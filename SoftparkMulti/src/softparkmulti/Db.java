@@ -1,5 +1,6 @@
 package softparkmulti;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,6 +13,8 @@ import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
+//import app.softparkmulti.util.MessageBox;
+
 public class Db {
 	
 	Connection conn = null;
@@ -19,7 +22,8 @@ public class Db {
 	public Db() {
 		Properties prop = new Properties();
 		InputStream propertiesInput;
-		String host, database, dbuser, dbpassword;
+		String host = "", database = "", dbuser = "", dbpassword = "";
+		String dbuser2 = "", dbpassword2 = "";
 		try{
 			propertiesInput = getClass().getResourceAsStream("config.properties");
 			// load a properties file
@@ -28,11 +32,34 @@ public class Db {
 			database = prop.getProperty("database");
 			dbuser = prop.getProperty("dbuser");
 			dbpassword = prop.getProperty("dbpassword");
-			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser, dbpassword);
-		}catch(Exception ex){
-			JOptionPane.showMessageDialog(null, ex.getMessage());
-		}
+			dbuser2 = prop.getProperty("dbuser2");
+			dbpassword2 = prop.getProperty("dbpassword2");
+			
+			}catch(IOException ex){
+
+				JOptionPane.showMessageDialog(null, ex.getMessage());
+			}
+			
+			try{
+
+				conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser, dbpassword);
+			}catch(Exception ex){
+				//JOptionPane.showMessageDialog(null, ex.getMessage());
+				try{
+					conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser2, dbpassword2);
+				}catch(SQLException ex2){
+					JOptionPane.showMessageDialog(null, ex2.getMessage());
+				}
+			}
+//			Class.forName("com.mysql.jdbc.Driver");
+//			conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser, dbpassword);
+		
+//		}catch(Exception ex){
+//			JOptionPane.showMessageDialog(null, ex.getMessage());
+//		}
+		
+		
+		
 	}
 	
 	protected boolean testConnection() {

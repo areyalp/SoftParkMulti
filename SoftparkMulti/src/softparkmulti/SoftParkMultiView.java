@@ -64,8 +64,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private int summaryId = 0;
 	private boolean summaryHasInvoice = false;
-	private int invoiceCount = 0;
-	
+	private int invoiceCount = 0;	
 	private User user;
 	private int userId;
 	private int stationId;
@@ -90,8 +89,7 @@ public class SoftParkMultiView extends JFrame {
 
 	private JButton toolBarButtonCollect, toolBarButtonCutoff, toolBarButtonManualTicket, toolBarButtonLostTicket;
 	
-	private JButton buttonValetInvoice, buttonValetLostTicket;
-	
+	private JButton buttonValetInvoice, buttonValetLostTicket;	
 	private JButton buttonAccept, buttonCancel;
 
 	private JPanel theToolBarPanel;
@@ -106,7 +104,7 @@ public class SoftParkMultiView extends JFrame {
 	private JTextField textTicket;
 	private JLabel labelPrice;
 	
-	private JTree tree;
+	private JTree tree;	
 	private JButton buttonReloadReports;
 	
 
