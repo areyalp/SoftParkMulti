@@ -606,27 +606,27 @@ public class SoftParkMultiView extends JFrame {
 
 		toolBar = new JToolBar("Barra de Herramientas");
 
-		toolBarButtonCollect = new JButton("Sistema de Cobro", new ImageIcon("resources/collect-money.png"));
+		toolBarButtonCollect = new JButton("Sistema de Cobro", new ImageIcon("resources/cash_register.png"));
 
 		toolBar.add(toolBarButtonCollect);
 
 		toolBar.addSeparator();
-
-		toolBarButtonCutoff = new JButton("Cierres", new ImageIcon("resources/cutoff.png"));
-
-		toolBar.add(toolBarButtonCutoff);
-
-		toolBar.addSeparator();
-
-		toolBarButtonManualTicket = new JButton("Ticket Manual", new ImageIcon("resources/manual-ticket.png"));
+		
+		toolBarButtonManualTicket = new JButton("Ticket Manual", new ImageIcon("resources/new_ticket.png"));
 
 		toolBar.add(toolBarButtonManualTicket);
 
 		toolBar.addSeparator();
 
-		toolBarButtonLostTicket = new JButton("Ticket Perdido", new ImageIcon("resources/lost-ticket.png"));
+		toolBarButtonLostTicket = new JButton("Ticket Perdido", new ImageIcon("resources/lost_ticket.png"));
 
 		toolBar.add(toolBarButtonLostTicket);
+
+		toolBar.addSeparator();
+		
+		toolBarButtonCutoff = new JButton("Cierres", new ImageIcon("resources/lock.png"));
+
+		toolBar.add(toolBarButtonCutoff);
 
 		toolBar.setFloatable(false);
 

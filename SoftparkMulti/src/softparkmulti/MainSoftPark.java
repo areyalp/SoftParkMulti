@@ -1,6 +1,4 @@
 package softparkmulti;
-import java.sql.ResultSet;
-import javax.swing.JOptionPane;
 
 public class MainSoftPark  {
 	private static int stationId;

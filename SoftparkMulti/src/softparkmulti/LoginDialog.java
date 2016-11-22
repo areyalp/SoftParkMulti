@@ -40,27 +40,27 @@ public class LoginDialog extends JDialog{
 		JLabel background;
         JPanel basic = new JPanel(new BorderLayout(0, 0));       
         
-        JPanel leftPanel = new JPanel(new BorderLayout(5, 5));
-        leftPanel.setMaximumSize(new Dimension(600, 600));
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 0));
+        leftPanel.setMaximumSize(new Dimension(550, 550));
         		
 		image = new ImageIcon(getClass().getResource("/estacionamiento.jpg"));
 		background = new JLabel(image);
 		add(background);
 		
-        background.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));        
+        background.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));        
 		leftPanel.add(background, BorderLayout.WEST);              
         
         basic.add(leftPanel);                     
         this.add(basic, BorderLayout.WEST);
         
-        JPanel container = new JPanel(new BorderLayout(0, 0));  
+        JPanel container = new JPanel(new BorderLayout(0,0));  
         this.add(container, BorderLayout.EAST);
 		
         JPanel loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints cs = new GridBagConstraints();
  
         cs.fill = GridBagConstraints.HORIZONTAL;            
-        cs.insets = new Insets(5,0,5,0);
+        cs.insets = new Insets(5,5,5,5);
         
         labelName = new JLabel("SoftPark");
         labelName.setFont(new Font("Serif", Font.BOLD, 30));
@@ -115,7 +115,7 @@ public class LoginDialog extends JDialog{
         this.add(container, BorderLayout.EAST);
         
         setTitle("Softpark - Login");
-        setSize(new Dimension(800, 600));
+        setSize(new Dimension(800, 550));
         setResizable(false);
         Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension dim = tk.getScreenSize();

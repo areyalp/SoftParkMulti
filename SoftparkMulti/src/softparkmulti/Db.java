@@ -13,8 +13,6 @@ import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
-//import app.softparkmulti.util.MessageBox;
-
 public class Db {
 	
 	Connection conn = null;
@@ -36,30 +34,18 @@ public class Db {
 			dbpassword2 = prop.getProperty("dbpassword2");
 			
 			}catch(IOException ex){
-
 				JOptionPane.showMessageDialog(null, ex.getMessage());
 			}
 			
 			try{
-
 				conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser, dbpassword);
 			}catch(Exception ex){
-				//JOptionPane.showMessageDialog(null, ex.getMessage());
 				try{
 					conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser2, dbpassword2);
 				}catch(SQLException ex2){
 					JOptionPane.showMessageDialog(null, ex2.getMessage());
 				}
-			}
-//			Class.forName("com.mysql.jdbc.Driver");
-//			conn = DriverManager.getConnection("jdbc:mysql://" + host + "/" + database, dbuser, dbpassword);
-		
-//		}catch(Exception ex){
-//			JOptionPane.showMessageDialog(null, ex.getMessage());
-//		}
-		
-		
-		
+			}		
 	}
 	
 	protected boolean testConnection() {
