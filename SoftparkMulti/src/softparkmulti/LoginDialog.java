@@ -43,7 +43,7 @@ public class LoginDialog extends JDialog{
         JPanel leftPanel = new JPanel(new BorderLayout(0, 0));
         leftPanel.setMaximumSize(new Dimension(550, 550));
         		
-		image = new ImageIcon(getClass().getResource("/estacionamiento.jpg"));
+		image = new ImageIcon("resources/estacionamiento.jpg");
 		background = new JLabel(image);
 		add(background);
 		

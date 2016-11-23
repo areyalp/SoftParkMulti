@@ -178,7 +178,6 @@ public class SoftParkMultiView extends JFrame {
 		// Create the tool bar.
 		toolBarPanel.add(createToolBar());
 
-		// Create the tab pane
 		JTabbedPane tabbedPane = new JTabbedPane();
 
 		// Add a tab
@@ -393,7 +392,12 @@ public class SoftParkMultiView extends JFrame {
 
 		layout.setAutoCreateGaps(true);
 		layout.setAutoCreateContainerGaps(true);
-
+		
+		//added a title to the ticket data
+		JLabel labelTitle = new JLabel("Datos del Ticket");
+		labelTitle.setFont(new Font("Serif", Font.BOLD, 22));
+		thePanel.add(labelTitle);
+		
 		JLabel labelTicket = new JLabel("Ticket No.:");
 		thePanel.add(labelTicket);
 		textTicket = new JTextField(12);
@@ -431,14 +435,45 @@ public class SoftParkMultiView extends JFrame {
 		JTextField textExpiration = new JTextField(12);
 		textExpiration.setEditable(false);
 		thePanel.add(textExpiration);
-
+		
+		//insert here the rest of the fields necessaries for the payment module		
+		ImageIcon image = new ImageIcon("resources/image404.png");
+		JLabel labelPicture = new JLabel(image);		
+		thePanel.add(labelPicture);
+		
+		JLabel labelPayment = new JLabel("Pago");
+		labelPayment.setFont(new Font(null, Font.BOLD, 22));
+		thePanel.add(labelPayment);
+		
+		JLabel labelTotal = new JLabel("Total");
+		labelTotal.setFont(new Font(null, Font.BOLD, 18));
+		thePanel.add(labelTotal);
+		
+		JLabel labelMoney = new JLabel("Bs.");
+		labelMoney.setForeground(Color.RED);		
+		thePanel.add(labelMoney);
+		
+		JLabel labelCashed = new JLabel("Entregado");
+		thePanel.add(labelCashed);
+		JTextField textCashed = new JTextField(12);
+		textCashed.setEditable(false);
+		thePanel.add(textCashed);
+		
+		JLabel labelChange = new JLabel("Vuelto");
+		thePanel.add(labelChange);
+		JTextField textChange = new JTextField(12);
+		textChange.setEditable(false);
+		thePanel.add(textChange);
+		
 		layout.setHorizontalGroup(
 
 		layout.createSequentialGroup()
 
-		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTicket)
-				.addComponent(labelDate).addComponent(labelEntrance).addComponent(labelDuration)
-				.addComponent(labelExpiration))
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
+				.addComponent(labelTicket).addComponent(labelDate).addComponent(labelEntrance)
+				.addComponent(labelDuration).addComponent(labelExpiration).addComponent(labelPicture)
+				.addComponent(labelPayment).addComponent(labelTotal)
+				.addComponent(labelCashed).addComponent(labelChange))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 						.addComponent(textTicket, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
@@ -449,6 +484,12 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textDuration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
 						.addComponent(textExpiration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(labelMoney, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textCashed, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textChange, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE))
 
 		);
@@ -456,6 +497,7 @@ public class SoftParkMultiView extends JFrame {
 		layout.setVerticalGroup(
 
 		layout.createSequentialGroup()
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitle))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTicket)
 						.addComponent(textTicket))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDate)
@@ -466,7 +508,15 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textDuration))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelExpiration)
 						.addComponent(textExpiration))
-
+				
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPicture))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPayment))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTotal).addComponent(labelMoney))
+//				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelMoney))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCashed)
+						.addComponent(textCashed))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelChange)
+						.addComponent(textChange))
 		);
 
 		return thePanel;
