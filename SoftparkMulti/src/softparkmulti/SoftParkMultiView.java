@@ -2,6 +2,7 @@ package softparkmulti;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -384,10 +385,16 @@ public class SoftParkMultiView extends JFrame {
 
 	private JComponent createSubPanelCharge() {
 
+		JPanel container = new JPanel();
+		//adding box layout
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS)); // top to bottom
+		//creating the 3 panels inside
 		JPanel thePanel = new JPanel();
-
+		JPanel picturePanel = new JPanel();
+		JPanel paymentPanel = new JPanel();
+		JPanel emptyPanel = new JPanel();
+		
 		GroupLayout layout = new GroupLayout(thePanel);
-
 		thePanel.setLayout(layout);
 
 		layout.setAutoCreateGaps(true);
@@ -401,7 +408,6 @@ public class SoftParkMultiView extends JFrame {
 		JLabel labelTicket = new JLabel("Ticket No.:");
 		thePanel.add(labelTicket);
 		textTicket = new JTextField(12);
-		// textTicket.setEditable(false);
 		thePanel.add(textTicket);
 
 		JLabel labelDate = new JLabel("Fecha de Entrada:");
@@ -434,36 +440,7 @@ public class SoftParkMultiView extends JFrame {
 		thePanel.add(labelExpiration);
 		JTextField textExpiration = new JTextField(12);
 		textExpiration.setEditable(false);
-		thePanel.add(textExpiration);
-		
-		//insert here the rest of the fields necessaries for the payment module		
-		ImageIcon image = new ImageIcon("resources/image404.png");
-		JLabel labelPicture = new JLabel(image);		
-		thePanel.add(labelPicture);
-		
-		JLabel labelPayment = new JLabel("Pago");
-		labelPayment.setFont(new Font(null, Font.BOLD, 22));
-		thePanel.add(labelPayment);
-		
-		JLabel labelTotal = new JLabel("Total");
-		labelTotal.setFont(new Font(null, Font.BOLD, 18));
-		thePanel.add(labelTotal);
-		
-		JLabel labelMoney = new JLabel("Bs.");
-		labelMoney.setForeground(Color.RED);		
-		thePanel.add(labelMoney);
-		
-		JLabel labelCashed = new JLabel("Entregado");
-		thePanel.add(labelCashed);
-		JTextField textCashed = new JTextField(12);
-		textCashed.setEditable(false);
-		thePanel.add(textCashed);
-		
-		JLabel labelChange = new JLabel("Vuelto");
-		thePanel.add(labelChange);
-		JTextField textChange = new JTextField(12);
-		textChange.setEditable(false);
-		thePanel.add(textChange);
+		thePanel.add(textExpiration);		
 		
 		layout.setHorizontalGroup(
 
@@ -471,9 +448,7 @@ public class SoftParkMultiView extends JFrame {
 
 		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
 				.addComponent(labelTicket).addComponent(labelDate).addComponent(labelEntrance)
-				.addComponent(labelDuration).addComponent(labelExpiration).addComponent(labelPicture)
-				.addComponent(labelPayment).addComponent(labelTotal)
-				.addComponent(labelCashed).addComponent(labelChange))
+				.addComponent(labelDuration).addComponent(labelExpiration))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 						.addComponent(textTicket, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
@@ -484,12 +459,6 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textDuration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
 						.addComponent(textExpiration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(labelMoney, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textCashed, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textChange, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE))
 
 		);
@@ -507,19 +476,84 @@ public class SoftParkMultiView extends JFrame {
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDuration)
 						.addComponent(textDuration))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelExpiration)
-						.addComponent(textExpiration))
-				
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPicture))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPayment))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTotal).addComponent(labelMoney))
-//				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelMoney))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCashed)
-						.addComponent(textCashed))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelChange)
-						.addComponent(textChange))
+						.addComponent(textExpiration))				
+		);
+		
+		//add thePanel to the boxlayoutPanel
+		container.add(thePanel);
+		
+		picturePanel.setLayout(new FlowLayout() );
+		
+		//insert here the rest of the fields necessaries for the payment module		
+		ImageIcon image = new ImageIcon("resources/image404.png");
+		JLabel labelPicture = new JLabel(image);	
+		labelPicture.setAlignmentY(TOP_ALIGNMENT);
+		
+		picturePanel.add(labelPicture);
+
+		
+		container.add(picturePanel);
+		
+		//payment panel
+		GroupLayout payment = new GroupLayout(paymentPanel);
+		paymentPanel.setLayout(payment);
+		
+		payment.setAutoCreateGaps(true);
+		payment.setAutoCreateContainerGaps(true);
+		
+		JLabel labelPayment = new JLabel("Pago");
+		labelPayment.setFont(new Font(null, Font.BOLD, 22));
+		paymentPanel.add(labelPayment);
+		
+		JLabel labelTotal = new JLabel("Total");
+		labelTotal.setFont(new Font(null, Font.BOLD, 18));
+		paymentPanel.add(labelTotal);
+		
+		JLabel labelMoney = new JLabel("Bs.");
+		labelMoney.setForeground(Color.RED);		
+		paymentPanel.add(labelMoney);
+		
+		JLabel labelCashed = new JLabel("Entregado");
+		paymentPanel.add(labelCashed);
+		JTextField textCashed = new JTextField(12);
+		textCashed.setEditable(false);
+		paymentPanel.add(textCashed);
+		
+		JLabel labelChange = new JLabel("Vuelto");
+		paymentPanel.add(labelChange);
+		JTextField textChange = new JTextField(12);
+		textChange.setEditable(false);
+		paymentPanel.add(textChange);	
+		
+		payment.setHorizontalGroup(
+				payment.createSequentialGroup()
+
+		.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelPayment)
+				.addComponent(labelTotal).addComponent(labelCashed).addComponent(labelChange))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(labelMoney, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textCashed, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textChange, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+
 		);
 
-		return thePanel;
+		payment.setVerticalGroup(
+				payment.createSequentialGroup()
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPayment))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTotal).addComponent(labelMoney))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCashed)
+						.addComponent(textCashed))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelChange)
+						.addComponent(textChange))			
+		);
+		container.add(paymentPanel);
+		
+		container.add(emptyPanel);
+		
+		return container;
 	}
 
 	private JMenuBar createMenu() {
