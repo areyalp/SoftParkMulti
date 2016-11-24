@@ -1,6 +1,7 @@
 package softparkmulti;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
@@ -300,10 +302,25 @@ public class SoftParkMultiView extends JFrame {
 		theTab.setLayout(new GridLayout(0, 3));
 
 		theTab.add(createSubPanelCharge());
+		theTab.add(createSubPanelMiddle());
 
 		return theTab;
 	}
 	
+	private JPanel createSubPanelMiddle() {
+		// TODO Auto-generated method stub
+		JPanel container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS)); // top to bottom
+		JPanel personalDataPanel = new JPanel();
+		JPanel directionsPanel = new JPanel();
+		
+		container.add(personalDataPanel);
+		
+		container.add(directionsPanel);
+
+		return container;
+	}
+
 	private JPanel createValetCashier() {
 		
 		JPanel containerPanel = new JPanel();
@@ -392,7 +409,6 @@ public class SoftParkMultiView extends JFrame {
 		JPanel thePanel = new JPanel();
 		JPanel picturePanel = new JPanel();
 		JPanel paymentPanel = new JPanel();
-		JPanel emptyPanel = new JPanel();
 		
 		GroupLayout layout = new GroupLayout(thePanel);
 		thePanel.setLayout(layout);
@@ -481,17 +497,15 @@ public class SoftParkMultiView extends JFrame {
 		
 		//add thePanel to the boxlayoutPanel
 		container.add(thePanel);
+	    container.add(Box.createVerticalStrut(25));
+	    
+		picturePanel.setLayout(new FlowLayout() );		
 		
-		picturePanel.setLayout(new FlowLayout() );
-		
-		//insert here the rest of the fields necessaries for the payment module		
 		ImageIcon image = new ImageIcon("resources/image404.png");
 		JLabel labelPicture = new JLabel(image);	
 		labelPicture.setAlignmentY(TOP_ALIGNMENT);
 		
-		picturePanel.add(labelPicture);
-
-		
+		picturePanel.add(labelPicture);		
 		container.add(picturePanel);
 		
 		//payment panel
@@ -550,8 +564,7 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textChange))			
 		);
 		container.add(paymentPanel);
-		
-		container.add(emptyPanel);
+		container.add(Box.createVerticalStrut(140));
 		
 		return container;
 	}
