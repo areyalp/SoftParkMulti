@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.ItemSelectable;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,7 +28,9 @@ import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
@@ -40,6 +43,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
@@ -97,14 +101,18 @@ public class SoftParkMultiView extends JFrame {
 
 	private JPanel theToolBarPanel;
 	private JPanel theStatusBarPanel;
+	private JPanel personalPanel, companyPanel;
 
+	private JCheckBox checkBillsName;
 	private JToolBar toolBar;
+	
+	private JComboBox comboCompany, comboShop,comboColor, comboModel, comboState, comboBrand;
 
 	private static JLabel labelStatus;
 
 	private String activePort;
 
-	private JTextField textTicket;
+	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JLabel labelPrice;
 	
 	private JTree tree;	
@@ -303,23 +311,159 @@ public class SoftParkMultiView extends JFrame {
 
 		theTab.add(createSubPanelCharge());
 		theTab.add(createSubPanelMiddle());
+		theTab.add(createSubPanelRight());
 
 		return theTab;
 	}
 	
-	private JPanel createSubPanelMiddle() {
+	private JPanel createSubPanelRight() {
 		// TODO Auto-generated method stub
-		JPanel container = new JPanel();
-		container.setLayout(new BoxLayout(container, BoxLayout.X_AXIS)); // top to bottom
-		JPanel personalDataPanel = new JPanel();
-		JPanel directionsPanel = new JPanel();
+		JPanel container = new JPanel(new BorderLayout());
 		
-		container.add(personalDataPanel);
+		JPanel carsDataPanel = new JPanel();
 		
-		container.add(directionsPanel);
+		GroupLayout layout = new GroupLayout(carsDataPanel);
+		carsDataPanel.setLayout(layout);
 
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelTitle = new JLabel("Datos del Vehiculo");
+		labelTitle.setFont(new Font(null, Font.BOLD, 22));
+		carsDataPanel.add(labelTitle);
+		
+		JLabel labelState = new JLabel("Estado:");
+		carsDataPanel.add(labelState);
+		comboState = new JComboBox<String>();
+		comboState.removeItem("     ");
+		carsDataPanel.add(comboState);
+
+		JLabel labelPlate = new JLabel("Placa:");
+		carsDataPanel.add(labelPlate);
+		JTextField  textPlate = new JTextField(12);
+		carsDataPanel.add(textPlate);
+
+		JLabel labelOwnerId = new JLabel("Cedula Propietario:");
+		carsDataPanel.add(labelOwnerId);
+		JTextField textOwnerId= new JTextField(12);
+		carsDataPanel.add(textOwnerId);
+
+		JLabel labelOwnerName = new JLabel("Nombre Propietario:");
+		carsDataPanel.add(labelOwnerName);
+		JTextField textOwnerName = new JTextField(12);
+		carsDataPanel.add(textOwnerName);
+
+		JLabel labelOwnerLastName = new JLabel("Apellido:");
+		carsDataPanel.add(labelOwnerLastName);
+		JTextField textOwnerLastName = new JTextField(12);
+		carsDataPanel.add(textOwnerLastName);		
+		
+		JLabel labelColor = new JLabel("Color:");
+		carsDataPanel.add(labelColor);
+		comboColor = new JComboBox<String>();
+		comboColor.removeItem("     ");
+		carsDataPanel.add(comboColor);
+
+		JLabel labelBrand = new JLabel("Marca:");
+		carsDataPanel.add(labelBrand);
+		comboBrand = new JComboBox<String>();
+		comboBrand.removeItem("     ");
+		carsDataPanel.add(comboBrand);	
+		
+		JLabel labelModel = new JLabel("Modelo:");
+		carsDataPanel.add(labelModel);
+		comboModel = new JComboBox<String>();
+		comboModel.removeItem("     ");
+		carsDataPanel.add(comboModel);
+
+		JLabel labelDescription = new JLabel("Descripcion:");
+		carsDataPanel.add(labelDescription);
+		JTextArea textDescription = new JTextArea(4,20);
+		carsDataPanel.add(textDescription);
+
+		layout.setHorizontalGroup(
+
+		layout.createSequentialGroup()
+
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
+				.addComponent(labelState).addComponent(labelPlate).addComponent(labelOwnerId)
+				.addComponent(labelOwnerName).addComponent(labelOwnerLastName)
+				.addComponent(labelColor).addComponent(labelBrand)
+				.addComponent(labelModel).addComponent(labelDescription))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(comboState, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textPlate, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textOwnerId, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textOwnerName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textOwnerLastName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(comboColor, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(comboBrand, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(comboModel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textDescription, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+
+		);
+
+		layout.setVerticalGroup(
+
+		layout.createSequentialGroup()
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitle))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelState)
+						.addComponent(comboState))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPlate)
+						.addComponent(textPlate))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelOwnerId)
+						.addComponent(textOwnerId))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelOwnerName)
+						.addComponent(textOwnerName))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelOwnerLastName)
+						.addComponent(textOwnerLastName))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelColor)
+						.addComponent(comboColor))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelBrand)
+						.addComponent(comboBrand))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelModel)
+						.addComponent(comboModel))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDescription)
+						.addComponent(textDescription))								
+		);
+		
+		container.add(carsDataPanel, BorderLayout.NORTH);
+		
 		return container;
 	}
+
+	private JPanel createSubPanelMiddle() {
+		JPanel container = new JPanel(new BorderLayout());
+
+		JPanel topPanel = new JPanel();
+		
+		CheckBoxListener lForCheckBox = new CheckBoxListener();		
+
+		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",true);
+		checkBillsName.addItemListener(lForCheckBox);
+		topPanel.add(checkBillsName);		
+		container.add(topPanel,BorderLayout.NORTH);		
+		
+		if(checkBillsName.isSelected()){
+			container.add(companyPanel(),BorderLayout.CENTER);
+		}
+		else{
+			container.add(personalPanel(),BorderLayout.CENTER);
+		}
+		
+		return container;
+	}
+	
 
 	private JPanel createValetCashier() {
 		
@@ -400,7 +544,138 @@ public class SoftParkMultiView extends JFrame {
 		return containerPanel;
 	}
 
-	private JComponent createSubPanelCharge() {
+	private JPanel personalPanel(){
+		
+		JPanel personalPanel = new JPanel();
+		GroupLayout layout = new GroupLayout(personalPanel);
+		personalPanel.setLayout(layout);
+
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelTitle = new JLabel("Datos Personales");
+		labelTitle.setFont(new Font(null, Font.BOLD, 18));
+		personalPanel.add(labelTitle);
+		
+		JLabel labelId = new JLabel("Cedula:");
+		personalPanel.add(labelId);
+		JTextField textId = new JTextField(12);
+		personalPanel.add(textId);
+
+		JLabel labelFirstName = new JLabel("Nombre:");
+		personalPanel.add(labelFirstName);
+		JTextField textFirstName = new JTextField(12);
+		personalPanel.add(textFirstName);
+
+		JLabel labelLastName= new JLabel("Apellido:");
+		personalPanel.add(labelLastName);
+		JTextField textLastName = new JTextField(12);
+		personalPanel.add(textLastName);
+
+		JLabel labelEmail = new JLabel("Email:");
+		personalPanel.add(labelEmail);
+		JTextField textEmail = new JTextField(12);
+		personalPanel.add(textEmail);
+
+		JLabel labelPhone = new JLabel("Móvil:");
+		personalPanel.add(labelPhone);
+		JTextField textPhone = new JTextField(12);
+		personalPanel.add(textPhone);		
+		
+		layout.setHorizontalGroup(
+		layout.createSequentialGroup()
+
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
+				.addComponent(labelId).addComponent(labelFirstName).addComponent(labelLastName)
+				.addComponent(labelEmail).addComponent(labelPhone))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(textId, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textFirstName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textLastName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textEmail, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textPhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+		);
+
+		layout.setVerticalGroup(
+
+		layout.createSequentialGroup()
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitle))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelId)
+						.addComponent(textId))	
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelFirstName)
+						.addComponent(textFirstName))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelLastName)
+						.addComponent(textLastName))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelEmail)
+						.addComponent(textEmail))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPhone)
+						.addComponent(textPhone))			
+		);
+		
+		//add personalPanel to the boxlayoutPanel
+//		personalPanel.setSize(400, 300);
+//		personalPanel.setVisible(true);			    
+		
+		return personalPanel;		
+	}
+	
+	private JPanel companyPanel(){
+		
+		JPanel companyPanel = new JPanel();		
+		GroupLayout layoutcompany = new GroupLayout(companyPanel);
+		companyPanel.setLayout(layoutcompany);
+
+		layoutcompany.setAutoCreateGaps(true);
+		layoutcompany.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelTitleCompany = new JLabel("Datos de la Empresa");
+		labelTitleCompany.setFont(new Font(null, Font.BOLD, 18));
+		companyPanel.add(labelTitleCompany);
+
+		JLabel labelCompany = new JLabel("Empresa:");
+		companyPanel.add(labelCompany);
+		comboCompany = new JComboBox<String>();
+		comboCompany.removeItem("");
+		companyPanel.add(comboCompany);
+
+		JLabel labelShop = new JLabel("Local:");
+		companyPanel.add(labelShop);
+		comboShop = new JComboBox<String>();
+		comboShop.removeItem("     ");
+		companyPanel.add(comboShop);
+				
+		layoutcompany.setHorizontalGroup(
+		layoutcompany.createSequentialGroup()
+		.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitleCompany)
+				.addComponent(labelCompany).addComponent(labelShop))
+				.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(comboCompany, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(comboShop, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE))
+		);
+
+		layoutcompany.setVerticalGroup(
+		layoutcompany.createSequentialGroup()
+		.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitleCompany))
+				.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCompany)
+						.addComponent(comboCompany))	
+				.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelShop)
+						.addComponent(comboShop))			
+		);
+//		companyPanel.setVisible(false);
+		
+		return companyPanel;		
+	}
+	
+	private JPanel createSubPanelCharge() {
 
 		JPanel container = new JPanel();
 		//adding box layout
@@ -418,7 +693,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		//added a title to the ticket data
 		JLabel labelTitle = new JLabel("Datos del Ticket");
-		labelTitle.setFont(new Font("Serif", Font.BOLD, 22));
+		labelTitle.setFont(new Font(null, Font.BOLD, 22));
 		thePanel.add(labelTitle);
 		
 		JLabel labelTicket = new JLabel("Ticket No.:");
@@ -568,7 +843,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		return container;
 	}
-
+ 
 	private JMenuBar createMenu() {
 		// JPanel thePanel = new JPanel(new BorderLayout());
 
@@ -996,6 +1271,7 @@ public class SoftParkMultiView extends JFrame {
 		@Override
 		public void itemStateChanged(ItemEvent ev) {
 
+//			ItemSelectable checkBillsName = null;
 			if (ev.getItemSelectable() == cbMenuItemToolbar) {
 				switch (ev.getStateChange()) {
 				case ItemEvent.SELECTED:
@@ -1014,7 +1290,26 @@ public class SoftParkMultiView extends JFrame {
 					theStatusBarPanel.setVisible(false);
 					break;
 				}
-			} // END OF else if
+			} 
+			else if (ev.getItemSelectable() == checkBillsName) {
+				if(ev.getStateChange() == ItemEvent.SELECTED) {//checkbox has been selected
+					personalPanel().setVisible(false);
+					companyPanel().setVisible(true);
+		        } else {//checkbox has been deselected
+		        	personalPanel().setVisible(true);
+					companyPanel().setVisible(false);
+		        };
+//				switch (ev.getStateChange()) {
+//				case ItemEvent.SELECTED:
+//					personalPanel.setVisible(false);
+//					companyPanel.setVisible(true);
+//					break;
+//				case ItemEvent.DESELECTED:
+//					personalPanel.setVisible(true);
+//					companyPanel.setVisible(false);;
+//					break;
+//				}
+			}// END OF else if
 
 		}// END OF method itemStateChanged
 
