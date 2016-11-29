@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.ItemSelectable;
+import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -117,6 +118,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private JTree tree;	
 	private JButton buttonReloadReports;
+	private JComboBox<String> comboCountry, comboDirectionState;
 	
 
 	public SoftParkMultiView(int stationId) {
@@ -318,6 +320,10 @@ public class SoftParkMultiView extends JFrame {
 	
 	private JPanel createSubPanelRight() {
 		// TODO Auto-generated method stub
+		JPanel wrapContainerPanel = new JPanel();
+		
+		wrapContainerPanel.setLayout(new BoxLayout(wrapContainerPanel, BoxLayout.X_AXIS));
+		
 		JPanel container = new JPanel(new BorderLayout());
 		
 		JPanel carsDataPanel = new JPanel();
@@ -329,8 +335,8 @@ public class SoftParkMultiView extends JFrame {
 		layout.setAutoCreateContainerGaps(true);
 		
 		//added a title to the ticket data
-		JLabel labelTitle = new JLabel("Datos del Vehiculo");
-		labelTitle.setFont(new Font(null, Font.BOLD, 22));
+		JLabel labelTitle = new JLabel("Datos de Vehículo");
+		labelTitle.setFont(new Font(null, Font.BOLD, 20));
 		carsDataPanel.add(labelTitle);
 		
 		JLabel labelState = new JLabel("Estado:");
@@ -439,7 +445,97 @@ public class SoftParkMultiView extends JFrame {
 		
 		container.add(carsDataPanel, BorderLayout.NORTH);
 		
-		return container;
+		//add new JPanel to the directions data		
+		JPanel directionsPanel = new JPanel();		
+		
+		GroupLayout layoutDirection = new GroupLayout(directionsPanel);
+		directionsPanel.setLayout(layoutDirection);
+
+		layoutDirection.setAutoCreateGaps(true);
+		layoutDirection.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelDirectionsTitle = new JLabel("Dirección     ");
+		labelDirectionsTitle.setFont(new Font(null, Font.BOLD, 20));
+		directionsPanel.add(labelDirectionsTitle);
+
+		JLabel labelCountry = new JLabel("País:");
+		directionsPanel.add(labelCountry);
+		comboCountry = new JComboBox<String>();
+		comboCountry.removeItem("");
+		directionsPanel.add(comboCountry);
+
+		JLabel labelDirectionState = new JLabel("Estado:");
+		directionsPanel.add(labelDirectionState);
+		comboDirectionState = new JComboBox<String>();
+		comboDirectionState.removeItem("     ");
+		directionsPanel.add(comboDirectionState);
+
+		JLabel labelCity = new JLabel("Ciudad:");
+		directionsPanel.add(labelCity);
+		JTextField textCity = new JTextField(12);
+		directionsPanel.add(textCity);
+
+		JLabel labelZipCode = new JLabel("Codigo Postal:");
+		directionsPanel.add(labelZipCode);
+		JTextField textZipCode = new JTextField(12);
+		directionsPanel.add(textZipCode);
+
+		JLabel labelPhone = new JLabel("Telefono:");
+		directionsPanel.add(labelPhone);
+		JTextField textPhone = new JTextField(12);
+		directionsPanel.add(textPhone);
+
+		JLabel labelStreet = new JLabel("Calle/Casa/Apto:");
+		directionsPanel.add(labelStreet);
+		JTextField textStreet = new JTextField(12);
+		directionsPanel.add(textStreet);
+				
+		layoutDirection.setHorizontalGroup(
+				
+		layoutDirection.createSequentialGroup()
+		
+		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelDirectionsTitle)
+				.addComponent(labelCountry).addComponent(labelDirectionState).addComponent(labelCity)
+				.addComponent(labelZipCode).addComponent(labelPhone).addComponent(labelStreet))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(comboCountry, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(comboDirectionState, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textCity, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textZipCode, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textPhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textStreet, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE))
+		);
+
+		layoutDirection.setVerticalGroup(
+		layoutDirection.createSequentialGroup()
+		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionsTitle))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCountry)
+						.addComponent(comboCountry))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionState)
+						.addComponent(comboDirectionState))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCity)
+						.addComponent(textCity))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelZipCode)
+						.addComponent(textZipCode))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPhone)
+						.addComponent(textPhone))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelStreet)
+						.addComponent(textStreet))			
+		);
+		
+		container.add(directionsPanel, BorderLayout.CENTER);		
+		
+		wrapContainerPanel.add(container);
+		wrapContainerPanel.add(Box.createHorizontalStrut(50));
+		
+		return wrapContainerPanel;
 	}
 
 	private JPanel createSubPanelMiddle() {
@@ -449,7 +545,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		CheckBoxListener lForCheckBox = new CheckBoxListener();		
 
-		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",true);
+		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",false);
 		checkBillsName.addItemListener(lForCheckBox);
 		topPanel.add(checkBillsName);		
 		container.add(topPanel,BorderLayout.NORTH);		
@@ -578,17 +674,17 @@ public class SoftParkMultiView extends JFrame {
 		JTextField textEmail = new JTextField(12);
 		personalPanel.add(textEmail);
 
-		JLabel labelPhone = new JLabel("Móvil:");
-		personalPanel.add(labelPhone);
-		JTextField textPhone = new JTextField(12);
-		personalPanel.add(textPhone);		
+		JLabel labelMobilePhone = new JLabel("Móvil:");
+		personalPanel.add(labelMobilePhone);
+		JTextField textMobilePhone = new JTextField(12);
+		personalPanel.add(textMobilePhone);		
 		
 		layout.setHorizontalGroup(
 		layout.createSequentialGroup()
 
 		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
 				.addComponent(labelId).addComponent(labelFirstName).addComponent(labelLastName)
-				.addComponent(labelEmail).addComponent(labelPhone))
+				.addComponent(labelEmail).addComponent(labelMobilePhone))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 						.addComponent(textId, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
@@ -598,7 +694,7 @@ public class SoftParkMultiView extends JFrame {
 								GroupLayout.PREFERRED_SIZE)
 						.addComponent(textEmail, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textPhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textMobilePhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE))
 		);
 
@@ -614,13 +710,9 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textLastName))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelEmail)
 						.addComponent(textEmail))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPhone)
-						.addComponent(textPhone))			
-		);
-		
-		//add personalPanel to the boxlayoutPanel
-//		personalPanel.setSize(400, 300);
-//		personalPanel.setVisible(true);			    
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelMobilePhone)
+						.addComponent(textMobilePhone))			
+		);		    
 		
 		return personalPanel;		
 	}
@@ -670,7 +762,6 @@ public class SoftParkMultiView extends JFrame {
 				.addGroup(layoutcompany.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelShop)
 						.addComponent(comboShop))			
 		);
-//		companyPanel.setVisible(false);
 		
 		return companyPanel;		
 	}
