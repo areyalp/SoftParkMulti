@@ -64,6 +64,8 @@ import jssc.SerialPortList;
 import tfhka.*;
 import tfhka.ve.*;
 
+
+
 @SuppressWarnings("serial")
 public class SoftParkMultiView extends JFrame {
 
@@ -102,7 +104,7 @@ public class SoftParkMultiView extends JFrame {
 
 	private JPanel theToolBarPanel;
 	private JPanel theStatusBarPanel;
-	private JPanel personalPanel, companyPanel;
+	private JPanel personalPanel, companyPanel, middleContainer, wrapRightContainerPanel;
 
 	private JCheckBox checkBillsName;
 	private JToolBar toolBar;
@@ -119,6 +121,7 @@ public class SoftParkMultiView extends JFrame {
 	private JTree tree;	
 	private JButton buttonReloadReports;
 	private JComboBox<String> comboCountry, comboDirectionState;
+	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
 	
 
 	public SoftParkMultiView(int stationId) {
@@ -195,7 +198,9 @@ public class SoftParkMultiView extends JFrame {
 
 		// Add a tab
 		if(stationInfo.getType() == 1){
+			stationMode = "E/S";
 			tabbedPane.addTab("Sistema de Cobro", createCashierTab());
+			
 		}else if(stationInfo.getType() == 4){
 			stationMode = "Valet";
 			tabbedPane.addTab("Valet Parking", createValetTab());
@@ -307,25 +312,216 @@ public class SoftParkMultiView extends JFrame {
 
 	private JPanel createCashierTab() {
 
+		JPanel wrapContainerPanel = new JPanel();
+		
+		wrapContainerPanel.setLayout(new BoxLayout(wrapContainerPanel, BoxLayout.Y_AXIS));
+		
 		JPanel theTab = new JPanel();
 
 		theTab.setLayout(new GridLayout(0, 3));
+		
+//		panelCashier = createSubPanelCharge();
+//		panelCashier.setVisible(false);
 
 		theTab.add(createSubPanelCharge());
+		
 		theTab.add(createSubPanelMiddle());
+		
 		theTab.add(createSubPanelRight());
+		
+//		theTab.setSize(1200,1000);
+	
+//		theTab.setVisible(false);
 
-		return theTab;
+		wrapContainerPanel.add(theTab);
+		
+//		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+//		
+//		ButtonListener lForSwitchButton = new ButtonListener();
+//		
+//		buttonCollectAccept = new JButton("Aceptar");
+//		buttonCollectAccept.setActionCommand("collect.accept.button");
+//		buttonCollectAccept.addActionListener(lForSwitchButton);
+//		
+//		buttonPanel.add(buttonCollectAccept);
+//		
+//		buttonCollectCancel = new JButton("Cancelar");
+//		buttonCollectCancel.setActionCommand("collect.cancel.button");
+//		buttonCollectCancel.addActionListener(lForSwitchButton);
+//		buttonCollectCancel.setEnabled(false);
+//		
+//		buttonPanel.add(buttonCollectCancel);			
+////		buttonPanel.setSize(600,150);
+//		
+//		wrapContainerPanel.add(buttonPanel);
+		
+		return wrapContainerPanel;
 	}
 	
 	private JPanel createSubPanelRight() {
-		// TODO Auto-generated method stub
-		JPanel wrapContainerPanel = new JPanel();
+		// 
+		wrapRightContainerPanel = new JPanel();
 		
-		wrapContainerPanel.setLayout(new BoxLayout(wrapContainerPanel, BoxLayout.X_AXIS));
+		wrapRightContainerPanel.setLayout(new BoxLayout(wrapRightContainerPanel, BoxLayout.X_AXIS));
 		
-		JPanel container = new JPanel(new BorderLayout());
+		JPanel container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+				
+		//add new JPanel to the directions data		
+		JPanel directionsPanel = new JPanel();		
 		
+		GroupLayout layoutDirection = new GroupLayout(directionsPanel);
+		directionsPanel.setLayout(layoutDirection);
+
+		layoutDirection.setAutoCreateGaps(true);
+		layoutDirection.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelDirectionsTitle = new JLabel("Dirección     ");
+		labelDirectionsTitle.setFont(new Font(null, Font.BOLD, 20));
+		directionsPanel.add(labelDirectionsTitle);
+
+		JLabel labelCountry = new JLabel("País:");
+		directionsPanel.add(labelCountry);
+		comboCountry = new JComboBox<String>();
+		comboCountry.removeItem("");
+		directionsPanel.add(comboCountry);
+
+		JLabel labelDirectionState = new JLabel("Estado:");
+		directionsPanel.add(labelDirectionState);
+		comboDirectionState = new JComboBox<String>();
+		comboDirectionState.removeItem("     ");
+		directionsPanel.add(comboDirectionState);
+
+		JLabel labelCity = new JLabel("Ciudad:");
+		directionsPanel.add(labelCity);
+		JTextField textCity = new JTextField(12);
+		directionsPanel.add(textCity);
+
+		JLabel labelZipCode = new JLabel("Codigo Postal:");
+		directionsPanel.add(labelZipCode);
+		JTextField textZipCode = new JTextField(12);
+		directionsPanel.add(textZipCode);
+
+		JLabel labelPhone = new JLabel("Telefono:");
+		directionsPanel.add(labelPhone);
+		JTextField textPhone = new JTextField(12);
+		directionsPanel.add(textPhone);
+
+		JLabel labelStreet = new JLabel("Calle/Casa/Apto:");
+		directionsPanel.add(labelStreet);
+		JTextField textStreet = new JTextField(12);
+		directionsPanel.add(textStreet);
+				
+		layoutDirection.setHorizontalGroup(
+				
+		layoutDirection.createSequentialGroup()
+		
+		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelDirectionsTitle)
+				.addComponent(labelCountry).addComponent(labelDirectionState).addComponent(labelCity)
+				.addComponent(labelZipCode).addComponent(labelPhone).addComponent(labelStreet))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(comboCountry, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(comboDirectionState, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textCity, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textZipCode, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textPhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE)
+						.addComponent(textStreet, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE))
+		);
+
+		layoutDirection.setVerticalGroup(
+		layoutDirection.createSequentialGroup()
+		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionsTitle))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCountry)
+						.addComponent(comboCountry))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionState)
+						.addComponent(comboDirectionState))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCity)
+						.addComponent(textCity))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelZipCode)
+						.addComponent(textZipCode))
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPhone)
+						.addComponent(textPhone))	
+				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelStreet)
+						.addComponent(textStreet))			
+		);
+		
+		container.add(directionsPanel);		
+		
+		//create here new panel for the entrance
+		JPanel entrancePanel = new JPanel(new BorderLayout(20,20));
+		
+		JPanel entranceTitlePanel = new JPanel();
+		
+		JLabel labelEntranceTitle = new JLabel("Ingreso de Vehículos");
+		labelEntranceTitle.setFont(new Font(null, Font.BOLD, 20));
+		entranceTitlePanel.add(labelEntranceTitle);
+		
+		entrancePanel.add(entranceTitlePanel, BorderLayout.NORTH);
+		
+		JPanel entranceButtonPanel = new JPanel();
+		
+		ButtonListener lForSwitchButton = new ButtonListener();
+		
+		buttonCarEntrance = new JButton("Ingresar");
+		buttonCarEntrance.setActionCommand("entrance.button");
+		buttonCarEntrance.addActionListener(lForSwitchButton);
+		
+		entranceButtonPanel.add(buttonCarEntrance);
+		
+		entrancePanel.add(entranceButtonPanel, BorderLayout.CENTER);
+		
+		JPanel entrancePlatePanel = new JPanel();
+		
+		JLabel labelEntrancePlate = new JLabel("Placa:");
+		entrancePlatePanel.add(labelEntrancePlate);
+		JTextField textEntrancePlate = new JTextField(12);
+		entrancePlatePanel.add(textEntrancePlate);
+		
+		entrancePanel.add(entrancePlatePanel, BorderLayout.SOUTH);		
+		
+		container.add(Box.createVerticalStrut(50));
+		container.add(entrancePanel);		
+		container.add(Box.createVerticalStrut(300));
+				
+		wrapRightContainerPanel.add(container);
+		wrapRightContainerPanel.add(Box.createHorizontalStrut(50));
+		
+		return wrapRightContainerPanel;
+	}
+
+	private JPanel createSubPanelMiddle() {
+		middleContainer = new JPanel();
+		
+		middleContainer.setLayout(new BoxLayout(middleContainer, BoxLayout.Y_AXIS));
+		
+		JPanel topPanel = new JPanel();
+		
+		CheckBoxListener lForCheckBox = new CheckBoxListener();		
+
+		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",false);
+		checkBillsName.addItemListener(lForCheckBox);
+		topPanel.add(checkBillsName);
+		
+		middleContainer.add(topPanel);
+//		middleContainer.add(Box.createGlue());
+		
+		if(checkBillsName.isSelected()){
+			companyPanel = companyPanel();
+			middleContainer.add(companyPanel);
+		}
+		else{
+			personalPanel = personalPanel();
+			middleContainer.add(personalPanel);
+		}
+		middleContainer.add(Box.createGlue());
+		//INSERT HERE CAR´S DATA PANEL
 		JPanel carsDataPanel = new JPanel();
 		
 		GroupLayout layout = new GroupLayout(carsDataPanel);
@@ -443,124 +639,15 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textDescription))								
 		);
 		
-		container.add(carsDataPanel, BorderLayout.NORTH);
-		
-		//add new JPanel to the directions data		
-		JPanel directionsPanel = new JPanel();		
-		
-		GroupLayout layoutDirection = new GroupLayout(directionsPanel);
-		directionsPanel.setLayout(layoutDirection);
+//		middleContainer.add(Box.createVerticalStrut(50));
+		middleContainer.add(carsDataPanel);
+		middleContainer.add(Box.createGlue());
+//		middleContainer.add(Box.createVerticalStrut(50));
 
-		layoutDirection.setAutoCreateGaps(true);
-		layoutDirection.setAutoCreateContainerGaps(true);
-		
-		//added a title to the ticket data
-		JLabel labelDirectionsTitle = new JLabel("Dirección     ");
-		labelDirectionsTitle.setFont(new Font(null, Font.BOLD, 20));
-		directionsPanel.add(labelDirectionsTitle);
-
-		JLabel labelCountry = new JLabel("País:");
-		directionsPanel.add(labelCountry);
-		comboCountry = new JComboBox<String>();
-		comboCountry.removeItem("");
-		directionsPanel.add(comboCountry);
-
-		JLabel labelDirectionState = new JLabel("Estado:");
-		directionsPanel.add(labelDirectionState);
-		comboDirectionState = new JComboBox<String>();
-		comboDirectionState.removeItem("     ");
-		directionsPanel.add(comboDirectionState);
-
-		JLabel labelCity = new JLabel("Ciudad:");
-		directionsPanel.add(labelCity);
-		JTextField textCity = new JTextField(12);
-		directionsPanel.add(textCity);
-
-		JLabel labelZipCode = new JLabel("Codigo Postal:");
-		directionsPanel.add(labelZipCode);
-		JTextField textZipCode = new JTextField(12);
-		directionsPanel.add(textZipCode);
-
-		JLabel labelPhone = new JLabel("Telefono:");
-		directionsPanel.add(labelPhone);
-		JTextField textPhone = new JTextField(12);
-		directionsPanel.add(textPhone);
-
-		JLabel labelStreet = new JLabel("Calle/Casa/Apto:");
-		directionsPanel.add(labelStreet);
-		JTextField textStreet = new JTextField(12);
-		directionsPanel.add(textStreet);
-				
-		layoutDirection.setHorizontalGroup(
-				
-		layoutDirection.createSequentialGroup()
-		
-		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelDirectionsTitle)
-				.addComponent(labelCountry).addComponent(labelDirectionState).addComponent(labelCity)
-				.addComponent(labelZipCode).addComponent(labelPhone).addComponent(labelStreet))
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.LEADING)
-						.addComponent(comboCountry, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE)
-						.addComponent(comboDirectionState, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE)
-						.addComponent(textCity, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE)
-						.addComponent(textZipCode, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE)
-						.addComponent(textPhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE)
-						.addComponent(textStreet, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE))
-		);
-
-		layoutDirection.setVerticalGroup(
-		layoutDirection.createSequentialGroup()
-		.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionsTitle))
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCountry)
-						.addComponent(comboCountry))	
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDirectionState)
-						.addComponent(comboDirectionState))
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCity)
-						.addComponent(textCity))	
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelZipCode)
-						.addComponent(textZipCode))
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPhone)
-						.addComponent(textPhone))	
-				.addGroup(layoutDirection.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelStreet)
-						.addComponent(textStreet))			
-		);
-		
-		container.add(directionsPanel, BorderLayout.CENTER);		
-		
-		wrapContainerPanel.add(container);
-		wrapContainerPanel.add(Box.createHorizontalStrut(50));
-		
-		return wrapContainerPanel;
-	}
-
-	private JPanel createSubPanelMiddle() {
-		JPanel container = new JPanel(new BorderLayout());
-
-		JPanel topPanel = new JPanel();
-		
-		CheckBoxListener lForCheckBox = new CheckBoxListener();		
-
-		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",false);
-		checkBillsName.addItemListener(lForCheckBox);
-		topPanel.add(checkBillsName);		
-		container.add(topPanel,BorderLayout.NORTH);		
-		
-		if(checkBillsName.isSelected()){
-			container.add(companyPanel(),BorderLayout.CENTER);
-		}
-		else{
-			container.add(personalPanel(),BorderLayout.CENTER);
-		}
-		
-		return container;
+		//
+		return middleContainer;
 	}
 	
-
 	private JPanel createValetCashier() {
 		
 		JPanel containerPanel = new JPanel();
@@ -686,15 +773,15 @@ public class SoftParkMultiView extends JFrame {
 				.addComponent(labelId).addComponent(labelFirstName).addComponent(labelLastName)
 				.addComponent(labelEmail).addComponent(labelMobilePhone))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-						.addComponent(textId, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textId, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textFirstName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textFirstName, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textLastName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textLastName, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
 								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textEmail, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textEmail, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textMobilePhone, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+						.addComponent(textMobilePhone, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
 								GroupLayout.PREFERRED_SIZE))
 		);
 
@@ -714,6 +801,7 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textMobilePhone))			
 		);		    
 		
+//		personalPanel.setAlignmentX(LEFT_ALIGNMENT);
 		return personalPanel;		
 	}
 	
@@ -930,7 +1018,26 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textChange))			
 		);
 		container.add(paymentPanel);
-		container.add(Box.createVerticalStrut(140));
+//		container.add(Box.createVerticalStrut(140));
+		
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+		
+		ButtonListener lForSwitchButton = new ButtonListener();
+		
+		buttonCollectAccept = new JButton("Aceptar");
+		buttonCollectAccept.setActionCommand("collect.accept.button");
+		buttonCollectAccept.addActionListener(lForSwitchButton);
+		
+		buttonPanel.add(buttonCollectAccept);
+		
+		buttonCollectCancel = new JButton("Cancelar");
+		buttonCollectCancel.setActionCommand("collect.cancel.button");
+		buttonCollectCancel.addActionListener(lForSwitchButton);
+		buttonCollectCancel.setEnabled(false);
+		
+		buttonPanel.add(buttonCollectCancel);
+		
+		container.add(buttonPanel);
 		
 		return container;
 	}
@@ -1066,16 +1173,26 @@ public class SoftParkMultiView extends JFrame {
 	private JComponent createToolBar() {
 
 		theToolBarPanel = new JPanel(new BorderLayout());
+		
+		ToolbarButtonListener lForToolbarButton = new ToolbarButtonListener();
 
 		toolBar = new JToolBar("Barra de Herramientas");
 
 		toolBarButtonCollect = new JButton("Sistema de Cobro", new ImageIcon("resources/cash_register.png"));
+		
+		toolBarButtonCollect.setActionCommand("bar.button.collet");
+		
+		toolBarButtonCollect.addActionListener(lForToolbarButton);
 
 		toolBar.add(toolBarButtonCollect);
 
 		toolBar.addSeparator();
 		
 		toolBarButtonManualTicket = new JButton("Ticket Manual", new ImageIcon("resources/new_ticket.png"));
+		
+		toolBarButtonManualTicket.setActionCommand("bar.button.manual.ticket");
+		
+		toolBarButtonManualTicket.addActionListener(lForToolbarButton);
 
 		toolBar.add(toolBarButtonManualTicket);
 
@@ -1083,11 +1200,19 @@ public class SoftParkMultiView extends JFrame {
 
 		toolBarButtonLostTicket = new JButton("Ticket Perdido", new ImageIcon("resources/lost_ticket.png"));
 
+		toolBarButtonLostTicket.setActionCommand("bar.button.lost.ticket");
+		
+		toolBarButtonLostTicket.addActionListener(lForToolbarButton);
+		
 		toolBar.add(toolBarButtonLostTicket);
 
 		toolBar.addSeparator();
 		
 		toolBarButtonCutoff = new JButton("Cierres", new ImageIcon("resources/lock.png"));
+		
+		toolBarButtonCutoff.setActionCommand("bar.button.cut.off");
+		
+		toolBarButtonCutoff.addActionListener(lForToolbarButton);
 
 		toolBar.add(toolBarButtonCutoff);
 
@@ -1357,8 +1482,46 @@ public class SoftParkMultiView extends JFrame {
 
 	}// END OF class MenuItemListener
 
+	private class ToolbarButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			
+			if(e.getActionCommand().equalsIgnoreCase("bar.button.collet")) {
+				if(createSubPanelCharge().isVisible()){
+					createSubPanelCharge();
+				}
+			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.manual.ticket")) {
+				createSubPanelMiddle();
+			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.lost.ticket")) {
+//				if(boxesFrame.isClosed()){
+					createSubPanelRight();
+//				}
+			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.cut.off")) {
+//				if(boardsFrame.isClosed()){
+//					createBoardsFrame();
+//				}
+//			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.budgets")) {
+//				if(budgetsFrame.isClosed()){
+//					createBudgetsFrame();
+//				}
+//			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.starters")) {
+//				if(startersFrame.isClosed()){
+//					createStartersFrame();
+//				}
+//			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.tracing")) {
+//				if(tracingFrame.isClosed()){
+//					createTracingFrame();
+//				}
+			}
+		}
+		
+	}
+	
 	private class CheckBoxListener implements ItemListener {
 
+		
 		@Override
 		public void itemStateChanged(ItemEvent ev) {
 
@@ -1384,22 +1547,42 @@ public class SoftParkMultiView extends JFrame {
 			} 
 			else if (ev.getItemSelectable() == checkBillsName) {
 				if(ev.getStateChange() == ItemEvent.SELECTED) {//checkbox has been selected
-					personalPanel().setVisible(false);
-					companyPanel().setVisible(true);
+					SwingUtilities.invokeLater(new Runnable(){
+					     @Override
+					     public void run() {
+					      middleContainer.remove(personalPanel);
+					      middleContainer.validate();
+					      middleContainer.repaint();
+					      personalPanel.setVisible(false);
+					      
+					      companyPanel.setVisible(true);
+					      middleContainer.add(companyPanel);
+					      middleContainer.validate();
+					      middleContainer.repaint();
+					      
+					      middleContainer.getParent().validate();
+					      middleContainer.getParent().repaint();
+					     }
+					    });
 		        } else {//checkbox has been deselected
-		        	personalPanel().setVisible(true);
-					companyPanel().setVisible(false);
+		        	SwingUtilities.invokeLater(new Runnable(){
+					     @Override
+					     public void run() {
+					      middleContainer.remove(companyPanel);
+					      middleContainer.validate();
+					      middleContainer.repaint();
+					      companyPanel.setVisible(false);
+					      
+					      personalPanel.setVisible(true);
+					      middleContainer.add(personalPanel);
+					      middleContainer.validate();
+					      middleContainer.repaint();
+					      
+					      middleContainer.getParent().validate();
+					      middleContainer.getParent().repaint();
+					     }
+					    });
 		        };
-//				switch (ev.getStateChange()) {
-//				case ItemEvent.SELECTED:
-//					personalPanel.setVisible(false);
-//					companyPanel.setVisible(true);
-//					break;
-//				case ItemEvent.DESELECTED:
-//					personalPanel.setVisible(true);
-//					companyPanel.setVisible(false);;
-//					break;
-//				}
 			}// END OF else if
 
 		}// END OF method itemStateChanged
@@ -1469,6 +1652,9 @@ public class SoftParkMultiView extends JFrame {
 					Thread t = new Thread(co);
 					t.start();
 				}
+			}
+			else if (stationMode.equals("E/S")){
+				
 			}
 		}
 		
