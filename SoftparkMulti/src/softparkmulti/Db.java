@@ -107,16 +107,16 @@ public class Db {
 	}
 	//Added new method insertTransactionsIn with it's arguments... check this...
 	
-	protected int insertTransactionsIn(int stationId, int summaryId, int ticketNumber, Timestamp entranceDate, String plate,
+	protected int insertTransactionsIn(int stationId, Timestamp entranceDate, String plate, int ticketNumber,
 			int transactionTypeId) {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsIn (StationId,TicketNumber,EntranceDate,Plate)"
+		sql = "INSERT INTO TransactionsIn (StationId,EntranceDate,Plate,TicketNumber)"
 				+ " VALUES (" + stationId + "," 
-				+ ticketNumber + "," 
 				+ entranceDate + ","
-				+ plate + ")";
+				+ plate +  "," 
+				+ ticketNumber + ")";
 		insertedId = this.insert(sql);
 		if(insertedId > 0) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId)"

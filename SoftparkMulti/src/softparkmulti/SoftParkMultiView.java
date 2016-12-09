@@ -1751,12 +1751,15 @@ public class SoftParkMultiView extends JFrame {
 //						}
 						//TODO add code to open relay
 						int activateRelay = 0;
-						int relay=0;
-						activateRelay =	RelayDriver.ACTIVE_STATE;
+						int relay1 = 1;
+//						activateRelay =	RelayDriver.ACTIVE_STATE;
 						RelayDriver rd = new RelayDriver();
 						try {
 							rd.connect(relayPort);
-							rd.switchRelay(relay, activateRelay);
+							rd.switchRelay(relay1, RelayDriver.ACTIVE_STATE);
+							//TODO check sensor
+							//use timer.. en mercabar software
+							
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
