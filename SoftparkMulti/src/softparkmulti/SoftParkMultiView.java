@@ -19,8 +19,11 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Properties;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -114,7 +117,7 @@ public class SoftParkMultiView extends JFrame {
 
 	private static JLabel labelStatus;
 
-	private String activePort;
+	private String activePort, relayPort;
 
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JLabel labelPrice;
@@ -1377,16 +1380,12 @@ public class SoftParkMultiView extends JFrame {
 				stationsWithSummary = Db.getStationsWithSummary();
 				summaries = Db.loadSummaries();
 				tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-			}else{				
-				if(ev.getActionCommand().equalsIgnoreCase("valet.invoice") || 
-						ev.getActionCommand().equalsIgnoreCase("valet.lost") ||
-						ev.getActionCommand().equalsIgnoreCase("accept") || 
-						ev.getActionCommand().equalsIgnoreCase("cancel") || 						
-						ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
-					SelectValetRun v = new SelectValetRun(ev.getActionCommand());
+			}
+			else if (ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
+					CheckInRun v = new CheckInRun(ev.getActionCommand());
 					new Thread(v).start();
 				}				
-			}
+			
 		}
 		
 	}
@@ -1656,13 +1655,49 @@ public class SoftParkMultiView extends JFrame {
 					t.start();
 				}
 			}
-			else if (stationMode.equals("E/S")){
-				//TODO Finish this to print entrance ticket		
+			
+		}
+		
+	}
+	
+	public class Relay {
+
+		public Relay() {
+			Properties prop = new Properties();
+			InputStream propertiesInput;
+//			String relayPort = "";
+			try{
+				propertiesInput = getClass().getResourceAsStream("relay.properties");
+				// load a properties file
+				prop.load(propertiesInput);
+				relayPort = prop.getProperty("relayPort");
+				
+				}catch(IOException ex){
+					JOptionPane.showMessageDialog(null, ex.getMessage());
+				}
+		}					
+	}
+	
+	private class CheckInRun implements Runnable{
+
+		String actionCommand;
+		
+		@SuppressWarnings("unused")
+		CheckInRun(String actionCommand) {
+			this.actionCommand = actionCommand;
+		}
+		@Override
+		public synchronized void run() {
+			// TODO Auto-generated method stub			
+			
+			if (stationMode.equals("E/S")){
+					//TODO Finish this to print entrance ticket		
 				//Have to check the presence of the vehicle to allow print the ticket
 					if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
 						//Have to check the presence of the vehicle to allow print the ticket
 						Db db = new Db();
-						String plate = textEntrancePlate.getText();						
+						String plate = textEntrancePlate.getText();		
+						String ticketNumber = "";
 						@SuppressWarnings("unused")
 //						boolean sentCmd = false;
 //						int transactionId = db.preInsertTransaction(stationId);
@@ -1671,9 +1706,9 @@ public class SoftParkMultiView extends JFrame {
 //						} catch (PrinterException ce) {
 //							ce.printStackTrace();
 //						}
-//						DateTime dt = new DateTime();
-//						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-//						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+						DateTime entranceDateTime = new DateTime();
+						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 //						try {
 //							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
 //						} catch (PrinterException ce) {
@@ -1716,18 +1751,34 @@ public class SoftParkMultiView extends JFrame {
 //						}
 						//TODO add code to open relay
 						int activateRelay = 0;
+						int relay=0;
 						activateRelay =	RelayDriver.ACTIVE_STATE;
+						RelayDriver rd = new RelayDriver();
+						try {
+							rd.connect(relayPort);
+							rd.switchRelay(relay, activateRelay);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 	
 						//Add the data from plate, id, stationid if transactionsIn
+						//generate a ticketNumber with  stationId,date,
+//						db.insertTransactionsIn(stationId, entranceDateTime, plate, ticketNumber);
 						
 					}
 					
 				
 			}
+			
+			
+			
+			
 		}
-		
+				
 	}
 	
+
 	private class CheckOutRun implements Runnable {
 		
 		ArrayList<Transaction> transactions;
