@@ -143,5 +143,11 @@ public class PrinterCommand {
 		
 		return stringNumber;
 	}
+
+		
+	public static String setBarcode(String string) {
+		//TODO set the values of the barcode entrance ticket
+		return "y1234567890";
+	}
 	
 }

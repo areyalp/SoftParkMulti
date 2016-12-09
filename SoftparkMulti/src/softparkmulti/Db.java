@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -104,8 +105,77 @@ public class Db {
 		}
 		return false;
 	}
+	//Added new method insertTransactionsIn with it's arguments... check this...
 	
-	protected int insertTransaction(int stationId, int summaryId, int ticketNumber, double totalAmount, double taxAmount, 
+	protected int insertTransactionsIn(int stationId, int summaryId, int ticketNumber, Timestamp entranceDate, String plate,
+			int transactionTypeId) {
+
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO TransactionsIn (StationId,TicketNumber,EntranceDate,Plate)"
+				+ " VALUES (" + stationId + "," 
+				+ ticketNumber + "," 
+				+ entranceDate + ","
+				+ plate + ")";
+		insertedId = this.insert(sql);
+		if(insertedId > 0) {
+			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId)"
+					+ " VALUES (" + insertedId + "," 
+					+ transactionTypeId + ")";
+			this.insert(sql);
+		}
+		return insertedId;
+	}
+	
+	protected int insertTransactionsOut(int stationId, int summaryId, int ticketNumber, Timestamp entranceDate, Timestamp exitDate,
+			String plate, int transactionTypeId, double totalAmount, double taxAmount, int payTypeId) {
+
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,EntranceDate,ExitDate,Plate,SummaryId,TotalAmount)"
+				+ " VALUES (" + stationId + "," 
+				+ ticketNumber + "," 
+				+ entranceDate + ","
+				+ exitDate + ","
+				+ plate + ","
+				+ summaryId + "," 
+				+ totalAmount + ")";
+		insertedId = this.insert(sql);
+		if(insertedId > 0) {
+			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
+					+ " VALUES (" + insertedId + "," 
+					+ transactionTypeId + ","
+					+ totalAmount + ","
+					+ taxAmount + ")";
+			this.insert(sql);
+			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
+					+ " VALUES (" + insertedId + "," 
+					+ payTypeId + "," 
+					+ totalAmount + ")";
+			this.insert(sql);
+		}
+		return insertedId;
+	}
+	
+	protected int preInsertTransaction(int stationId) {
+		
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO Transactions (EntryStationId, TicketNumber) VALUES(" + stationId + ", 0)";
+		insertedId = this.insert(sql);
+		if(insertedId > 0) {
+			sql = "INSERT INTO TransactionsDetail (TransactionId)"
+					+ " VALUES (" + insertedId + ")";
+			this.insert(sql);
+			sql = "INSERT INTO TransactionsPay (TransactionId)"
+					+ " VALUES (" + insertedId + ")";
+			this.insert(sql);
+		}
+		return insertedId;
+	}
+	//
+	
+	protected int insertTransaction(int stationId, int summaryId, int ticketNumber, double totalAmount, double taxAmount,
 			int transactionTypeId, int payTypeId) {
 
 		String sql;
@@ -114,7 +184,7 @@ public class Db {
 				+ " VALUES (" + stationId + "," 
 				+ ticketNumber + "," 
 				+ summaryId + "," 
-				+ totalAmount +")";
+				+ totalAmount + ")";
 		insertedId = this.insert(sql);
 		if(insertedId > 0) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
@@ -373,5 +443,6 @@ public class Db {
 		}
 		return isTicketProcessed;
 	}
+
 
 }

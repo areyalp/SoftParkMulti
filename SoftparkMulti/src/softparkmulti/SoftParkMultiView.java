@@ -1,7 +1,7 @@
 package softparkmulti;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -9,8 +9,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.ItemSelectable;
-import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -61,6 +59,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import jssc.SerialPortList;
+//import softpark.SoftParkView.SelectValetRun;
+//import softpark.Db;
+//import softpark.PrinterCommand;
 import tfhka.*;
 import tfhka.ve.*;
 
@@ -122,6 +123,7 @@ public class SoftParkMultiView extends JFrame {
 	private JButton buttonReloadReports;
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
+	private JTextField textEntrancePlate;
 	
 
 	public SoftParkMultiView(int stationId) {
@@ -357,7 +359,192 @@ public class SoftParkMultiView extends JFrame {
 		
 		return wrapContainerPanel;
 	}
-	
+
+	private JPanel createSubPanelCharge() {
+
+		JPanel container = new JPanel();
+		//adding box layout
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS)); // top to bottom
+		//creating the 3 panels inside
+		JPanel thePanel = new JPanel();
+		JPanel picturePanel = new JPanel();
+		JPanel paymentPanel = new JPanel();
+		
+		GroupLayout layout = new GroupLayout(thePanel);
+		thePanel.setLayout(layout);
+
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
+		
+		//added a title to the ticket data
+		JLabel labelTitle = new JLabel("Datos del Ticket");
+		labelTitle.setFont(new Font(null, Font.BOLD, 20));
+		thePanel.add(labelTitle);
+		
+		JLabel labelTicket = new JLabel("Ticket No.:");
+		thePanel.add(labelTicket);
+		textTicket = new JTextField(12);
+		thePanel.add(textTicket);
+
+		JLabel labelDate = new JLabel("Fecha de Entrada:");
+		thePanel.add(labelDate);
+		MaskFormatter mask = null;
+		try {
+			mask = new MaskFormatter("##/##/#### ##:##");
+			mask.setPlaceholderCharacter('_');
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		JFormattedTextField textDateIn = new JFormattedTextField(mask);
+		textDateIn.setEditable(false);
+		textDateIn.setColumns(12);
+		thePanel.add(textDateIn);
+
+		JLabel labelEntrance = new JLabel("Entrada:");
+		thePanel.add(labelEntrance);
+		JTextField textEntrance = new JTextField(12);
+		textEntrance.setEditable(false);
+		thePanel.add(textEntrance);
+
+		JLabel labelDuration = new JLabel("Duracion:");
+		thePanel.add(labelDuration);
+		JTextField textDuration = new JTextField(12);
+		textDuration.setEditable(false);
+		thePanel.add(textDuration);
+
+		JLabel labelExpiration = new JLabel("Expiracion:");
+		thePanel.add(labelExpiration);
+		JTextField textExpiration = new JTextField(12);
+		textExpiration.setEditable(false);
+		thePanel.add(textExpiration);		
+		
+		layout.setHorizontalGroup(
+
+		layout.createSequentialGroup()
+
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
+				.addComponent(labelTicket).addComponent(labelDate).addComponent(labelEntrance)
+				.addComponent(labelDuration).addComponent(labelExpiration))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(textTicket, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textDateIn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textEntrance, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textDuration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textExpiration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+
+		);
+
+		layout.setVerticalGroup(
+
+		layout.createSequentialGroup()
+		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitle))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTicket)
+						.addComponent(textTicket))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDate)
+						.addComponent(textDateIn))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelEntrance)
+						.addComponent(textEntrance))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDuration)
+						.addComponent(textDuration))
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelExpiration)
+						.addComponent(textExpiration))				
+		);
+		
+		//add thePanel to the boxlayoutPanel
+		container.add(thePanel);
+	    
+		picturePanel.setLayout(new FlowLayout() );		
+		
+		ImageIcon image = new ImageIcon("resources/image404.png");
+		JLabel labelPicture = new JLabel(image);	
+		labelPicture.setAlignmentY(TOP_ALIGNMENT);		
+		picturePanel.add(labelPicture);		
+		picturePanel.setMaximumSize(getMinimumSize());
+		container.add(picturePanel);
+		
+		//payment panel
+		GroupLayout payment = new GroupLayout(paymentPanel);
+		paymentPanel.setLayout(payment);
+		
+		payment.setAutoCreateGaps(true);
+		payment.setAutoCreateContainerGaps(true);
+		
+		JLabel labelPayment = new JLabel("Pago");
+		labelPayment.setFont(new Font(null, Font.BOLD, 20));
+		paymentPanel.add(labelPayment);
+		
+		JLabel labelTotal = new JLabel("Total");
+		labelTotal.setFont(new Font(null, Font.BOLD, 18));
+		paymentPanel.add(labelTotal);
+		
+		JLabel labelMoney = new JLabel("Bs.");
+		labelMoney.setForeground(Color.RED);		
+		paymentPanel.add(labelMoney);
+		
+		JLabel labelCashed = new JLabel("Entregado");
+		paymentPanel.add(labelCashed);
+		JTextField textCashed = new JTextField(12);
+		textCashed.setEditable(false);
+		paymentPanel.add(textCashed);
+		
+		JLabel labelChange = new JLabel("Vuelto");
+		paymentPanel.add(labelChange);
+		JTextField textChange = new JTextField(12);
+		textChange.setEditable(false);
+		paymentPanel.add(textChange);	
+		
+		payment.setHorizontalGroup(
+				payment.createSequentialGroup()
+
+		.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelPayment)
+				.addComponent(labelTotal).addComponent(labelCashed).addComponent(labelChange))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(labelMoney, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textCashed, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(textChange, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+
+		);
+
+		payment.setVerticalGroup(
+				payment.createSequentialGroup()
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPayment))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTotal).addComponent(labelMoney))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCashed)
+						.addComponent(textCashed))
+				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelChange)
+						.addComponent(textChange))			
+		);
+		container.add(paymentPanel);
+		
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		
+		ButtonListener lForSwitchButton = new ButtonListener();
+		
+		buttonCollectAccept = new JButton("Aceptar");
+		buttonCollectAccept.setActionCommand("collect.accept.button");
+		buttonCollectAccept.addActionListener(lForSwitchButton);
+		
+		buttonPanel.add(buttonCollectAccept);
+		
+		buttonCollectCancel = new JButton("Cancelar");
+		buttonCollectCancel.setActionCommand("collect.cancel.button");
+		buttonCollectCancel.addActionListener(lForSwitchButton);
+		buttonCollectCancel.setEnabled(false);
+		
+		buttonPanel.add(buttonCollectCancel);		
+		container.add(buttonPanel);
+		
+		return container;
+	}
+
 	private JPanel createSubPanelRight() {
 		// 
 		wrapRightContainerPanel = new JPanel();
@@ -470,7 +657,8 @@ public class SoftParkMultiView extends JFrame {
 		ButtonListener lForSwitchButton = new ButtonListener();
 		
 		buttonCarEntrance = new JButton("Ingresar");
-		buttonCarEntrance.setActionCommand("entrance.button");
+		buttonCarEntrance.setPreferredSize(getPreferredSize());
+		buttonCarEntrance.setActionCommand("vehicle.in.button");
 		buttonCarEntrance.addActionListener(lForSwitchButton);
 		
 		entranceButtonPanel.add(buttonCarEntrance);
@@ -481,14 +669,14 @@ public class SoftParkMultiView extends JFrame {
 		
 		JLabel labelEntrancePlate = new JLabel("Placa:");
 		entrancePlatePanel.add(labelEntrancePlate);
-		JTextField textEntrancePlate = new JTextField(12);
+		textEntrancePlate = new JTextField(12);
 		entrancePlatePanel.add(textEntrancePlate);
 		
 		entrancePanel.add(entrancePlatePanel, BorderLayout.SOUTH);		
 		
 		container.add(Box.createVerticalStrut(50));
 		container.add(entrancePanel);		
-		container.add(Box.createVerticalStrut(300));
+		container.add(Box.createVerticalStrut(50));
 				
 		wrapRightContainerPanel.add(container);
 		wrapRightContainerPanel.add(Box.createHorizontalStrut(50));
@@ -508,9 +696,10 @@ public class SoftParkMultiView extends JFrame {
 		checkBillsName = new JCheckBox(" Facturar a nombre de Empresa",false);
 		checkBillsName.addItemListener(lForCheckBox);
 		topPanel.add(checkBillsName);
+		topPanel.setMaximumSize(getMinimumSize());
+
 		
 		middleContainer.add(topPanel);
-//		middleContainer.add(Box.createGlue());
 		
 		if(checkBillsName.isSelected()){
 			companyPanel = companyPanel();
@@ -520,7 +709,6 @@ public class SoftParkMultiView extends JFrame {
 			personalPanel = personalPanel();
 			middleContainer.add(personalPanel);
 		}
-		middleContainer.add(Box.createGlue());
 		//INSERT HERE CAR´S DATA PANEL
 		JPanel carsDataPanel = new JPanel();
 		
@@ -639,10 +827,7 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textDescription))								
 		);
 		
-//		middleContainer.add(Box.createVerticalStrut(50));
 		middleContainer.add(carsDataPanel);
-		middleContainer.add(Box.createGlue());
-//		middleContainer.add(Box.createVerticalStrut(50));
 
 		//
 		return middleContainer;
@@ -738,7 +923,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		//added a title to the ticket data
 		JLabel labelTitle = new JLabel("Datos Personales");
-		labelTitle.setFont(new Font(null, Font.BOLD, 18));
+		labelTitle.setFont(new Font(null, Font.BOLD, 20));
 		personalPanel.add(labelTitle);
 		
 		JLabel labelId = new JLabel("Cedula:");
@@ -816,7 +1001,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		//added a title to the ticket data
 		JLabel labelTitleCompany = new JLabel("Datos de la Empresa");
-		labelTitleCompany.setFont(new Font(null, Font.BOLD, 18));
+		labelTitleCompany.setFont(new Font(null, Font.BOLD, 20));
 		companyPanel.add(labelTitleCompany);
 
 		JLabel labelCompany = new JLabel("Empresa:");
@@ -853,195 +1038,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		return companyPanel;		
 	}
-	
-	private JPanel createSubPanelCharge() {
-
-		JPanel container = new JPanel();
-		//adding box layout
-		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS)); // top to bottom
-		//creating the 3 panels inside
-		JPanel thePanel = new JPanel();
-		JPanel picturePanel = new JPanel();
-		JPanel paymentPanel = new JPanel();
-		
-		GroupLayout layout = new GroupLayout(thePanel);
-		thePanel.setLayout(layout);
-
-		layout.setAutoCreateGaps(true);
-		layout.setAutoCreateContainerGaps(true);
-		
-		//added a title to the ticket data
-		JLabel labelTitle = new JLabel("Datos del Ticket");
-		labelTitle.setFont(new Font(null, Font.BOLD, 22));
-		thePanel.add(labelTitle);
-		
-		JLabel labelTicket = new JLabel("Ticket No.:");
-		thePanel.add(labelTicket);
-		textTicket = new JTextField(12);
-		thePanel.add(textTicket);
-
-		JLabel labelDate = new JLabel("Fecha de Entrada:");
-		thePanel.add(labelDate);
-		MaskFormatter mask = null;
-		try {
-			mask = new MaskFormatter("##/##/#### ##:##");
-			mask.setPlaceholderCharacter('_');
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		JFormattedTextField textDateIn = new JFormattedTextField(mask);
-		textDateIn.setEditable(false);
-		textDateIn.setColumns(12);
-		thePanel.add(textDateIn);
-
-		JLabel labelEntrance = new JLabel("Entrada:");
-		thePanel.add(labelEntrance);
-		JTextField textEntrance = new JTextField(12);
-		textEntrance.setEditable(false);
-		thePanel.add(textEntrance);
-
-		JLabel labelDuration = new JLabel("Duracion:");
-		thePanel.add(labelDuration);
-		JTextField textDuration = new JTextField(12);
-		textDuration.setEditable(false);
-		thePanel.add(textDuration);
-
-		JLabel labelExpiration = new JLabel("Expiracion:");
-		thePanel.add(labelExpiration);
-		JTextField textExpiration = new JTextField(12);
-		textExpiration.setEditable(false);
-		thePanel.add(textExpiration);		
-		
-		layout.setHorizontalGroup(
-
-		layout.createSequentialGroup()
-
-		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelTitle)
-				.addComponent(labelTicket).addComponent(labelDate).addComponent(labelEntrance)
-				.addComponent(labelDuration).addComponent(labelExpiration))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-						.addComponent(textTicket, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textDateIn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textEntrance, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textDuration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textExpiration, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE))
-
-		);
-
-		layout.setVerticalGroup(
-
-		layout.createSequentialGroup()
-		.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTitle))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTicket)
-						.addComponent(textTicket))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDate)
-						.addComponent(textDateIn))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelEntrance)
-						.addComponent(textEntrance))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDuration)
-						.addComponent(textDuration))
-				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelExpiration)
-						.addComponent(textExpiration))				
-		);
-		
-		//add thePanel to the boxlayoutPanel
-		container.add(thePanel);
-	    container.add(Box.createVerticalStrut(25));
-	    
-		picturePanel.setLayout(new FlowLayout() );		
-		
-		ImageIcon image = new ImageIcon("resources/image404.png");
-		JLabel labelPicture = new JLabel(image);	
-		labelPicture.setAlignmentY(TOP_ALIGNMENT);
-		
-		picturePanel.add(labelPicture);		
-		container.add(picturePanel);
-		
-		//payment panel
-		GroupLayout payment = new GroupLayout(paymentPanel);
-		paymentPanel.setLayout(payment);
-		
-		payment.setAutoCreateGaps(true);
-		payment.setAutoCreateContainerGaps(true);
-		
-		JLabel labelPayment = new JLabel("Pago");
-		labelPayment.setFont(new Font(null, Font.BOLD, 22));
-		paymentPanel.add(labelPayment);
-		
-		JLabel labelTotal = new JLabel("Total");
-		labelTotal.setFont(new Font(null, Font.BOLD, 18));
-		paymentPanel.add(labelTotal);
-		
-		JLabel labelMoney = new JLabel("Bs.");
-		labelMoney.setForeground(Color.RED);		
-		paymentPanel.add(labelMoney);
-		
-		JLabel labelCashed = new JLabel("Entregado");
-		paymentPanel.add(labelCashed);
-		JTextField textCashed = new JTextField(12);
-		textCashed.setEditable(false);
-		paymentPanel.add(textCashed);
-		
-		JLabel labelChange = new JLabel("Vuelto");
-		paymentPanel.add(labelChange);
-		JTextField textChange = new JTextField(12);
-		textChange.setEditable(false);
-		paymentPanel.add(textChange);	
-		
-		payment.setHorizontalGroup(
-				payment.createSequentialGroup()
-
-		.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelPayment)
-				.addComponent(labelTotal).addComponent(labelCashed).addComponent(labelChange))
-				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING)
-						.addComponent(labelMoney, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textCashed, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE)
-						.addComponent(textChange, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE))
-
-		);
-
-		payment.setVerticalGroup(
-				payment.createSequentialGroup()
-				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelPayment))
-				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelTotal).addComponent(labelMoney))
-				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelCashed)
-						.addComponent(textCashed))
-				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelChange)
-						.addComponent(textChange))			
-		);
-		container.add(paymentPanel);
-//		container.add(Box.createVerticalStrut(140));
-		
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-		
-		ButtonListener lForSwitchButton = new ButtonListener();
-		
-		buttonCollectAccept = new JButton("Aceptar");
-		buttonCollectAccept.setActionCommand("collect.accept.button");
-		buttonCollectAccept.addActionListener(lForSwitchButton);
-		
-		buttonPanel.add(buttonCollectAccept);
-		
-		buttonCollectCancel = new JButton("Cancelar");
-		buttonCollectCancel.setActionCommand("collect.cancel.button");
-		buttonCollectCancel.addActionListener(lForSwitchButton);
-		buttonCollectCancel.setEnabled(false);
-		
-		buttonPanel.add(buttonCollectCancel);
-		
-		container.add(buttonPanel);
-		
-		return container;
-	}
- 
+		 
 	private JMenuBar createMenu() {
 		// JPanel thePanel = new JPanel(new BorderLayout());
 
@@ -1380,9 +1377,15 @@ public class SoftParkMultiView extends JFrame {
 				stationsWithSummary = Db.getStationsWithSummary();
 				summaries = Db.loadSummaries();
 				tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-			}else{
-				SelectValetRun v = new SelectValetRun(ev.getActionCommand());
-				new Thread(v).start();
+			}else{				
+				if(ev.getActionCommand().equalsIgnoreCase("valet.invoice") || 
+						ev.getActionCommand().equalsIgnoreCase("valet.lost") ||
+						ev.getActionCommand().equalsIgnoreCase("accept") || 
+						ev.getActionCommand().equalsIgnoreCase("cancel") || 						
+						ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
+					SelectValetRun v = new SelectValetRun(ev.getActionCommand());
+					new Thread(v).start();
+				}				
 			}
 		}
 		
@@ -1654,6 +1657,71 @@ public class SoftParkMultiView extends JFrame {
 				}
 			}
 			else if (stationMode.equals("E/S")){
+				//TODO Finish this to print entrance ticket		
+				//Have to check the presence of the vehicle to allow print the ticket
+					if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
+						//Have to check the presence of the vehicle to allow print the ticket
+						Db db = new Db();
+						String plate = textEntrancePlate.getText();						
+						@SuppressWarnings("unused")
+//						boolean sentCmd = false;
+//						int transactionId = db.preInsertTransaction(stationId);
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						DateTime dt = new DateTime();
+//						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+//						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(" "));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+//						try {
+//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(" "));
+//						} catch (PrinterException ce) {
+//							ce.printStackTrace();
+//						}
+						//TODO add code to open relay
+						int activateRelay = 0;
+						activateRelay =	RelayDriver.ACTIVE_STATE;
+						//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 	
+						//Add the data from plate, id, stationid if transactionsIn
+						
+					}
+					
 				
 			}
 		}
@@ -1684,7 +1752,6 @@ public class SoftParkMultiView extends JFrame {
 				if(isPrinterConnected){
 					try{
 						ticketNumber = Integer.parseInt(textTicket.getText());
-						
 						isTicketProcessed = Db.checkTicket(ticketNumber);
 						if(!isTicketProcessed) {
 							if(!textTicket.getText().isEmpty()) {

@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-no-tzdb.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-sources.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2.jar"/>
+	<classpathentry kind="lib" path="lib/rxtx-2.1.7.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
