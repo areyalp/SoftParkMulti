@@ -173,6 +173,16 @@ public class Db {
 		}
 		return insertedId;
 	}
+	
+	protected Integer transactionIn (Integer stationId, String plate){		
+		
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO TransactionsIn (StationId, Plate, TicketNumber) VALUES(" + stationId + ", '" + plate + "', 0)";
+		insertedId = this.insert(sql);
+		return insertedId;
+		
+	}
 	//
 	
 	protected int insertTransaction(int stationId, int summaryId, int ticketNumber, double totalAmount, double taxAmount,

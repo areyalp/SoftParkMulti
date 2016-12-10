@@ -131,7 +131,7 @@ public class SoftParkMultiView extends JFrame {
 
 	public SoftParkMultiView(int stationId) {
 		
-		fiscalPrinter = new tfhka.ve.Tfhka();
+		fiscalPrinter = new tfhka.ve.Tfhka("COM99");
 		
 		LoginDialog loginDialog = new LoginDialog(this);
 		
@@ -1654,10 +1654,8 @@ public class SoftParkMultiView extends JFrame {
 					Thread t = new Thread(co);
 					t.start();
 				}
-			}
-			
-		}
-		
+			}			
+		}		
 	}
 	
 	public class Relay {
@@ -1699,56 +1697,47 @@ public class SoftParkMultiView extends JFrame {
 						String plate = textEntrancePlate.getText();		
 						String ticketNumber = "";
 						@SuppressWarnings("unused")
-//						boolean sentCmd = false;
-//						int transactionId = db.preInsertTransaction(stationId);
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
+						boolean sentCmd = false;
+						int transactionId = db.transactionIn(stationId,plate);
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
 						DateTime entranceDateTime = new DateTime();
 						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(" "));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
-//						try {
-//							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(" "));
-//						} catch (PrinterException ce) {
-//							ce.printStackTrace();
-//						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						try {
+							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
+						} catch (PrinterException ce) {
+							ce.printStackTrace();
+						}
+						
 						//TODO add code to open relay
 						int activateRelay = 0;
 						int relay1 = 1;

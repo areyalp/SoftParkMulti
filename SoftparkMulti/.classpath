@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="resources"/>
+	<classpathentry kind="src" path="lib"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jssc.jar"/>
 	<classpathentry kind="lib" path="lib/TfhkaJava.jar"/>
@@ -10,6 +11,10 @@
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-no-tzdb.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-sources.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2.jar"/>
-	<classpathentry kind="lib" path="lib/rxtx-2.1.7.jar"/>
+	<classpathentry kind="lib" path="lib/rxtx-2.2.jar" sourcepath="lib/rxtx-2.2.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Program Files/Java/jre1.8.0_111/bin"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
