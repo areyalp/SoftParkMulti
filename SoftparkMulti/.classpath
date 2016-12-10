@@ -11,9 +11,9 @@
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-no-tzdb.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-sources.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2.jar"/>
-	<classpathentry kind="lib" path="lib/rxtx-2.2.jar" sourcepath="lib/rxtx-2.2.jar">
+	<classpathentry kind="lib" path="lib/RXTXcomm.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Program Files/Java/jre1.8.0_111/bin"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="SoftparkMulti/lib"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
