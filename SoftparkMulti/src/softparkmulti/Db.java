@@ -107,7 +107,7 @@ public class Db {
 	}
 	//Added new method insertTransactionsIn with it's arguments... check this...
 	
-	protected int insertTransactionsIn(int stationId, Timestamp entranceDate, String plate, int ticketNumber,
+	protected int insertTransactionsIn(int stationId, Timestamp entranceDate, String plate, Integer ticketNumber,
 			int transactionTypeId) {
 
 		String sql;
@@ -174,7 +174,7 @@ public class Db {
 		return insertedId;
 	}
 	
-	protected Integer transactionIn (Integer stationId, String plate){		
+	protected Integer transactionIn (Integer stationId, String plate, Integer ticketNumber){		
 		
 		String sql;
 		int insertedId = 0;

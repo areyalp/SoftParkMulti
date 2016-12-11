@@ -7,16 +7,16 @@ public class TransactionsIn {
 	private int id;
 	private Timestamp entranceDateTime; 
 	private String plate;
-	private String ticketNumber;
+	private Integer ticketNumber;
 
-	public TransactionsIn(int id, Timestamp entranceDateTime,  String plate, String ticketNumber) {
+	public TransactionsIn(int id, Timestamp entranceDateTime,  String plate, Integer ticketNumber) {
 		this.id = id;
 		this.plate = plate;
 		this.ticketNumber = ticketNumber;
 		this.entranceDateTime = entranceDateTime;
 	}
 	
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 	
@@ -28,7 +28,7 @@ public class TransactionsIn {
 		return plate;
 	}
 	
-	public String getTicketNumber() {
+	public Integer getTicketNumber() {
 		return ticketNumber;
 	}
 

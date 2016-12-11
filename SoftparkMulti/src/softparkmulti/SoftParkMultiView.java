@@ -62,11 +62,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import jssc.SerialPortList;
-//import softpark.SoftParkView.SelectValetRun;
-//import softpark.Db;
-//import softpark.PrinterCommand;
-import tfhka.*;
-import tfhka.ve.*;
+import tfhka.PrinterException;
+import tfhka.ve.S1PrinterData;
+import tfhka.ve.Tfhka;
 
 
 
@@ -86,6 +84,7 @@ public class SoftParkMultiView extends JFrame {
 	private ArrayList<Station> stationsWithSummary;
 	private ArrayList<Transaction> transactionsType;
 	private ArrayList<Transaction> transactions;
+	private ArrayList<TransactionsIn> transactionsin;
 	private ArrayList<PayType> payTypes;
 	
 	private Station stationInfo;
@@ -159,6 +158,8 @@ public class SoftParkMultiView extends JFrame {
 		transactionsType = Db.loadTransactionTypes();
 		
 		transactions = new ArrayList<Transaction>();
+		
+		transactionsin = new ArrayList<TransactionsIn>();
 		
 		payTypes = Db.loadPayTypes();
 		
@@ -1679,10 +1680,14 @@ public class SoftParkMultiView extends JFrame {
 	private class CheckInRun implements Runnable{
 
 		String actionCommand;
-		
+		ArrayList<TransactionsIn> transactionsin;
 		@SuppressWarnings("unused")
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
+		}
+		@SuppressWarnings("unused")
+		CheckInRun(ArrayList<TransactionsIn> transactionsin) {
+			this.transactionsin = transactionsin;
 		}
 		@Override
 		public synchronized void run() {
@@ -1691,80 +1696,77 @@ public class SoftParkMultiView extends JFrame {
 			if (stationMode.equals("E/S")){
 					//TODO Finish this to print entrance ticket		
 				//Have to check the presence of the vehicle to allow print the ticket
-					if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
-						//Have to check the presence of the vehicle to allow print the ticket
-						Db db = new Db();
-						String plate = textEntrancePlate.getText();		
-						String ticketNumber = "";
-						@SuppressWarnings("unused")
-						boolean sentCmd = false;
-						int transactionId = db.transactionIn(stationId,plate);
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						DateTime entranceDateTime = new DateTime();
-						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
-						} catch (PrinterException ce) {
-							ce.printStackTrace();
-						}
-						
-						//TODO add code to open relay
-						int activateRelay = 0;
-						int relay1 = 1;
-//						activateRelay =	RelayDriver.ACTIVE_STATE;
-						RelayDriver rd = new RelayDriver();
-						try {
-							rd.connect(relayPort);
-							rd.switchRelay(relay1, RelayDriver.ACTIVE_STATE);
-							//TODO check sensor
-							//use timer.. en mercabar software
-							
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 	
-						//Add the data from plate, id, stationid if transactionsIn
-						//generate a ticketNumber with  stationId,date,
-//						db.insertTransactionsIn(stationId, entranceDateTime, plate, ticketNumber);
-						
+				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
+					//Have to check the presence of the vehicle to allow print the ticket
+					Db db = new Db();
+					String plate = textEntrancePlate.getText();		
+					Integer ticketNumber = 0;
+					@SuppressWarnings("unused")
+					boolean sentCmd = false;
+					int transactionId = db.transactionIn(stationId,plate,ticketNumber);
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					DateTime entranceDateTime = new DateTime();
+					DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+					DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
+					}
+					try {
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
+					} catch (PrinterException ce) {
+						ce.printStackTrace();
 					}
 					
-				
-			}
-			
-			
-			
+					//TODO add code to open relay
+					int activateRelay = 0;
+					int relay1 = 1;
+//						activateRelay =	RelayDriver.ACTIVE_STATE;
+					RelayDriver rd = new RelayDriver();
+					//TODO check the code to connect to the relay board
+//						try {
+//							rd.connect(relayPort);
+//							rd.switchRelay(relay1, RelayDriver.ACTIVE_STATE);
+//							//TODO check sensor
+//							//use timer.. en mercabar software
+//							
+//						} catch (Exception e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}
+					//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 	
+					//Add the data from plate, id, stationid if transactionsIn
+					//generate a ticketNumber with  stationId,date,
+					//Insert ticketNumber,plate and entranceDateTime in DB
+//						db.insertTransactionsIn(stationId, entranceDateTime, plate, ticketNumber);
+					
+				}
+			}		//end of station mode= E/S
 			
 		}
 				
