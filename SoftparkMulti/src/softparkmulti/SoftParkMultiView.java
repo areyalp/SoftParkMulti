@@ -122,7 +122,9 @@ public class SoftParkMultiView extends JFrame {
 	private String activePort, relayPort;
 
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
-	private JTextField textExpiration,textDuration, textEntrance;
+	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
+	private JTextField textEntrancePlate;
+	
 	private JLabel labelPrice;
 	private JFormattedTextField textDateIn;
 	
@@ -130,7 +132,7 @@ public class SoftParkMultiView extends JFrame {
 	private JButton buttonReloadReports;
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
-	private JTextField textEntrancePlate;
+	
 	public Integer transactionId;
 	public Timestamp entranceDateTime;
 	
@@ -380,26 +382,26 @@ public class SoftParkMultiView extends JFrame {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-		JFormattedTextField textDateIn = new JFormattedTextField(mask);
+		textDateIn = new JFormattedTextField(mask);
 		textDateIn.setEditable(false);
 		textDateIn.setColumns(12);
 		thePanel.add(textDateIn);
 
 		JLabel labelEntrance = new JLabel("Entrada:");
 		thePanel.add(labelEntrance);
-		JTextField textEntrance = new JTextField(12);
+		textEntrance = new JTextField(12);
 		textEntrance.setEditable(false);
 		thePanel.add(textEntrance);
 
 		JLabel labelDuration = new JLabel("Duracion:");
 		thePanel.add(labelDuration);
-		JTextField textDuration = new JTextField(12);
+		textDuration = new JTextField(12);
 		textDuration.setEditable(false);
 		thePanel.add(textDuration);
 
 		JLabel labelExpiration = new JLabel("Expiracion:");
 		thePanel.add(labelExpiration);
-		JTextField textExpiration = new JTextField(12);
+		textExpiration = new JTextField(12);
 		textExpiration.setEditable(false);
 		thePanel.add(textExpiration);		
 		
@@ -473,13 +475,13 @@ public class SoftParkMultiView extends JFrame {
 		
 		JLabel labelCashed = new JLabel("Entregado");
 		paymentPanel.add(labelCashed);
-		JTextField textCashed = new JTextField(12);
+		textCashed = new JTextField(12);
 		textCashed.setEditable(false);
 		paymentPanel.add(textCashed);
 		
 		JLabel labelChange = new JLabel("Vuelto");
 		paymentPanel.add(labelChange);
-		JTextField textChange = new JTextField(12);
+		textChange = new JTextField(12);
 		textChange.setEditable(false);
 		paymentPanel.add(textChange);	
 		
@@ -1706,6 +1708,8 @@ public class SoftParkMultiView extends JFrame {
 					DateTime entranceDateTime = new DateTime();
 					DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 					DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+					DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+					DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
 					try {
 						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
 					} catch (PrinterException ce) {
@@ -1727,7 +1731,7 @@ public class SoftParkMultiView extends JFrame {
 						ce.printStackTrace();
 					}
 					try {
-						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(String.valueOf(transactionId)));
+						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
 					} catch (PrinterException ce) {
 						ce.printStackTrace();
 					}
@@ -1798,7 +1802,7 @@ public class SoftParkMultiView extends JFrame {
 		@Override
 		public synchronized void run() {
 			Db db = new Db();
-			int ticketNumber = 0;
+			Integer ticketNumber = 0;
 			int insertedSummaryId = 0;
 			boolean isTicketProcessed = false;
 			boolean isTicketIn = false;
@@ -1809,8 +1813,8 @@ public class SoftParkMultiView extends JFrame {
 //				if(isPrinterConnected){
 					if(stationMode.equals("Valet")) {					
 						try{
-							ticketNumber = Integer.parseInt(textTicket.getText());
-							isTicketProcessed = Db.checkTicket(ticketNumber);
+//							ticketNumber = textTicket.getText();
+//							isTicketProcessed = Db.checkTicket(ticketNumber);
 							if(!isTicketProcessed) {
 								if(!textTicket.getText().isEmpty()) {
 									try {
@@ -1873,15 +1877,15 @@ public class SoftParkMultiView extends JFrame {
 									
 									if(summaryHasInvoice) {
 										for(Transaction t: transactions) {
-											db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
-												t.getId(), payTypes.get(0).getId());
+//											db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
+//												t.getId(), payTypes.get(0).getId());
 										}
 									}else{
 										if(summaryId > 0) {
 											summaryHasInvoice = true;
 											for(Transaction t: transactions) {
-												db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
-														t.getId(), payTypes.get(0).getId());
+//												db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
+//														t.getId(), payTypes.get(0).getId());
 											}
 										}else{
 											try{
@@ -1897,8 +1901,8 @@ public class SoftParkMultiView extends JFrame {
 												summaryId = insertedSummaryId;
 												summaryHasInvoice = true;
 												for(Transaction t: transactions) {
-													db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
-															t.getId(), payTypes.get(0).getId());
+//													db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
+//															t.getId(), payTypes.get(0).getId());
 												}
 												stationsWithSummary = Db.getStationsWithSummary();
 												summaries = Db.loadSummaries();
@@ -1925,14 +1929,18 @@ public class SoftParkMultiView extends JFrame {
 						}
 					} else if (stationMode.equals("E/S")) {
 						//TODO check this method
-						try{
-							ticketNumber = Integer.parseInt(textTicket.getText());
+						String ticketCode = "";
+						Boolean isTicketOut = true;
+						try{							
+							ticketCode = textTicket.getText();							
+							ticketNumber = Integer.valueOf(ticketCode.substring(17));
 							isTicketIn = Db.isTicketIn(ticketNumber);
+							isTicketOut = Db.isTicketOut(ticketNumber);
 							//verify  ticket in the DB...
 							if(isTicketIn) {
 								//Verify the ticket without an exit
 								//
-								if(!textTicket.getText().isEmpty()) {	
+								if(ticketNumber > 0) { 	
 									//Upload data form TransactionsIn table into the 
 									TransactionsIn transIn = new TransactionsIn(transactionId,stationId,entranceDateTime);	
 //									ticketNumber = transIn.getId();
@@ -1944,11 +1952,9 @@ public class SoftParkMultiView extends JFrame {
 //									DateTimeFormatter dtf = DateTimeFormat.forPattern(hh:mm);
 //									DateTime dt = dtf.parseDateTime(textDateIn);	
 																	
-									textDuration.setEditable(true);
+									textDuration.setEditable(true);					
 									
-									
-									textExpiration.setEditable(true);
-									
+									textExpiration.setEditable(true);									
 									
 									if(!shiftIsDown) {
 										try {

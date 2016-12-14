@@ -461,7 +461,7 @@ public class Db {
 		return isTicketProcessed;
 	}
 
-	protected static boolean isTicketIn(Integer ticketNumber) {
+	protected static Boolean isTicketIn(Integer ticketNumber) {
 		Db db = new Db();
 		boolean isTicketIn = false;
 		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
@@ -478,6 +478,25 @@ public class Db {
 		}
 		return isTicketIn;
 	}
+
+	public static Boolean isTicketOut(Integer ticketNumber) {
+		Db db = new Db();
+		boolean isTicketOut = false;
+		ResultSet rowTicketOut = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
+				+ "FROM TransactionsOut "
+				+ "WHERE transactionsOut.TicketNumber = " + ticketNumber);		
+		try {
+			if(rowTicketOut.next()) {
+				if(rowTicketOut.getInt("cnt") > 0) {
+					isTicketOut = true;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return isTicketOut;
+	}
+
 
 
 }
