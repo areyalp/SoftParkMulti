@@ -4,20 +4,29 @@ import java.sql.Timestamp;
 
 public class TransactionsIn {
 
-	private int id;
 	private Timestamp entranceDateTime; 
 	private String plate;
-	private Integer ticketNumber;
+	private Integer transactionId;
+	private Integer stationId;
 
-	public TransactionsIn(int id, Timestamp entranceDateTime,  String plate, Integer ticketNumber) {
-		this.id = id;
+	public TransactionsIn(Timestamp entranceDateTime,  String plate, Integer transactionId) {
+
 		this.plate = plate;
-		this.ticketNumber = ticketNumber;
+		this.transactionId = transactionId;
 		this.entranceDateTime = entranceDateTime;
 	}
 	
-	public Integer getId() {
-		return id;
+	public TransactionsIn(String plate, Integer transactionId) {
+
+		this.plate = plate;
+		this.transactionId = transactionId;
+	}
+		
+	public TransactionsIn(Integer transactionId, Integer stationId, Timestamp entranceDateTime ) {
+
+		this.transactionId = transactionId;
+		this.stationId = stationId;
+		this.entranceDateTime = entranceDateTime;
 	}
 	
 	public Timestamp getEntranceDateTime() {
@@ -28,8 +37,12 @@ public class TransactionsIn {
 		return plate;
 	}
 	
-	public Integer getTicketNumber() {
-		return ticketNumber;
+	public Integer getTransactionId() {
+		return transactionId;
+	}
+	
+	public Integer getStationId() {
+		return transactionId;
 	}
 
 }

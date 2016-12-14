@@ -6,7 +6,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/jssc.jar"/>
 	<classpathentry kind="lib" path="lib/TfhkaJava.jar"/>
-	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.36-bin.jar"/>
+	<classpathentry kind="lib" path="lib/mysql-connector-java-5.1.36-bin.jar" sourcepath="lib/mysql-connector-java-5.1.36-bin.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-javadoc.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-no-tzdb.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.2-sources.jar"/>

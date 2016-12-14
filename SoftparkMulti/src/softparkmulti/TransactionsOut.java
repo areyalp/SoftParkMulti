@@ -6,21 +6,22 @@ public class TransactionsOut {
 	private int id;
 	private double maxAmount;
 	private double tax;
-	private Timestamp entranceDateTime;
-	private Timestamp exitDateTime;
 	private String ticketNumber;
+	private String name;
 	
-	public TransactionsOut(int id, double maxAmount, double tax, String ticketNumber, String plate, Timestamp exitDateTime, Timestamp entranceDateTime) {
+	public TransactionsOut(int id, String name, double maxAmount, double tax, String ticketNumber) {
 		this.id = id;
 		this.maxAmount = maxAmount;
 		this.tax = tax;
-		this.exitDateTime = exitDateTime;
-		this.ticketNumber = ticketNumber;
-		this.entranceDateTime = entranceDateTime;
+		this.name= name;
 	}
 	
 	public int getId() {
 		return id;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public double getMaxAmount() {
@@ -35,13 +36,5 @@ public class TransactionsOut {
 		return ticketNumber;
 	}
 	
-	public Timestamp getExitDateTime() {
-		return exitDateTime;
-	}
-
-	public Timestamp getEntranceDateTime() {
-		return entranceDateTime;
-	}
-
 	
 }
