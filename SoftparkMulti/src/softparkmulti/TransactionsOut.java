@@ -9,11 +9,19 @@ public class TransactionsOut {
 	private String ticketNumber;
 	private String name;
 	
+	public TransactionsOut(int id, String name, double maxAmount, double tax) {
+		this.id = id;
+		this.maxAmount = maxAmount;
+		this.tax = tax;
+		this.name= name;
+	}
+	
 	public TransactionsOut(int id, String name, double maxAmount, double tax, String ticketNumber) {
 		this.id = id;
 		this.maxAmount = maxAmount;
 		this.tax = tax;
 		this.name= name;
+		this.ticketNumber = ticketNumber;
 	}
 	
 	public int getId() {
@@ -36,5 +44,7 @@ public class TransactionsOut {
 		return ticketNumber;
 	}
 	
-	
+	public String toString() {
+		return name;
+	}
 }

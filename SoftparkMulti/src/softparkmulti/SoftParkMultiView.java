@@ -12,12 +12,15 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.TextEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
@@ -87,7 +90,8 @@ public class SoftParkMultiView extends JFrame {
 	private ArrayList<Transaction> transactionsType;
 	private ArrayList<Transaction> transactions;
 	private ArrayList<TransactionsIn> transactionsin;
-	private ArrayList<TransactionsOut> transactionsOut;
+	private ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
+	private ArrayList<TransactionsOut> transactionsOutType = new ArrayList<TransactionsOut>();
 	private ArrayList<PayType> payTypes;
 	
 	private Station stationInfo;
@@ -125,7 +129,7 @@ public class SoftParkMultiView extends JFrame {
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
 	
-	private JLabel labelPrice;
+	private JLabel labelPrice, labelMoney;
 	private JFormattedTextField textDateIn;
 	
 	private JTree tree;	
@@ -164,6 +168,8 @@ public class SoftParkMultiView extends JFrame {
 		stationInfo = Station.getStationInfo(stationId);
 		
 		transactionsType = Db.loadTransactionTypes();
+		
+		transactionsOutType =  Db.loadTransactionsOutTypes();
 		
 		transactions = new ArrayList<Transaction>();
 		
@@ -363,6 +369,8 @@ public class SoftParkMultiView extends JFrame {
 		layout.setAutoCreateGaps(true);
 		layout.setAutoCreateContainerGaps(true);
 		
+		TextFieldListener lForText	= new TextFieldListener();
+		
 		//added a title to the ticket data
 		JLabel labelTitle = new JLabel("Datos del Ticket");
 		labelTitle.setFont(new Font(null, Font.BOLD, 20));
@@ -370,7 +378,9 @@ public class SoftParkMultiView extends JFrame {
 		
 		JLabel labelTicket = new JLabel("Ticket No.:");
 		thePanel.add(labelTicket);
-		textTicket = new JTextField(12);
+		textTicket = new JTextField(14);
+		textTicket.setActionCommand("multi.text.type");
+		textTicket.addActionListener(lForText);
 		thePanel.add(textTicket);
 
 		JLabel labelDate = new JLabel("Fecha de Entrada:");
@@ -384,24 +394,24 @@ public class SoftParkMultiView extends JFrame {
 		}
 		textDateIn = new JFormattedTextField(mask);
 		textDateIn.setEditable(false);
-		textDateIn.setColumns(12);
+		textDateIn.setColumns(14);
 		thePanel.add(textDateIn);
 
 		JLabel labelEntrance = new JLabel("Entrada:");
 		thePanel.add(labelEntrance);
-		textEntrance = new JTextField(12);
+		textEntrance = new JTextField(14);
 		textEntrance.setEditable(false);
 		thePanel.add(textEntrance);
 
 		JLabel labelDuration = new JLabel("Duracion:");
 		thePanel.add(labelDuration);
-		textDuration = new JTextField(12);
+		textDuration = new JTextField(14);
 		textDuration.setEditable(false);
 		thePanel.add(textDuration);
 
 		JLabel labelExpiration = new JLabel("Expiracion:");
 		thePanel.add(labelExpiration);
-		textExpiration = new JTextField(12);
+		textExpiration = new JTextField(14);
 		textExpiration.setEditable(false);
 		thePanel.add(textExpiration);		
 		
@@ -475,13 +485,13 @@ public class SoftParkMultiView extends JFrame {
 		
 		JLabel labelCashed = new JLabel("Entregado");
 		paymentPanel.add(labelCashed);
-		textCashed = new JTextField(12);
+		textCashed = new JTextField(14);
 		textCashed.setEditable(false);
 		paymentPanel.add(textCashed);
 		
 		JLabel labelChange = new JLabel("Vuelto");
 		paymentPanel.add(labelChange);
-		textChange = new JTextField(12);
+		textChange = new JTextField(14);
 		textChange.setEditable(false);
 		paymentPanel.add(textChange);	
 		
@@ -1340,6 +1350,38 @@ public class SoftParkMultiView extends JFrame {
 		
 	}
 	
+	private class TextFieldListener implements FocusListener, ActionListener {
+
+		@Override
+		public void focusGained(FocusEvent e) {
+			
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			if(!buttonCollectAccept.isVisible()) {
+				textTicket.requestFocus();
+			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			//add some code here when Enter has been hit in the text field
+			if(e.getActionCommand().equalsIgnoreCase("multi.text.type")) {
+//				int ticketNumber = Integer.valueOf(textTicket.getText().substring(0, 11));
+//				boolean ticketExists = Db.checkTicket(ticketNumber);
+//				if(ticketExists) {
+//					
+//				}
+				CheckOutRun ev1 = new CheckOutRun(e.getActionCommand());
+				new Thread(ev1).start();
+			}
+		}
+
+		
+
+	}
+	
 	private class ButtonListener implements ActionListener, KeyListener {
 
 		@Override
@@ -1379,8 +1421,24 @@ public class SoftParkMultiView extends JFrame {
 					new Thread(v).start();
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button")) {
-					CheckOutRun ev1 = new CheckOutRun(ev.getActionCommand());
-					new Thread(ev1).start();
+//					CheckOutRun ev1 = new CheckOutRun(ev.getActionCommand());
+//					new Thread(ev1).start();
+				}
+				else if (ev.getActionCommand().equalsIgnoreCase("multi.cancel.button")) {
+					textTicket.setEditable(true);
+					textTicket.setText("");
+					textDateIn.setEditable(false);
+					textDateIn.setText("");
+					textEntrance.setEditable(false);
+					textEntrance.setText("");
+					textDuration.setEditable(false);
+					textDuration.setText("");
+					textExpiration.setEditable(false);
+					textExpiration.setText("");
+					textCashed.setEditable(false);
+					textCashed.setText("");
+					textChange.setEditable(false);
+					textChange.setText("");
 				}
 				
 			}
@@ -1774,11 +1832,10 @@ public class SoftParkMultiView extends JFrame {
 		
 		String actionCommand;
 		ArrayList<Transaction> transactions;
-		ArrayList<TransactionsOut> transactionsOut;
+		ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
 		S1PrinterData statusS1;
 		@SuppressWarnings("unused")
 		boolean sentCmd = false;
-
 
 //		CheckOutRun(ArrayList<Transaction> transactions) {
 //			this.transactions = transactions;
@@ -1957,6 +2014,19 @@ public class SoftParkMultiView extends JFrame {
 									textExpiration.setEditable(true);									
 									
 									if(!shiftIsDown) {
+										if(transactionsOut.size() > 0) {
+											Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
+											if(transactionsOutIndex > -1) {
+												transactionsOut.remove(transactionsOutIndex);
+											}else{
+												transactionsOut.add(transactionsOutType.get(0));
+//												labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
+											}											
+										}
+										else{
+											transactionsOut.add(transactionsOutType.get(2));		//Check this...
+//											labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
+										}										
 										try {
 											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
 										} catch (PrinterException ce) {
@@ -1980,39 +2050,39 @@ public class SoftParkMultiView extends JFrame {
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET ESTACIONAMIENTO"));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Estacionamiento #: " + ticketNumber));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET ESTACIONAMIENTO"));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Estacionamiento #: " + ticketNumber));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
 										DateTime dt = new DateTime();
 										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
 										
 									}
 									db = new Db();
@@ -2065,10 +2135,12 @@ public class SoftParkMultiView extends JFrame {
 								}
 							}else{
 								JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
+								textTicket.setText("");
 							}
 									
 							}catch(NumberFormatException ne) {
 								JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
+								textTicket.setText("");
 							}
 					}
 //				}
@@ -2150,6 +2222,28 @@ public class SoftParkMultiView extends JFrame {
 		return subTotal;
 	}
 
+	public double getSubTotalMulti(ArrayList<TransactionsOut> transactionsOut) {
+		double subTotal = 0;
+		
+		for(TransactionsOut tOut: transactionsOut) {
+			subTotal += tOut.getMaxAmount();
+		}
+		return subTotal;
+	}
+	
+	private int transactionSelectedMulti(ArrayList<TransactionsOut> transactionsOut, int id) {
+		int selectedId = -1;
+		int i = 0;
+		for(TransactionsOut tOut: transactionsOut) {
+			if(tOut.getId() == id) {
+				selectedId = i;
+				break;
+			}
+			i++;
+		}
+		return selectedId;
+	}
+	
 	private int transactionSelected(ArrayList<Transaction> transactions, int id) {
 		int selectedId = -1;
 		int i = 0;

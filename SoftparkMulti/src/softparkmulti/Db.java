@@ -424,6 +424,34 @@ public class Db {
 		return transactionTypes;
 	}
 	
+	protected static ArrayList<TransactionsOut> loadTransactionsOutTypes() {
+		ArrayList<TransactionsOut> transactionsOutTypes = null;
+		Db db = new Db();
+		ResultSet rowsTransactionsOutTypes = db.select("SELECT "
+				+ "t.Name, "
+				+ "r.Id, "
+				+ "r.MaxAmount, "
+				+ "r.Tax "
+			+ "FROM TransactionTypes t, Rates r "
+			+ "WHERE t.Id = r.TransactionTypeId");
+		
+		transactionsOutTypes = new ArrayList<TransactionsOut>();
+		try {
+			while(rowsTransactionsOutTypes.next()) {
+				transactionsOutTypes.add(new TransactionsOut(
+						rowsTransactionsOutTypes.getInt("Id"),
+						rowsTransactionsOutTypes.getString("Name"),
+						rowsTransactionsOutTypes.getDouble("MaxAmount"),
+						rowsTransactionsOutTypes.getDouble("Tax")
+						));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return transactionsOutTypes;
+	}
+	
 	protected static ArrayList<PayType> loadPayTypes() {
 		ArrayList<PayType> payTypes = null;
 		Db db = new Db();

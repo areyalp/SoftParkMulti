@@ -10,6 +10,9 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -17,6 +20,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 
@@ -88,7 +92,11 @@ public class LoginDialog extends JDialog{
         cs.gridwidth = 1;
         loginPanel.add(labelPassword, cs);
  
+        TextFieldListener lForText	= new TextFieldListener();
+        
         textPassword = new JPasswordField(15);
+        textPassword.setActionCommand("password.text.type");
+        textPassword.addActionListener(lForText);
         cs.gridx = 1;
         cs.gridy = 2;
         cs.gridwidth = 2;
@@ -152,6 +160,43 @@ public class LoginDialog extends JDialog{
 			}
 		}
 		
+	}
+	
+	private class TextFieldListener implements FocusListener, ActionListener {
+
+		@Override
+		public void focusGained(FocusEvent e) {
+			
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+//			if(!buttonCollectAccept.isVisible()) {
+//				textTicket.requestFocus();
+//			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			//add some code here when Enter has been hit in the text field
+			if(e.getActionCommand().equalsIgnoreCase("password.text.type")) {
+				if (Login.authenticate(getUsername(), getPassword())) {
+                    succeeded = true;
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(LoginDialog.this,
+                            "Invalid username or password",
+                            "Login",
+                            JOptionPane.ERROR_MESSAGE);
+                    // reset username and password
+                    textUsername.setText("");
+                    textPassword.setText("");
+                    succeeded = false;
+ 
+                }
+			}
+		}		
+
 	}
 	
 	protected String getUsername() {
