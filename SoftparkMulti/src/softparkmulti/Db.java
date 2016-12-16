@@ -127,7 +127,7 @@ public class Db {
 		return insertedId;
 	}
 	
-	protected int insertTransactionsOut(int stationId, int summaryId, int ticketNumber,	
+	protected int insertTransactionsOut(int stationId,  int ticketNumber, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed) {
 
 		String sql;

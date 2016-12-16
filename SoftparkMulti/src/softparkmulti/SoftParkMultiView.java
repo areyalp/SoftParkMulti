@@ -123,7 +123,7 @@ public class SoftParkMultiView extends JFrame {
 
 	private static JLabel labelStatus;
 
-	private String activePort, relayPort;
+	private String activePort, relayPort="";
 
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
@@ -1714,22 +1714,39 @@ public class SoftParkMultiView extends JFrame {
 		}		
 	}
 	
-	public class Relay {
-
-		public Relay() {
-			Properties prop = new Properties();
-			InputStream propertiesInput;
-//			String relayPort = "";
-			try{
-				propertiesInput = getClass().getResourceAsStream("relay.properties");
-				// load a properties file
-				prop.load(propertiesInput);
-				relayPort = prop.getProperty("relayPort");
-				
-				}catch(IOException ex){
-					JOptionPane.showMessageDialog(null, ex.getMessage());
-				}
-		}					
+//	public class Relay {
+//
+//		public Relay() {
+//			Properties prop = new Properties();
+//			InputStream propertiesInput;
+////			String relayPort = "";
+//			try{
+//				propertiesInput = getClass().getResourceAsStream("relay.properties");
+//				// load a properties file
+//				prop.load(propertiesInput);
+//				relayPort = prop.getProperty("relayPort");
+//				
+//				}catch(IOException ex){
+//					JOptionPane.showMessageDialog(null, ex.getMessage());
+//				}
+//		}					
+//	}
+	
+	public String Relay() {
+		// TODO Auto-generated method stub
+		Properties prop = new Properties();
+		InputStream propertiesInput;
+//		String relayPort = "";
+		try{
+			propertiesInput = getClass().getResourceAsStream("relay.properties");
+			// load a properties file
+			prop.load(propertiesInput);
+			relayPort = prop.getProperty("relayPort");
+			
+			}catch(IOException ex){
+				JOptionPane.showMessageDialog(null, ex.getMessage());
+			}
+		return relayPort;
 	}
 	
 	private class CheckInRun implements Runnable{
@@ -1797,24 +1814,37 @@ public class SoftParkMultiView extends JFrame {
 						sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
 					} catch (PrinterException ce) {
 						ce.printStackTrace();
-					}
-					
+					}					
 					//TODO add code to open relay
 					int activateRelay = 0;
 					int relay1 = 1;
+					int relay2 = 2;
+//					Relay();
 //					activateRelay =	RelayDriver.ACTIVE_STATE;
-//					RelayDriver rd = new RelayDriver();
+					RelayDriver rd = new RelayDriver();
 					//TODO check the code to connect to the relay board
-//						try {
-//							rd.connect(relayPort);
-//							rd.switchRelay(relay1, RelayDriver.ACTIVE_STATE);
-//							//TODO check sensor
-//							//use timer.. en mercabar software
-//							
-//						} catch (Exception e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
+						try {
+//							rd.getSerialPort();
+							rd.connect("COM8");
+							rd.switchRelay(relay1, RelayDriver.INACTIVE_STATE);
+							rd.switchRelay(relay1, RelayDriver.ACTIVE_STATE);
+							//check the entrance sensor
+//							if (entranceSensor.isActive){
+//																
+//							}
+//							else{
+//								rd.switchRelay(relay1, RelayDriver.INACTIVE_STATE);
+//							}
+							
+							rd.switchRelay(relay1, RelayDriver.INACTIVE_STATE);
+							//TODO check sensor
+							//use timer.. en mercabar software
+
+							
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 
 					//Insert ticketNumber,plate and entranceDateTime in DB					
 //					TransactionsIn transIn = new TransactionsIn(plate, transactionId);
@@ -1996,143 +2026,150 @@ public class SoftParkMultiView extends JFrame {
 							//verify  ticket in the DB...
 							if(isTicketIn) {
 								//Verify the ticket without an exit
-								//
-								if(ticketNumber > 0) { 	
-									//Upload data form TransactionsIn table into the 
-									TransactionsIn transIn = new TransactionsIn(transactionId,stationId,entranceDateTime);	
-//									ticketNumber = transIn.getId();
-//									labelPrice.setText(String.valueOf(getSubTotal(transactions)));
-									textDateIn.setEditable(true);
-									textDateIn.setText((String.valueOf(transIn.getEntranceDateTime())));
-									textEntrance.setEditable(true);
-									textEntrance.setText((String.valueOf(transIn.getStationId())));
-//									DateTimeFormatter dtf = DateTimeFormat.forPattern(hh:mm);
-//									DateTime dt = dtf.parseDateTime(textDateIn);	
-																	
-									textDuration.setEditable(true);					
+								if (!isTicketOut){
 									
-									textExpiration.setEditable(true);									
-									
-									if(!shiftIsDown) {
-										if(transactionsOut.size() > 0) {
-											Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
-											if(transactionsOutIndex > -1) {
-												transactionsOut.remove(transactionsOutIndex);
-											}else{
-												transactionsOut.add(transactionsOutType.get(0));
-//												labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
-											}											
-										}
-										else{
-											transactionsOut.add(transactionsOutType.get(2));		//Check this...
-//											labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
-										}										
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										for(TransactionsOut tOut: transactionsOut) {
+									if(ticketNumber > 0) { 	
+										//Upload data form TransactionsIn table into the 
+//										TransactionsIn transIn = new TransactionsIn(transactionId,stationId,entranceDateTime);	
+	//									ticketNumber = transIn.getId();
+	//									labelPrice.setText(String.valueOf(getSubTotal(transactions)));
+										textDateIn.setEditable(true);
+//										textDateIn.setText(transIn.getEntranceDateTime().toString());
+										textEntrance.setEditable(true);
+//										textEntrance.setText((String.valueOf(transIn.getStationId())));
+	//									DateTimeFormatter dtf = DateTimeFormat.forPattern(hh:mm);
+	//									DateTime dt = dtf.parseDateTime(textDateIn);	
+																		
+										textDuration.setEditable(true);					
+										
+										textExpiration.setEditable(true);									
+										
+										if(!shiftIsDown) {
+											if(transactionsOut.size() > 0) {
+												Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
+												if(transactionsOutIndex > -1) {
+													transactionsOut.remove(transactionsOutIndex);
+												}else{
+													transactionsOut.add(transactionsOutType.get(0));
+	//												labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
+												}											
+											}
+											else{
+												transactionsOut.add(transactionsOutType.get(2));		//Check this...
+	//											labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
+											}										
 											try {
-												sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
-														PrinterCommand.TAX1, 
-														tOut.getMaxAmount(), 
-														1, 
-														tOut.getName()));
+												sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
 											} catch (PrinterException ce) {
 												ce.printStackTrace();
 											}
-										}
-										
-										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
-													PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET ESTACIONAMIENTO"));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Estacionamiento #: " + ticketNumber));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-										DateTime dt = new DateTime();
-										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-										
-									}
-									db = new Db();
-			
-									if(summaryHasInvoice) {
-										for(TransactionsOut tOut: transactionsOut) {
-											db.insertTransactionsOut(stationId,  summaryId, ticketNumber, tOut.getMaxAmount(), 12, 
-												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
-										}
-									}else{
-										if(summaryId > 0) {
-											summaryHasInvoice = true;
 											for(TransactionsOut tOut: transactionsOut) {
-												db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
-														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-											}
-										}else{
-											if(shiftIsDown) {
-												try{
-													statusS1 = fiscalPrinter.getS1PrinterData();
-												} catch(PrinterException se) {
-													se.printStackTrace();
+												try {
+													sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
+															PrinterCommand.TAX1, 
+															tOut.getMaxAmount(), 
+															1, 
+															tOut.getName()));
+												} catch (PrinterException ce) {
+													ce.printStackTrace();
 												}
-												int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-												db = new Db();
-												insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
-											} else {
-												insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
 											}
 											
-											if(insertedSummaryId > 0) {
-												summaryId = insertedSummaryId;
+											try {
+												sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
+														PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+											} catch (PrinterException ce) {
+												ce.printStackTrace();
+											}
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET ESTACIONAMIENTO"));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Estacionamiento #: " + ticketNumber));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+											DateTime dt = new DateTime();
+											DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+											DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+	//										try {
+	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
+	//										} catch (PrinterException ce) {
+	//											ce.printStackTrace();
+	//										}
+											
+										}
+										db = new Db();
+				
+										if(summaryHasInvoice) {
+											for(TransactionsOut tOut: transactionsOut) {
+												db.insertTransactionsOut(stationId,  summaryId, ticketNumber, tOut.getMaxAmount(), 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
+											}
+										}else{
+											if(summaryId > 0) {
 												summaryHasInvoice = true;
-												for(TransactionsOut tOut: transactionsOut)  {
+												for(TransactionsOut tOut: transactionsOut) {
 													db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
 															tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 												}
-												stationsWithSummary = Db.getStationsWithSummary();
-												summaries = Db.loadSummaries();
-												tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
 											}else{
-												summaryId = 0;
-												summaryHasInvoice = false;
-												JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+												if(shiftIsDown) {
+													try{
+														statusS1 = fiscalPrinter.getS1PrinterData();
+													} catch(PrinterException se) {
+														se.printStackTrace();
+													}
+													int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+													db = new Db();
+													insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
+												} else {
+													insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
+												}
+												
+												if(insertedSummaryId > 0) {
+													summaryId = insertedSummaryId;
+													summaryHasInvoice = true;
+													for(TransactionsOut tOut: transactionsOut)  {
+														db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
+																tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+													}
+													stationsWithSummary = Db.getStationsWithSummary();
+													summaries = Db.loadSummaries();
+													tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+												}else{
+													summaryId = 0;
+													summaryHasInvoice = false;
+													JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+												}
 											}
 										}
+									}else{
+										JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 									}
-								}else{
-									JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
+									
+								}//END OF ISTICKETOUT
+								else{
+									
 								}
+							
 							}else{
 								JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
 								textTicket.setText("");
@@ -2203,7 +2240,7 @@ public class SoftParkMultiView extends JFrame {
 		buttonCancel.setEnabled(true);
 		buttonCancel.setVisible(true);
 	}
-	
+		
 	public void disableButtons() {
 		buttonAccept.setEnabled(false);
 		buttonAccept.setVisible(false);
