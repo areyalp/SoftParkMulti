@@ -452,6 +452,23 @@ public class Db {
 		return transactionsOutTypes;
 	}
 	
+	//crear metodo para obtener montos de tarifas getConfig()
+	
+	public String getConfig(String name, String type){
+		
+		Db db = new Db();
+		String configValue = "";
+		ResultSet rowsConfigValue = db.select("SELECT Value FROM Configs WHERE Name = '" +  name  + "' AND Type = '" + type + "'");
+		try {
+			if(rowsConfigValue.next()) {
+				configValue = rowsConfigValue.getString("Value");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return configValue;
+	}
+	
 	protected static ArrayList<PayType> loadPayTypes() {
 		ArrayList<PayType> payTypes = null;
 		Db db = new Db();

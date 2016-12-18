@@ -1898,7 +1898,7 @@ public class SoftParkMultiView extends JFrame {
 //						System.out.println("meses " + period.getMonths());
 //						System.out.println("años " + period.getYears());
 //						System.out.println("Mas 20 min " + dtOut.toDateTime().plusMinutes(20));
-
+						Db db = new Db();
 						
 						textDateIn.setEditable(true);
 						textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
@@ -1907,20 +1907,23 @@ public class SoftParkMultiView extends JFrame {
 														
 						textDuration.setEditable(true);						
 						textDuration.setText(String.valueOf(period.getHours() + ":" +period.getMinutes()));
-						textExpiration.setEditable(true);									
-						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(20).toLocalTime())));
+						textExpiration.setEditable(true);				
+						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
+						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 
-						Integer overnight = Days.daysBetween(dtIn, dtOut).getDays();
+						//dtIn mayor dtOut
+						Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
+						DateTime dtInOffset = dtIn.minusHours(overnightOffset);
+						DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
+						Integer overnightDays = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
 						Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
+						
+						//dtIn mayor dtOut
 						//Check Overnight
-						if (overnight > 0){
+						if (overnightDays > 0){
 							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-							Integer amount = (int) transactionsOutType.get(4).getMaxAmount();
-							//Check if the amount of hours is bigger than 24
-							if (hoursLapse > 24){
-								Integer countHours = hoursLapse - 24;
-								
-							}
+							//cobrar dias x pernocta
+							
 						}
 //						else if(){
 //							
