@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,7 @@ import java.io.InputStream;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Properties;
 
 import javax.swing.BorderFactory;
@@ -62,6 +64,12 @@ import javax.swing.text.MaskFormatter;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Days;
+import org.joda.time.Duration;
+import org.joda.time.Hours;
+import org.joda.time.Interval;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -119,7 +127,7 @@ public class SoftParkMultiView extends JFrame {
 	private JCheckBox checkBillsName;
 	private JToolBar toolBar;
 	
-	private JComboBox comboCompany, comboShop,comboColor, comboModel, comboState, comboBrand;
+	private JComboBox<String> comboCompany, comboShop,comboColor, comboModel, comboState, comboBrand;
 
 	private static JLabel labelStatus;
 
@@ -137,7 +145,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
 	
-	public Integer transactionId;
+	public Integer transactionId,ticketNumber;
 	public Timestamp entranceDateTime;
 	
 	public SoftParkMultiView(int stationId) {
@@ -380,7 +388,8 @@ public class SoftParkMultiView extends JFrame {
 		thePanel.add(labelTicket);
 		textTicket = new JTextField(14);
 		textTicket.setActionCommand("multi.text.type");
-		textTicket.addActionListener(lForText);
+		textTicket.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.emptySet());
+		textTicket.addKeyListener(lForText);
 		thePanel.add(textTicket);
 
 		JLabel labelDate = new JLabel("Fecha de Entrada:");
@@ -1350,32 +1359,29 @@ public class SoftParkMultiView extends JFrame {
 		
 	}
 	
-	private class TextFieldListener implements FocusListener, ActionListener {
+	private class TextFieldListener implements KeyListener {
 
 		@Override
-		public void focusGained(FocusEvent e) {
+		public void keyPressed(KeyEvent evt) {
+			Integer keyCode = evt.getKeyCode();
+			
+			if(keyCode == KeyEvent.VK_TAB) {
+//				CheckOutRun out = new CheckOutRun("E/S");
+//				new Thread(out).start();
+				preCheckOut();
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent arg0) {
+			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
-		public void focusLost(FocusEvent e) {
-			if(!buttonCollectAccept.isVisible()) {
-				textTicket.requestFocus();
-			}
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			//add some code here when Enter has been hit in the text field
-			if(e.getActionCommand().equalsIgnoreCase("multi.text.type")) {
-//				int ticketNumber = Integer.valueOf(textTicket.getText().substring(0, 11));
-//				boolean ticketExists = Db.checkTicket(ticketNumber);
-//				if(ticketExists) {
-//					
-//				}
-				CheckOutRun ev1 = new CheckOutRun(e.getActionCommand());
-				new Thread(ev1).start();
-			}
+		public void keyTyped(KeyEvent arg0) {
+			// TODO Auto-generated method stub
+			
 		}
 
 		
@@ -1423,6 +1429,9 @@ public class SoftParkMultiView extends JFrame {
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button")) {
 //					CheckOutRun ev1 = new CheckOutRun(ev.getActionCommand());
 //					new Thread(ev1).start();
+					
+					CheckOutRun out = new CheckOutRun("E/S");
+					new Thread(out).start();
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.cancel.button")) {
 					textTicket.setEditable(true);
@@ -1752,27 +1761,19 @@ public class SoftParkMultiView extends JFrame {
 	private class CheckInRun implements Runnable{
 
 		String actionCommand;
-		ArrayList<TransactionsIn> transactionsin;
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
 		}
-		@SuppressWarnings("unused")
-		CheckInRun(ArrayList<TransactionsIn> transactionsin) {
-			this.transactionsin = transactionsin;
-		}
 		@Override
 		public synchronized void run() {
-			// TODO Auto-generated method stub			
-			
 			if (stationMode.equals("E/S")){
 					//TODO Finish this to print entrance ticket		
 				//Have to check the presence of the vehicle to allow print the ticket
 				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
-					//Have to check the presence of the vehicle to allow print the ticket
 					Db db = new Db();
 					String plate = textEntrancePlate.getText();		
-					Integer ticketNumber = 0;
-					@SuppressWarnings("unused")
+					ticketNumber = 0;
+					
 					boolean sentCmd = false;
 					int transactionId = db.preTransactionIn(stationId,plate);
 					try {
@@ -1815,14 +1816,10 @@ public class SoftParkMultiView extends JFrame {
 					} catch (PrinterException ce) {
 						ce.printStackTrace();
 					}					
-					//TODO add code to open relay
 					int activateRelay = 0;
 					int relay1 = 1;
 					int relay2 = 2;
-//					Relay();
-//					activateRelay =	RelayDriver.ACTIVE_STATE;
 					RelayDriver rd = new RelayDriver();
-					//TODO check the code to connect to the relay board
 						try {
 //							rd.getSerialPort();
 							rd.connect("COM8");
@@ -1845,11 +1842,8 @@ public class SoftParkMultiView extends JFrame {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<c 
-					//Insert ticketNumber,plate and entranceDateTime in DB					
-//					TransactionsIn transIn = new TransactionsIn(plate, transactionId);
-//					ticketNumber = transIn.getId();
-//					db.transactionIn(stationId, plate, transIn.getTransactionId());
+					//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
+						textEntrancePlate.setText("");
 					
 				}
 			}		//end of station mode= E/S
@@ -1858,41 +1852,123 @@ public class SoftParkMultiView extends JFrame {
 				
 	}
 	
+	private void preCheckOut (){
+		
+		String ticketCode = "";
+		ticketNumber = 0;
+		Boolean isTicketOut = true;
+		Boolean isTicketIn = false;
+		boolean isTicketProcessed = false;
+		
+		try{							
+			ticketCode = textTicket.getText();							
+			ticketNumber = Integer.valueOf(ticketCode.substring(17));
+			isTicketIn = Db.isTicketIn(ticketNumber);
+			isTicketOut = Db.isTicketOut(ticketNumber);
+			//verify  ticket in the DB...
+			if(isTicketIn) {
+				//Verify the ticket without an exit
+				if (!isTicketOut){
+					
+					if(ticketNumber > 0) { 	
+						
+						String day = ticketCode.substring(0,2);
+						String month = ticketCode.substring(2,4);
+						String year = ticketCode.substring(4,8);
+						String hour = ticketCode.substring(8,10);
+						String minutes = ticketCode.substring(10,12);
+						String seconds = ticketCode.substring(12,14);	
+						
+						DateTime dtIn = new DateTime(Integer.valueOf(year), Integer.valueOf(month), Integer.valueOf(day), Integer.valueOf(hour), Integer.valueOf(minutes), Integer.valueOf(seconds), 0);
+						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");	
+																
+						DateTime dtOut = new DateTime();
+						DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy");
+						DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
+						
+//						System.out.println("Entro hace " + Days.daysBetween(dtIn, dtOut).getDays() + " dias");
+															
+						Period period = new Period(dtIn, dtOut);
+						
+//						System.out.println("periodo " + period);
+//						System.out.println("horas " + period.getHours());
+//						System.out.println("minutos " + period.getMinutes());
+//						System.out.println("dias " + period.getDays());
+//						System.out.println("meses " + period.getMonths());
+//						System.out.println("años " + period.getYears());
+//						System.out.println("Mas 20 min " + dtOut.toDateTime().plusMinutes(20));
+
+						
+						textDateIn.setEditable(true);
+						textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
+						textEntrance.setEditable(true);
+						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada
+														
+						textDuration.setEditable(true);						
+						textDuration.setText(String.valueOf(period.getHours() + ":" +period.getMinutes()));
+						textExpiration.setEditable(true);									
+						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(20).toLocalTime())));
+
+						Integer overnight = Days.daysBetween(dtIn, dtOut).getDays();
+						Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
+						//Check Overnight
+						if (overnight > 0){
+							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+							Integer amount = (int) transactionsOutType.get(4).getMaxAmount();
+							//Check if the amount of hours is bigger than 24
+							if (hoursLapse > 24){
+								Integer countHours = hoursLapse - 24;
+								
+							}
+						}
+//						else if(){
+//							
+//						}
+						
+						
+					}else{
+						JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
+					}
+					
+				}//END OF !ISTICKETOUT
+				else{
+					JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+				}
+			
+			}else{
+				JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
+				textTicket.setText("");
+			}
+					
+			}catch(NumberFormatException ne) {
+				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
+				textTicket.setText("");
+			}
+
+		
+	}
+	
 	private class CheckOutRun implements Runnable {
 		
-		String actionCommand;
+		String stationMode;
 		ArrayList<Transaction> transactions;
 		ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
+		ArrayList<TransactionsIn> transactionsin = new ArrayList<TransactionsIn>();
 		S1PrinterData statusS1;
-		@SuppressWarnings("unused")
 		boolean sentCmd = false;
-
-//		CheckOutRun(ArrayList<Transaction> transactions) {
-//			this.transactions = transactions;
-//		}
 		
-		CheckOutRun(ArrayList<TransactionsOut> transactionsOut) {
-			this.transactionsOut = transactionsOut;
-		}
-
-		public ArrayList<TransactionsOut> getActionCommand() {
-			// TODO Auto-generated method stub
-			this.actionCommand = actionCommand;
-			return null;
-		}
-
-		public CheckOutRun(String keyText) {
-			// TODO Auto-generated constructor stub
-			this.actionCommand = actionCommand;
+		public CheckOutRun(String stationMode) {
+			this.stationMode = stationMode;
 		}
 
 		@Override
 		public synchronized void run() {
 			Db db = new Db();
-			Integer ticketNumber = 0;
+//			Integer ticketNumber = 0;
 			int insertedSummaryId = 0;
 			boolean isTicketProcessed = false;
-			boolean isTicketIn = false;
+//			boolean isTicketIn = false;
 			
 			printerChecker();
 			
@@ -1963,17 +2039,17 @@ public class SoftParkMultiView extends JFrame {
 									db = new Db();
 									
 									if(summaryHasInvoice) {
-										for(Transaction t: transactions) {
+//										for(Transaction t: transactions) {
 //											db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
 //												t.getId(), payTypes.get(0).getId());
-										}
+//										}
 									}else{
 										if(summaryId > 0) {
 											summaryHasInvoice = true;
-											for(Transaction t: transactions) {
+//											for(Transaction t: transactions) {
 //												db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
 //														t.getId(), payTypes.get(0).getId());
-											}
+//											}
 										}else{
 											try{
 												statusS1 = fiscalPrinter.getS1PrinterData();
@@ -1987,10 +2063,10 @@ public class SoftParkMultiView extends JFrame {
 											if(insertedSummaryId > 0) {
 												summaryId = insertedSummaryId;
 												summaryHasInvoice = true;
-												for(Transaction t: transactions) {
+//												for(Transaction t: transactions) {
 //													db.insertTransaction(stationId, summaryId, ticketNumber, t.getMaxAmount(), 12, 
 //															t.getId(), payTypes.get(0).getId());
-												}
+//												}
 												stationsWithSummary = Db.getStationsWithSummary();
 												summaries = Db.loadSummaries();
 												tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
@@ -2015,171 +2091,93 @@ public class SoftParkMultiView extends JFrame {
 							JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
 					} else if (stationMode.equals("E/S")) {
-						//TODO check this method
-						String ticketCode = "";
-						Boolean isTicketOut = true;
-						try{							
-							ticketCode = textTicket.getText();							
-							ticketNumber = Integer.valueOf(ticketCode.substring(17));
-							isTicketIn = Db.isTicketIn(ticketNumber);
-							isTicketOut = Db.isTicketOut(ticketNumber);
-							//verify  ticket in the DB...
-							if(isTicketIn) {
-								//Verify the ticket without an exit
-								if (!isTicketOut){
-									
-									if(ticketNumber > 0) { 	
-										//Upload data form TransactionsIn table into the 
-//										TransactionsIn transIn = new TransactionsIn(transactionId,stationId,entranceDateTime);	
-	//									ticketNumber = transIn.getId();
-	//									labelPrice.setText(String.valueOf(getSubTotal(transactions)));
-										textDateIn.setEditable(true);
-//										textDateIn.setText(transIn.getEntranceDateTime().toString());
-										textEntrance.setEditable(true);
-//										textEntrance.setText((String.valueOf(transIn.getStationId())));
-	//									DateTimeFormatter dtf = DateTimeFormat.forPattern(hh:mm);
-	//									DateTime dt = dtf.parseDateTime(textDateIn);	
-																		
-										textDuration.setEditable(true);					
-										
-										textExpiration.setEditable(true);									
-										
-										if(!shiftIsDown) {
-											if(transactionsOut.size() > 0) {
-												Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
-												if(transactionsOutIndex > -1) {
-													transactionsOut.remove(transactionsOutIndex);
-												}else{
-													transactionsOut.add(transactionsOutType.get(0));
-	//												labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
-												}											
-											}
-											else{
-												transactionsOut.add(transactionsOutType.get(2));		//Check this...
-	//											labelMoney.setText(String.valueOf(getSubTotalMulti(transactionsOut)));
-											}										
-											try {
-												sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
-											} catch (PrinterException ce) {
-												ce.printStackTrace();
-											}
-											for(TransactionsOut tOut: transactionsOut) {
-												try {
-													sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
-															PrinterCommand.TAX1, 
-															tOut.getMaxAmount(), 
-															1, 
-															tOut.getName()));
-												} catch (PrinterException ce) {
-													ce.printStackTrace();
-												}
-											}
-											
-											try {
-												sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
-														PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
-											} catch (PrinterException ce) {
-												ce.printStackTrace();
-											}
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET ESTACIONAMIENTO"));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Estacionamiento #: " + ticketNumber));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-											DateTime dt = new DateTime();
-											DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-											DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-	//										try {
-	//											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
-	//										} catch (PrinterException ce) {
-	//											ce.printStackTrace();
-	//										}
-											
-										}
-										db = new Db();
-				
-										if(summaryHasInvoice) {
-											for(TransactionsOut tOut: transactionsOut) {
-												db.insertTransactionsOut(stationId,  summaryId, ticketNumber, tOut.getMaxAmount(), 12, 
-													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
-											}
-										}else{
-											if(summaryId > 0) {
-												summaryHasInvoice = true;
-												for(TransactionsOut tOut: transactionsOut) {
-													db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
-															tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-												}
-											}else{
-												if(shiftIsDown) {
-													try{
-														statusS1 = fiscalPrinter.getS1PrinterData();
-													} catch(PrinterException se) {
-														se.printStackTrace();
-													}
-													int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-													db = new Db();
-													insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
-												} else {
-													insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
-												}
-												
-												if(insertedSummaryId > 0) {
-													summaryId = insertedSummaryId;
-													summaryHasInvoice = true;
-													for(TransactionsOut tOut: transactionsOut)  {
-														db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
-																tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-													}
-													stationsWithSummary = Db.getStationsWithSummary();
-													summaries = Db.loadSummaries();
-													tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-												}else{
-													summaryId = 0;
-													summaryHasInvoice = false;
-													JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
-												}
-											}
-										}
-									}else{
-										JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
-									}
-									
-								}//END OF ISTICKETOUT
-								else{
-									
+						if(!shiftIsDown) {
+							if(transactionsOut.size() > 0) {
+								Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
+								if(transactionsOutIndex > -1) {
+									transactionsOut.remove(transactionsOutIndex);
+								}else{
+									transactionsOut.add(transactionsOutType.get(2));
+								}											
+							}
+							else{
+								transactionsOut.add(transactionsOutType.get(2));		
+							}										
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							for(TransactionsOut tOut: transactionsOut) {
+								try {
+									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
+											PrinterCommand.TAX1, 
+											tOut.getMaxAmount(), 
+											1, 				//item quantity... needs to be change for the amount of hours.
+											tOut.getName()));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
 								}
+							}
 							
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
+										PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}											
+						}
+						db = new Db();
+
+						if(summaryHasInvoice) {
+							for(TransactionsOut tOut: transactionsOut) {
+								db.insertTransactionsOut(stationId,  summaryId, ticketNumber, tOut.getMaxAmount(), 12, 
+									tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
+							}
+						}else{
+							if(summaryId > 0) {
+								summaryHasInvoice = true;
+								for(TransactionsOut tOut: transactionsOut) {
+									db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
+											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+								}
 							}else{
-								JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
-								textTicket.setText("");
+								if(shiftIsDown) {
+									try{
+										statusS1 = fiscalPrinter.getS1PrinterData();
+									} catch(PrinterException se) {
+										se.printStackTrace();
+									}
+									int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+									db = new Db();
+									insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
+								} else {
+									insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
+								}
+								
+								if(insertedSummaryId > 0) {
+									summaryId = insertedSummaryId;
+									summaryHasInvoice = true;
+									for(TransactionsOut tOut: transactionsOut)  {
+										db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
+												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+									}
+									stationsWithSummary = Db.getStationsWithSummary();
+									summaries = Db.loadSummaries();
+									tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+								}else{
+									summaryId = 0;
+									summaryHasInvoice = false;
+									JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+								}
 							}
-									
-							}catch(NumberFormatException ne) {
-								JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
-								textTicket.setText("");
-							}
-					}
+						}
+					
+					}//END of stationMode = "E/S"			
+					
+					
+					
+					
 //				}
 //				else{
 //					JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);

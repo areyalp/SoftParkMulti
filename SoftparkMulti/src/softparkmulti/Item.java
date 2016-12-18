@@ -15,7 +15,7 @@ public class Item {
 	public String getName() {
 		return name;
 	}
-
+	
 	@Override
 	public String toString() {
 		// very important. this is what shows in combobox
