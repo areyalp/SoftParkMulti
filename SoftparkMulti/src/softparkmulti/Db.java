@@ -455,10 +455,9 @@ public class Db {
 	//crear metodo para obtener montos de tarifas getConfig()
 	
 	public String getConfig(String name, String type){
-		
-		Db db = new Db();
 		String configValue = "";
-		ResultSet rowsConfigValue = db.select("SELECT Value FROM Configs WHERE Name = '" +  name  + "' AND Type = '" + type + "'");
+		String query = "SELECT Value FROM Configs WHERE Name = '" +  name  + "' AND Type = '" + type + "'";
+		ResultSet rowsConfigValue = this.select(query);
 		try {
 			if(rowsConfigValue.next()) {
 				configValue = rowsConfigValue.getString("Value");
@@ -467,6 +466,35 @@ public class Db {
 			e.printStackTrace();
 		}
 		return configValue;
+	}
+	
+	public Integer getHourRates(Integer cantHoras){
+		Integer hourAmount = 0;
+		String query = "SELECT Amount FROM rateamounts WHERE RangeTo = '" +  cantHoras + "'";
+		ResultSet rowsRatesAmount = this.select(query);
+		try {
+			if(rowsRatesAmount.next()) {
+				hourAmount = rowsRatesAmount.getInt("Amount");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return hourAmount;
+	}
+	
+	public Integer getFractionRates(Integer cantHoras){
+		
+		Db db = new Db();
+		Integer fractionAmount = 0;
+		ResultSet rowsFractionRatesAmount = db.select("SELECT Fraction FROM rateamounts WHERE RangeFrom = '" +  cantHoras + "'");
+		try {
+			if(rowsFractionRatesAmount.next()) {
+				fractionAmount = rowsFractionRatesAmount.getInt("Fraction");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return fractionAmount;
 	}
 	
 	protected static ArrayList<PayType> loadPayTypes() {

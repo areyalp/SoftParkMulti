@@ -1886,18 +1886,9 @@ public class SoftParkMultiView extends JFrame {
 						DateTime dtOut = new DateTime();
 						DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy");
 						DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
-						
-//						System.out.println("Entro hace " + Days.daysBetween(dtIn, dtOut).getDays() + " dias");
 															
 						Period period = new Period(dtIn, dtOut);
 						
-//						System.out.println("periodo " + period);
-//						System.out.println("horas " + period.getHours());
-//						System.out.println("minutos " + period.getMinutes());
-//						System.out.println("dias " + period.getDays());
-//						System.out.println("meses " + period.getMonths());
-//						System.out.println("años " + period.getYears());
-//						System.out.println("Mas 20 min " + dtOut.toDateTime().plusMinutes(20));
 						Db db = new Db();
 						
 						textDateIn.setEditable(true);
@@ -1906,7 +1897,7 @@ public class SoftParkMultiView extends JFrame {
 						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada
 														
 						textDuration.setEditable(true);						
-						textDuration.setText(String.valueOf(period.getHours() + ":" +period.getMinutes()));
+//						textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
 						textExpiration.setEditable(true);				
 						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
@@ -1915,7 +1906,8 @@ public class SoftParkMultiView extends JFrame {
 						Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
 						DateTime dtInOffset = dtIn.minusHours(overnightOffset);
 						DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
-						Integer overnightDays = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
+						Integer daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
+						Integer overnightDays = daysBetween;
 						Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
 						
 						//dtIn mayor dtOut
@@ -1923,11 +1915,24 @@ public class SoftParkMultiView extends JFrame {
 						if (overnightDays > 0){
 							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 							//cobrar dias x pernocta
+							textDuration.setText(String.valueOf(daysBetween + " días y " + dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
 							
 						}
-//						else if(){
-//							
-//						}
+						else{
+							textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
+							//calculate amount
+							Integer spendMinutes = period.getMinutes();
+							Integer spendHours = period.getHours();
+							Integer amount = 0;
+							if ( spendMinutes > 29){
+								amount = db.getHourRates(spendHours + 1);
+							}
+							else{
+								amount = db.getFractionRates(spendHours);
+							}
+							
+							
+						}
 						
 						
 					}else{
