@@ -497,6 +497,21 @@ public class Db {
 		return fractionAmount;
 	}
 	
+	public Integer getOvernightRates(String overnight){
+		
+		Db db = new Db();
+		Integer overnightAmount = 0;
+		ResultSet rowsOvernightRatesAmount = db.select("SELECT MaxAmount FROM rates WHERE Name = '" +  overnight + "'");
+		try {
+			if(rowsOvernightRatesAmount.next()) {
+				overnightAmount = rowsOvernightRatesAmount.getInt("MaxAmount");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return overnightAmount;
+	}
+	
 	protected static ArrayList<PayType> loadPayTypes() {
 		ArrayList<PayType> payTypes = null;
 		Db db = new Db();

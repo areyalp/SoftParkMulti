@@ -25,6 +25,7 @@ import java.awt.event.TextEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,7 +131,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCompany, comboShop,comboColor, comboModel, comboState, comboBrand;
 
 	private static JLabel labelStatus;
-
+	
 	private String activePort, relayPort="";
 
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
@@ -145,8 +146,9 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
 	
-	public Integer transactionId,ticketNumber;
+	public Integer transactionId,ticketNumber,amount, overnightAmount, overnightDays;
 	public Timestamp entranceDateTime;
+
 	
 	public SoftParkMultiView(int stationId) {
 		
@@ -488,7 +490,7 @@ public class SoftParkMultiView extends JFrame {
 		labelTotal.setFont(new Font(null, Font.BOLD, 18));
 		paymentPanel.add(labelTotal);
 		
-		JLabel labelMoney = new JLabel("Bs.");
+		labelMoney = new JLabel("Bs.");
 		labelMoney.setForeground(Color.RED);		
 		paymentPanel.add(labelMoney);
 		
@@ -1425,6 +1427,7 @@ public class SoftParkMultiView extends JFrame {
 				if (ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
 					CheckInRun v = new CheckInRun(ev.getActionCommand());
 					new Thread(v).start();
+					textEntrancePlate.setText("");
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button")) {
 //					CheckOutRun ev1 = new CheckOutRun(ev.getActionCommand());
@@ -1858,7 +1861,6 @@ public class SoftParkMultiView extends JFrame {
 		ticketNumber = 0;
 		Boolean isTicketOut = true;
 		Boolean isTicketIn = false;
-		boolean isTicketProcessed = false;
 		
 		try{							
 			ticketCode = textTicket.getText();							
@@ -1907,33 +1909,41 @@ public class SoftParkMultiView extends JFrame {
 						DateTime dtInOffset = dtIn.minusHours(overnightOffset);
 						DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
 						Integer daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
-						Integer overnightDays = daysBetween;
+						overnightDays = daysBetween;
 						Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
 						
 						//dtIn mayor dtOut
-						//Check Overnight
 						if (overnightDays > 0){
 							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-							//cobrar dias x pernocta
-							textDuration.setText(String.valueOf(daysBetween + " días y " + dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
-							
+							textDuration.setText(String.valueOf(daysBetween + " días "));
+							overnightAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
+							labelMoney.setText(String.valueOf(overnightAmount) + " Bs.");
 						}
 						else{
-							textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
-							//calculate amount
+							DecimalFormat df = new DecimalFormat("00");
+							String durationHours = df.format(period.getHours());
+							String durationMinutes = df.format(period.getMinutes());
+							String durationSeconds = df.format(period.getSeconds());														
+							String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
+//							textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
+							textDuration.setText(durationTime);
+
 							Integer spendMinutes = period.getMinutes();
 							Integer spendHours = period.getHours();
-							Integer amount = 0;
+							amount = 0;
 							if ( spendMinutes > 29){
 								amount = db.getHourRates(spendHours + 1);
+								labelMoney.setText(String.valueOf(amount) + " Bs.");
 							}
 							else{
 								amount = db.getFractionRates(spendHours);
+//								labelMoney.setText(String.valueOf(amount));
+								
+								labelMoney.setText(String.valueOf(amount) + "Bs.");
+//								textChange.setText(String.valueOf(amount) + "Bs.");
 							}
-							
-							
-						}
-						
+
+						}					
 						
 					}else{
 						JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
@@ -1942,6 +1952,7 @@ public class SoftParkMultiView extends JFrame {
 				}//END OF !ISTICKETOUT
 				else{
 					JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+					textTicket.setText("");
 				}
 			
 			}else{
@@ -1973,10 +1984,17 @@ public class SoftParkMultiView extends JFrame {
 		@Override
 		public synchronized void run() {
 			Db db = new Db();
-//			Integer ticketNumber = 0;
 			int insertedSummaryId = 0;
 			boolean isTicketProcessed = false;
-//			boolean isTicketIn = false;
+			Integer change = 0;
+			Integer cashed = Integer.valueOf(textCashed.getText());
+			if (overnightDays > 0){
+				change = cashed - overnightAmount;
+			}
+			else{
+				change = cashed - amount;
+			}			
+			textChange.setText(String.valueOf(change));
 			
 			printerChecker();
 			
@@ -2121,7 +2139,7 @@ public class SoftParkMultiView extends JFrame {
 									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
 											PrinterCommand.TAX1, 
 											tOut.getMaxAmount(), 
-											1, 				//item quantity... needs to be change for the amount of hours.
+											1, 				
 											tOut.getName()));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
