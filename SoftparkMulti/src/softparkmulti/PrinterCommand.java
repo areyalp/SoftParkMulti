@@ -150,4 +150,8 @@ public class PrinterCommand {
 		return "y1234567890";
 	}
 	
+	public static String getTotal() {	
+		return "101";
+	}
+	
 }

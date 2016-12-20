@@ -1905,6 +1905,13 @@ public class SoftParkMultiView extends JFrame {
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 
 						//dtIn mayor dtOut
+						if (dtIn.isBefore(dtOut)){
+							System.out.println("hora correcta");
+						}
+						else{
+							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+
+						}
 						Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
 						DateTime dtInOffset = dtIn.minusHours(overnightOffset);
 						DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
@@ -1925,7 +1932,6 @@ public class SoftParkMultiView extends JFrame {
 							String durationMinutes = df.format(period.getMinutes());
 							String durationSeconds = df.format(period.getSeconds());														
 							String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
-//							textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
 							textDuration.setText(durationTime);
 
 							Integer spendMinutes = period.getMinutes();
@@ -1936,11 +1942,8 @@ public class SoftParkMultiView extends JFrame {
 								labelMoney.setText(String.valueOf(amount) + " Bs.");
 							}
 							else{
-								amount = db.getFractionRates(spendHours);
-//								labelMoney.setText(String.valueOf(amount));
-								
+								amount = db.getFractionRates(spendHours);								
 								labelMoney.setText(String.valueOf(amount) + "Bs.");
-//								textChange.setText(String.valueOf(amount) + "Bs.");
 							}
 
 						}					
@@ -1986,16 +1989,7 @@ public class SoftParkMultiView extends JFrame {
 			Db db = new Db();
 			int insertedSummaryId = 0;
 			boolean isTicketProcessed = false;
-			Integer change = 0;
-			Integer cashed = Integer.valueOf(textCashed.getText());
-			if (overnightDays > 0){
-				change = cashed - overnightAmount;
-			}
-			else{
-				change = cashed - amount;
-			}			
-			textChange.setText(String.valueOf(change));
-			
+						
 			printerChecker();
 			
 			if(db.testConnection()){
@@ -2119,7 +2113,7 @@ public class SoftParkMultiView extends JFrame {
 					} else if (stationMode.equals("E/S")) {
 						if(!shiftIsDown) {
 							if(transactionsOut.size() > 0) {
-								Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(0).getId());
+								Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(2).getId());
 								if(transactionsOutIndex > -1) {
 									transactionsOut.remove(transactionsOutIndex);
 								}else{
@@ -2145,13 +2139,30 @@ public class SoftParkMultiView extends JFrame {
 									ce.printStackTrace();
 								}
 							}
+							//insertar  codigo de barras  preguntar a jesus por la estructura del codigo de barras de la salida
+							DateTime entranceDateTime = new DateTime();
+							DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+							DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+							DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+							DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+							
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2)));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
 							
 							try {
 								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
 										PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
-							}											
+							}	
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.getTotal());		//comando para totalizar
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}	
 						}
 						db = new Db();
 
@@ -2198,6 +2209,8 @@ public class SoftParkMultiView extends JFrame {
 								}
 							}
 						}
+						//after print clear the textFields
+						
 					
 					}//END of stationMode = "E/S"			
 					
