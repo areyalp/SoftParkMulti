@@ -77,6 +77,7 @@ import org.joda.time.format.DateTimeFormatter;
 import jssc.SerialPortList;
 import tfhka.PrinterException;
 import tfhka.ve.S1PrinterData;
+import tfhka.ve.S2PrinterData;
 import tfhka.ve.Tfhka;
 
 
@@ -146,7 +147,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
 	
-	public Integer transactionId,ticketNumber,amount, overnightAmount, overnightDays;
+	public Integer transactionId,ticketNumber,amount, overnightDays;
 	public Timestamp entranceDateTime;
 
 	
@@ -1899,14 +1900,13 @@ public class SoftParkMultiView extends JFrame {
 						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada
 														
 						textDuration.setEditable(true);						
-//						textDuration.setText(String.valueOf(dtf2.print(period.getHours() + period.getMinutes() + period.getSeconds())));
 						textExpiration.setEditable(true);				
 						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 
 						//dtIn mayor dtOut
 						if (dtIn.isBefore(dtOut)){
-							System.out.println("hora correcta");
+//							System.out.println("hora correcta");  // add here the code to set the time
 						}
 						else{
 							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
@@ -1923,8 +1923,8 @@ public class SoftParkMultiView extends JFrame {
 						if (overnightDays > 0){
 							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 							textDuration.setText(String.valueOf(daysBetween + " días "));
-							overnightAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
-							labelMoney.setText(String.valueOf(overnightAmount) + " Bs.");
+							amount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
+							labelMoney.setText(String.valueOf(amount) + " Bs.");
 						}
 						else{
 							DecimalFormat df = new DecimalFormat("00");
@@ -1978,6 +1978,7 @@ public class SoftParkMultiView extends JFrame {
 		ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
 		ArrayList<TransactionsIn> transactionsin = new ArrayList<TransactionsIn>();
 		S1PrinterData statusS1;
+		S2PrinterData statusS2;
 		boolean sentCmd = false;
 		
 		public CheckOutRun(String stationMode) {
@@ -2122,17 +2123,26 @@ public class SoftParkMultiView extends JFrame {
 							}
 							else{
 								transactionsOut.add(transactionsOutType.get(2));		
-							}										
+							}	
+							
+//							try {
+//								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.printTest());
+//							} catch (PrinterException ce) {
+//								ce.printStackTrace();
+//							}
+							
+							
 							try {
 								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
+														
 							for(TransactionsOut tOut: transactionsOut) {
 								try {
 									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
 											PrinterCommand.TAX1, 
-											tOut.getMaxAmount(), 
+											amount, 
 											1, 				
 											tOut.getName()));
 								} catch (PrinterException ce) {
@@ -2146,37 +2156,38 @@ public class SoftParkMultiView extends JFrame {
 							DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 							DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
 							
-							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2)));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
+//							try {
+//								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2)));
+//							} catch (PrinterException ce) {
+//								ce.printStackTrace();
+//							}
 							
 							try {
 								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
 										PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
-							}	
-							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.getTotal());		//comando para totalizar
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}	
+							}	 
 						}
 						db = new Db();
 
 						if(summaryHasInvoice) {
 							for(TransactionsOut tOut: transactionsOut) {
-								db.insertTransactionsOut(stationId,  summaryId, ticketNumber, tOut.getMaxAmount(), 12, 
+								db.insertTransactionsOut(stationId,  summaryId, ticketNumber, amount, 12, 
 									tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 							}
 						}else{
 							if(summaryId > 0) {
 								summaryHasInvoice = true;
 								for(TransactionsOut tOut: transactionsOut) {
-									db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
+									db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
 											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+								}
+								
+								try{
+									statusS2 = fiscalPrinter.getS2PrinterData();
+								} catch(PrinterException se) {
+									se.printStackTrace();
 								}
 							}else{
 								if(shiftIsDown) {
@@ -2196,7 +2207,7 @@ public class SoftParkMultiView extends JFrame {
 									summaryId = insertedSummaryId;
 									summaryHasInvoice = true;
 									for(TransactionsOut tOut: transactionsOut)  {
-										db.insertTransactionsOut(stationId, ticketNumber, summaryId, tOut.getMaxAmount(), 12, 
+										db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 									}
 									stationsWithSummary = Db.getStationsWithSummary();
@@ -2224,9 +2235,27 @@ public class SoftParkMultiView extends JFrame {
 			}else{
 				JOptionPane.showMessageDialog(null, "La red esta desconectada, conectela de nuevo", "Red desconectada", JOptionPane.ERROR_MESSAGE);
 			}
-			textTicket.setEditable(true);
+			labelMoney.setText("Bs.");
+			textDuration.setEditable(false);
+			textDuration.setText("");
+
+			textEntrance.setEditable(false);
+			textEntrance.setText("");
+			
+			textDateIn.setEditable(false);
+			textDateIn.setText("");
+
+			textCashed.setEditable(false);
+			textCashed.setText("");
+
+			textChange.setEditable(false);
+			textChange.setText("");
+			
+			textExpiration.setEditable(false);
+			textExpiration.setText("");
 			buttonCollectAccept.setEnabled(true);
 			buttonCollectCancel.setEnabled(true);
+			amount = 0;
 		}
 		
 	}

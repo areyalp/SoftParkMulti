@@ -25,6 +25,11 @@ public class PrinterCommand {
 	
 	private static final int DNF_DOCUMENT_TEXT_DIGITS = 56;
 	
+	private static final int CASHIER_NAME_DIGITS = 16;
+	private static final int CASHIER_CODE_DIGITS = 5;
+	private static final int CASHIER_NUMBER_DIGITS = 2;
+	
+	
 	
 	public static String printTest(){
 		return "D";
@@ -150,8 +155,32 @@ public class PrinterCommand {
 		return "y1234567890";
 	}
 	
-	public static String getTotal() {	
-		return "101";
+//	public static String getTotal() {	
+//		return "101";
+//	}
+	
+	public static String programCashier(Integer cashierNumber, Integer cashierCode, String name){
+				
+		String stringCashierNumber = fillWithZeros(cashierNumber, CASHIER_NUMBER_DIGITS);
+		String stringCashierCode = fillWithZeros(cashierCode, CASHIER_CODE_DIGITS);
+		
+		if(name.length() > CASHIER_NAME_DIGITS){
+			name = name.substring(0, CASHIER_NAME_DIGITS - 1);
+		}
+		
+		return "pc" + stringCashierNumber + stringCashierCode + name;
+		
 	}
 	
+	public static String startCashier (Integer cashierCode){
+		
+		String stringCashierCode = fillWithZeros(cashierCode, 5);
+		
+		return "5" + stringCashierCode;		
+	}
+	
+	public static String endCashier (){		
+		
+		return "6";		
+	}
 }
