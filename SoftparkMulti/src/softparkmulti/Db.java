@@ -154,7 +154,31 @@ public class Db {
 		}
 		return insertedId;
 	}
-		
+	
+	protected int insertExonerated(int stationId,  int ticketNumber, int summaryId,	
+			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, Boolean exonerated) {
+
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,SummaryId,TotalAmount,Printed)"
+				+ " VALUES (" + stationId + "," 
+				+ ticketNumber + "," 
+				+ summaryId + "," 
+				+ totalAmount + ","
+				+ printed +  ","
+				+ (exonerated?1:0) + ")";
+		insertedId = this.insert(sql);
+		if(insertedId > 0) {
+			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
+					+ " VALUES (" + insertedId + "," 
+					+ transactionTypeId + ","
+					+ totalAmount + ","
+					+ taxAmount + ")";
+			this.insert(sql);			
+		}
+		return insertedId;
+	}
+	
 	protected Integer preInsertTransaction(Integer stationId) {
 		
 		String sql;
@@ -510,6 +534,22 @@ public class Db {
 			e.printStackTrace();
 		}
 		return overnightAmount;
+	}
+	
+	public String getPlate (Integer ticketNumber){
+		
+		Db db = new Db();
+		String plate = "";
+		ResultSet rowsPlate = db.select("SELECT Plate FROM transactionsin WHERE Id = '" +  ticketNumber + "'");
+		try {
+			if(rowsPlate.next()) {
+				plate = rowsPlate.getString("Plate");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return plate;
+		
 	}
 	
 	protected static ArrayList<PayType> loadPayTypes() {

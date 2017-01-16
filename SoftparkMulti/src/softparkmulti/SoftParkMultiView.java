@@ -135,6 +135,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private String activePort, relayPort="";
 
+	private Boolean exonerate;
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
@@ -145,11 +146,11 @@ public class SoftParkMultiView extends JFrame {
 	private JTree tree;	
 	private JButton buttonReloadReports;
 	private JComboBox<String> comboCountry, comboDirectionState;
-	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance;
+	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
 	public Integer transactionId,ticketNumber,amount, overnightDays;
 	public Timestamp entranceDateTime;
-
+	
 	
 	public SoftParkMultiView(int stationId) {
 		
@@ -548,7 +549,8 @@ public class SoftParkMultiView extends JFrame {
 		buttonCollectCancel.addActionListener(lForSwitchButton);
 		buttonCollectCancel.setEnabled(false);
 		
-		buttonPanel.add(buttonCollectCancel);		
+		buttonPanel.add(buttonCollectCancel);	
+		
 		container.add(buttonPanel);
 		
 		return container;
@@ -683,10 +685,21 @@ public class SoftParkMultiView extends JFrame {
 		
 		entrancePanel.add(entrancePlatePanel, BorderLayout.SOUTH);		
 		
-		container.add(Box.createVerticalStrut(50));
+		container.add(Box.createVerticalStrut(30));
 		container.add(entrancePanel);		
-		container.add(Box.createVerticalStrut(50));
-				
+		container.add(Box.createVerticalStrut(30));
+		
+		JPanel exoneratePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		
+		buttonCollectExonerate = new JButton("Exonerar");
+		buttonCollectExonerate.setActionCommand("multi.exonerate.button");
+		buttonCollectExonerate.addActionListener(lForSwitchButton);
+		buttonCollectExonerate.setEnabled(false);		
+		exoneratePanel.add(buttonCollectExonerate);
+		
+		container.add(exoneratePanel); 		
+		container.add(Box.createVerticalStrut(10));
+		
 		wrapRightContainerPanel.add(container);
 		wrapRightContainerPanel.add(Box.createHorizontalStrut(50));
 		
@@ -1393,6 +1406,8 @@ public class SoftParkMultiView extends JFrame {
 	
 	private class ButtonListener implements ActionListener, KeyListener {
 
+		private boolean exonerate;
+
 		@Override
 		public void keyPressed(KeyEvent ev) {
 			SelectValetRun v = new SelectValetRun(KeyEvent.getKeyText(ev.getKeyCode()));
@@ -1430,12 +1445,19 @@ public class SoftParkMultiView extends JFrame {
 					new Thread(v).start();
 					textEntrancePlate.setText("");
 				}
-				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button")) {
-//					CheckOutRun ev1 = new CheckOutRun(ev.getActionCommand());
-//					new Thread(ev1).start();
-					
+				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button"))  {				
 					CheckOutRun out = new CheckOutRun("E/S");
 					new Thread(out).start();
+				}
+				else if (ev.getActionCommand().equalsIgnoreCase("multi.exonerate.button")){					
+					int userResponse = JOptionPane.showConfirmDialog(null, "¿Desea exonerar este ticket?", "Confirme exoneracion de un ticket", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);					
+					if(userResponse == JOptionPane.YES_OPTION) {
+						CheckOutRun out = new CheckOutRun("E/S", true);
+						new Thread(out).start();
+					}
+					else{
+						//TODO
+					}
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.cancel.button")) {
 					textTicket.setEditable(true);
@@ -1726,25 +1748,7 @@ public class SoftParkMultiView extends JFrame {
 			}			
 		}		
 	}
-	
-//	public class Relay {
-//
-//		public Relay() {
-//			Properties prop = new Properties();
-//			InputStream propertiesInput;
-////			String relayPort = "";
-//			try{
-//				propertiesInput = getClass().getResourceAsStream("relay.properties");
-//				// load a properties file
-//				prop.load(propertiesInput);
-//				relayPort = prop.getProperty("relayPort");
-//				
-//				}catch(IOException ex){
-//					JOptionPane.showMessageDialog(null, ex.getMessage());
-//				}
-//		}					
-//	}
-	
+		
 	public String Relay() {
 		// TODO Auto-generated method stub
 		Properties prop = new Properties();
@@ -1891,7 +1895,8 @@ public class SoftParkMultiView extends JFrame {
 						DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
 															
 						Period period = new Period(dtIn, dtOut);
-						
+						Integer dayIn = dtIn.getDayOfMonth();
+						Integer dayOut = dtOut.getDayOfMonth();
 						Db db = new Db();
 						
 						textDateIn.setEditable(true);
@@ -1903,50 +1908,79 @@ public class SoftParkMultiView extends JFrame {
 						textExpiration.setEditable(true);				
 						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
-
+						Boolean overnightType = Boolean.valueOf(db.getConfig("overnight_type", "billing"));
 						//dtIn mayor dtOut
 						if (dtIn.isBefore(dtOut)){
-//							System.out.println("hora correcta");  // add here the code to set the time
+							//Check the overnight_type in the configs table from the DB
+							if (!overnightType){
+								//If the value = 0 then the charge will be by hours
+								Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
+								
+								DecimalFormat df = new DecimalFormat("00");
+//								String durationHours = df.format(period.getHours());
+								String durationMinutes = df.format(period.getMinutes());
+								String durationSeconds = df.format(period.getSeconds());														
+								String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
+								textDuration.setText(durationTime);
+
+								Integer spendMinutes = period.getMinutes();
+//								Integer spendHours = period.getHours();
+								amount = 0;
+								if ( spendMinutes > 29){
+									amount = db.getHourRates(hoursLapse + 1);
+									labelMoney.setText(String.valueOf(amount) + " Bs.");
+								}
+								else{
+									amount = db.getFractionRates(hoursLapse);								
+									labelMoney.setText(String.valueOf(amount) + "Bs.");
+								}
+								
+							}
+							else{
+								//If the value = 1 then the charge will be by night (overnights)
+								Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
+								DateTime dtInOffset = dtIn.minusHours(overnightOffset);
+								DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
+								Integer daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
+								overnightDays = daysBetween;
+								
+								if (overnightDays > 0){
+									JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+									textDuration.setText(String.valueOf(daysBetween + " días "));
+									amount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
+									labelMoney.setText(String.valueOf(amount) + " Bs.");
+								}
+								else{
+									DecimalFormat df = new DecimalFormat("00");
+									String durationHours = df.format(period.getHours());
+									String durationMinutes = df.format(period.getMinutes());
+									String durationSeconds = df.format(period.getSeconds());														
+									String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
+									textDuration.setText(durationTime);
+
+									Integer spendMinutes = period.getMinutes();
+									Integer spendHours = period.getHours();
+									amount = 0;
+									if ( spendMinutes > 29){
+										amount = db.getHourRates(spendHours + 1);
+										labelMoney.setText(String.valueOf(amount) + " Bs.");
+									}
+									else{
+										amount = db.getFractionRates(spendHours);								
+										labelMoney.setText(String.valueOf(amount) + "Bs.");
+									}								
+								}
+								
+							}
+	
+							buttonCollectCancel.setEnabled(true);
+							buttonCollectExonerate.setEnabled(true);
 						}
 						else{
 							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 
 						}
-						Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
-						DateTime dtInOffset = dtIn.minusHours(overnightOffset);
-						DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
-						Integer daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
-						overnightDays = daysBetween;
-						Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
-						
-						//dtIn mayor dtOut
-						if (overnightDays > 0){
-							JOptionPane.showMessageDialog(null, "Vehiculo con pernocta", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-							textDuration.setText(String.valueOf(daysBetween + " días "));
-							amount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
-							labelMoney.setText(String.valueOf(amount) + " Bs.");
-						}
-						else{
-							DecimalFormat df = new DecimalFormat("00");
-							String durationHours = df.format(period.getHours());
-							String durationMinutes = df.format(period.getMinutes());
-							String durationSeconds = df.format(period.getSeconds());														
-							String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
-							textDuration.setText(durationTime);
-
-							Integer spendMinutes = period.getMinutes();
-							Integer spendHours = period.getHours();
-							amount = 0;
-							if ( spendMinutes > 29){
-								amount = db.getHourRates(spendHours + 1);
-								labelMoney.setText(String.valueOf(amount) + " Bs.");
-							}
-							else{
-								amount = db.getFractionRates(spendHours);								
-								labelMoney.setText(String.valueOf(amount) + "Bs.");
-							}
-
-						}					
+											
 						
 					}else{
 						JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
@@ -1967,13 +2001,14 @@ public class SoftParkMultiView extends JFrame {
 				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 				textTicket.setText("");
 			}
-
+ 
 		
 	}
 	
 	private class CheckOutRun implements Runnable {
 		
 		String stationMode;
+		Boolean exonerate;
 		ArrayList<Transaction> transactions;
 		ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
 		ArrayList<TransactionsIn> transactionsin = new ArrayList<TransactionsIn>();
@@ -1982,7 +2017,12 @@ public class SoftParkMultiView extends JFrame {
 		boolean sentCmd = false;
 		
 		public CheckOutRun(String stationMode) {
+			this(stationMode,false);
+		}
+		
+		public CheckOutRun(String stationMode, Boolean exonerate) {
 			this.stationMode = stationMode;
+			this.exonerate = exonerate;
 		}
 
 		@Override
@@ -2111,123 +2151,182 @@ public class SoftParkMultiView extends JFrame {
 						} catch(NumberFormatException ne) {
 							JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
-					} else if (stationMode.equals("E/S")) {
-						if(!shiftIsDown) {
-							if(transactionsOut.size() > 0) {
-								Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(2).getId());
-								if(transactionsOutIndex > -1) {
-									transactionsOut.remove(transactionsOutIndex);
-								}else{
-									transactionsOut.add(transactionsOutType.get(2));
-								}											
-							}
-							else{
-								transactionsOut.add(transactionsOutType.get(2));		
-							}	
-							
-//							try {
-//								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.printTest());
-//							} catch (PrinterException ce) {
-//								ce.printStackTrace();
-//							}
-							
-							
-							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-														
-							for(TransactionsOut tOut: transactionsOut) {
+					} else if (stationMode.equals("E/S")) {						
+						if(!exonerate){
+							if(!shiftIsDown) {
+								if(transactionsOut.size() > 0) {
+									Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(2).getId());
+									if(transactionsOutIndex > -1) {
+										transactionsOut.remove(transactionsOutIndex);
+									}else{
+										transactionsOut.add(transactionsOutType.get(2));
+									}											
+								}
+								else{
+									transactionsOut.add(transactionsOutType.get(2));		
+								}								
 								try {
-									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
-											PrinterCommand.TAX1, 
-											amount, 
-											1, 				
-											tOut.getName()));
+									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}
+								//TODO
+								double price = 350;	
+								for(TransactionsOut tOut: transactionsOut) {
+									try {
+										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
+												PrinterCommand.TAX1, 
+												price, 
+												1, 				
+												tOut.getName()));
+									} catch (PrinterException ce) {
+										ce.printStackTrace();
+									}
+								}							
+								try {
+									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
+											PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}	 
+							}						
+							db = new Db();
+	
+							if(summaryHasInvoice) {
+								for(TransactionsOut tOut: transactionsOut) {
+									db.insertTransactionsOut(stationId,  summaryId, ticketNumber, amount, 12, 
+										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
+								}
+							}else{
+								if(summaryId > 0) {
+									summaryHasInvoice = true;
+									for(TransactionsOut tOut: transactionsOut) {
+										db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
+												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+									}																
+								}else{
+									if(shiftIsDown) {
+										try{
+											statusS1 = fiscalPrinter.getS1PrinterData();
+										} catch(PrinterException se) {
+											se.printStackTrace();
+										}
+										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+										db = new Db();
+										insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
+									} else {
+										insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
+									}
+									
+									if(insertedSummaryId > 0) {
+										summaryId = insertedSummaryId;
+										summaryHasInvoice = true;
+										for(TransactionsOut tOut: transactionsOut)  {
+											db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+										}
+										stationsWithSummary = Db.getStationsWithSummary();
+										summaries = Db.loadSummaries();
+										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+									}else{
+										summaryId = 0;
+										summaryHasInvoice = false;
+										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+									}
+								}
 							}
-							//insertar  codigo de barras  preguntar a jesus por la estructura del codigo de barras de la salida
+							//after print clear the textFields						
+						}
+						else{
+							String plate = db.getPlate(ticketNumber);
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + ticketNumber));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
 							DateTime entranceDateTime = new DateTime();
 							DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 							DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 							DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 							DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
-							
-//							try {
-//								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2)));
-//							} catch (PrinterException ce) {
-//								ce.printStackTrace();
-//							}
-							
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
-										PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
-							}	 
-						}
-						db = new Db();
-
-						if(summaryHasInvoice) {
-							for(TransactionsOut tOut: transactionsOut) {
-								db.insertTransactionsOut(stationId,  summaryId, ticketNumber, amount, 12, 
-									tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 							}
-						}else{
-							if(summaryId > 0) {
-								summaryHasInvoice = true;
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("EXONERADO"));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							try {
+								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("C.C. El Paseo"));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}			
+							//TODO check the insertion in DB and calculate amount
+							db = new Db();
+
+							if(summaryHasInvoice) {
 								for(TransactionsOut tOut: transactionsOut) {
-									db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
-											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-								}
-								
-								try{
-									statusS2 = fiscalPrinter.getS2PrinterData();
-								} catch(PrinterException se) {
-									se.printStackTrace();
+									db.insertExonerated(stationId,  summaryId, ticketNumber, amount, 12, 
+										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);			
 								}
 							}else{
-								if(shiftIsDown) {
-									try{
-										statusS1 = fiscalPrinter.getS1PrinterData();
-									} catch(PrinterException se) {
-										se.printStackTrace();
-									}
-									int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-									db = new Db();
-									insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
-								} else {
-									insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
-								}
-								
-								if(insertedSummaryId > 0) {
-									summaryId = insertedSummaryId;
+								if(summaryId > 0) {
 									summaryHasInvoice = true;
-									for(TransactionsOut tOut: transactionsOut)  {
-										db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
-												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-									}
-									stationsWithSummary = Db.getStationsWithSummary();
-									summaries = Db.loadSummaries();
-									tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+									for(TransactionsOut tOut: transactionsOut) {
+										db.insertExonerated(stationId, ticketNumber, summaryId, amount, 12, 
+												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
+									}																
 								}else{
-									summaryId = 0;
-									summaryHasInvoice = false;
-									JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+									if(shiftIsDown) {
+										try{
+											statusS1 = fiscalPrinter.getS1PrinterData();
+										} catch(PrinterException se) {
+											se.printStackTrace();
+										}
+										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+										db = new Db();
+										insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
+									} else {
+										insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
+									}
+									
+									if(insertedSummaryId > 0) {
+										summaryId = insertedSummaryId;
+										summaryHasInvoice = true;
+										for(TransactionsOut tOut: transactionsOut)  {
+											db.insertExonerated(stationId, ticketNumber, summaryId, amount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
+										}
+										stationsWithSummary = Db.getStationsWithSummary();
+										summaries = Db.loadSummaries();
+										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+									}else{
+										summaryId = 0;
+										summaryHasInvoice = false;
+										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+									}
 								}
-							}
+							}							
 						}
-						//after print clear the textFields
-						
-					
-					}//END of stationMode = "E/S"			
-					
-					
-					
-					
+					}//END of stationMode = "E/S"						
 //				}
 //				else{
 //					JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
@@ -2235,6 +2334,10 @@ public class SoftParkMultiView extends JFrame {
 			}else{
 				JOptionPane.showMessageDialog(null, "La red esta desconectada, conectela de nuevo", "Red desconectada", JOptionPane.ERROR_MESSAGE);
 			}
+			
+			textTicket.setText("");
+			textTicket.setEditable(true);
+			
 			labelMoney.setText("Bs.");
 			textDuration.setEditable(false);
 			textDuration.setText("");
@@ -2254,7 +2357,9 @@ public class SoftParkMultiView extends JFrame {
 			textExpiration.setEditable(false);
 			textExpiration.setText("");
 			buttonCollectAccept.setEnabled(true);
-			buttonCollectCancel.setEnabled(true);
+			buttonCollectCancel.setEnabled(false);
+			buttonCollectExonerate.setEnabled(false);
+
 			amount = 0;
 		}
 		
