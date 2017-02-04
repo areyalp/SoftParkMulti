@@ -80,6 +80,9 @@ import tfhka.ve.S1PrinterData;
 import tfhka.ve.S2PrinterData;
 import tfhka.ve.Tfhka;
 
+import java.awt.Toolkit;			//libraries from timer
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 @SuppressWarnings("serial")
@@ -140,7 +143,7 @@ public class SoftParkMultiView extends JFrame {
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
 	
-	private JLabel labelPrice, labelMoney;
+	private JLabel labelPrice, labelMoney, labelParkingCounter;
 	private JFormattedTextField textDateIn;
 	
 	private JTree tree;	
@@ -148,7 +151,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
-	public Integer transactionId,ticketNumber,amount, overnightDays;
+	public Integer transactionId,ticketNumber,amount, overnightDays,places;
 	public Timestamp entranceDateTime;
 	
 	
@@ -652,8 +655,11 @@ public class SoftParkMultiView extends JFrame {
 		
 		container.add(directionsPanel);		
 		
-		//create here new panel for the entrance
-		JPanel entrancePanel = new JPanel(new BorderLayout(20,20));
+		//create here new panel for the entrance		
+		JPanel entrancePanel = new JPanel();
+		
+		entrancePanel.setLayout(new BoxLayout(entrancePanel, BoxLayout.Y_AXIS));		
+//		JPanel entrancePanel = new JPanel(new BorderLayout(20,20));
 		
 		JPanel entranceTitlePanel = new JPanel();
 		
@@ -661,7 +667,7 @@ public class SoftParkMultiView extends JFrame {
 		labelEntranceTitle.setFont(new Font(null, Font.BOLD, 20));
 		entranceTitlePanel.add(labelEntranceTitle);
 		
-		entrancePanel.add(entranceTitlePanel, BorderLayout.NORTH);
+		entrancePanel.add(entranceTitlePanel);
 		
 		JPanel entranceButtonPanel = new JPanel();
 		
@@ -674,7 +680,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		entranceButtonPanel.add(buttonCarEntrance);
 		
-		entrancePanel.add(entranceButtonPanel, BorderLayout.CENTER);
+		entrancePanel.add(entranceButtonPanel);
 		
 		JPanel entrancePlatePanel = new JPanel();
 		
@@ -683,11 +689,24 @@ public class SoftParkMultiView extends JFrame {
 		textEntrancePlate = new JTextField(12);
 		entrancePlatePanel.add(textEntrancePlate);
 		
-		entrancePanel.add(entrancePlatePanel, BorderLayout.SOUTH);		
+		entrancePanel.add(entrancePlatePanel);	
 		
-		container.add(Box.createVerticalStrut(30));
+		JPanel parkingSpacesPanel = new JPanel();
+		
+		Integer places = Db.getPlaces("ALL");
+		
+		JLabel labelParkingSpaces = new JLabel("Puestos Disponibles: ");
+		labelParkingSpaces.setFont(new Font(null, Font.BOLD, 14));
+		parkingSpacesPanel.add(labelParkingSpaces);
+		labelParkingCounter = new JLabel(String.valueOf(places));
+		labelParkingCounter.setFont(new Font(null, Font.BOLD, 14));
+		parkingSpacesPanel.add(labelParkingCounter);		
+		
+		entrancePanel.add(parkingSpacesPanel);		
+		
+		container.add(Box.createVerticalStrut(20));
 		container.add(entrancePanel);		
-		container.add(Box.createVerticalStrut(30));
+		container.add(Box.createVerticalStrut(20));
 		
 		JPanel exoneratePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
@@ -1390,13 +1409,11 @@ public class SoftParkMultiView extends JFrame {
 
 		@Override
 		public void keyReleased(KeyEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void keyTyped(KeyEvent arg0) {
-			// TODO Auto-generated method stub
 			
 		}
 
@@ -1768,20 +1785,19 @@ public class SoftParkMultiView extends JFrame {
 	
 	private class CheckInRun implements Runnable{
 
-		String actionCommand;
+		String actionCommand;		
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
 		}
 		@Override
 		public synchronized void run() {
-			if (stationMode.equals("E/S")){
-					//TODO Finish this to print entrance ticket		
-				//Have to check the presence of the vehicle to allow print the ticket
+			if (stationMode.equals("E/S")){					
+				//TODO Have to check the presence of the vehicle to allow print the ticket
 				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
+					new TimerCycle();		//TODO check this
 					Db db = new Db();
 					String plate = textEntrancePlate.getText();		
-					ticketNumber = 0;
-					
+					ticketNumber = 0;					
 					boolean sentCmd = false;
 					int transactionId = db.preTransactionIn(stationId,plate);
 					try {
@@ -1847,12 +1863,13 @@ public class SoftParkMultiView extends JFrame {
 
 							
 						} catch (Exception e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
 						textEntrancePlate.setText("");
-					
+						//TODO Update the places available
+						labelParkingCounter.setText(String.valueOf(places));
+//						labelParkingCounter.setText(String.valueOf(getSubTotal(transactions)));
 				}
 			}		//end of station mode= E/S
 			
@@ -1860,7 +1877,7 @@ public class SoftParkMultiView extends JFrame {
 				
 	}
 	
-	private void preCheckOut (){
+ 	private void preCheckOut (){
 		
 		String ticketCode = "";
 		ticketNumber = 0;
@@ -1872,13 +1889,9 @@ public class SoftParkMultiView extends JFrame {
 			ticketNumber = Integer.valueOf(ticketCode.substring(17));
 			isTicketIn = Db.isTicketIn(ticketNumber);
 			isTicketOut = Db.isTicketOut(ticketNumber);
-			//verify  ticket in the DB...
 			if(isTicketIn) {
-				//Verify the ticket without an exit
-				if (!isTicketOut){
-					
-					if(ticketNumber > 0) { 	
-						
+				if (!isTicketOut){					
+					if(ticketNumber > 0) { 							
 						String day = ticketCode.substring(0,2);
 						String month = ticketCode.substring(2,4);
 						String year = ticketCode.substring(4,8);
@@ -1909,22 +1922,17 @@ public class SoftParkMultiView extends JFrame {
 						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 						Boolean overnightType = Boolean.valueOf(db.getConfig("overnight_type", "billing"));
-						//dtIn mayor dtOut
 						if (dtIn.isBefore(dtOut)){
 							//Check the overnight_type in the configs table from the DB
 							if (!overnightType){
 								//If the value = 0 then the charge will be by hours
-								Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
-								
+								Integer hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();								
 								DecimalFormat df = new DecimalFormat("00");
-//								String durationHours = df.format(period.getHours());
 								String durationMinutes = df.format(period.getMinutes());
 								String durationSeconds = df.format(period.getSeconds());														
 								String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
 								textDuration.setText(durationTime);
-
 								Integer spendMinutes = period.getMinutes();
-//								Integer spendHours = period.getHours();
 								amount = 0;
 								if ( spendMinutes > 29){
 									amount = db.getHourRates(hoursLapse + 1);
@@ -2170,7 +2178,7 @@ public class SoftParkMultiView extends JFrame {
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}
-								//TODO
+								//TODO fix price value to an object
 								double price = 350;	
 								for(TransactionsOut tOut: transactionsOut) {
 									try {
@@ -2238,6 +2246,17 @@ public class SoftParkMultiView extends JFrame {
 							//after print clear the textFields						
 						}
 						else{
+							if(transactionsOut.size() > 0) {
+								Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, transactionsOutType.get(2).getId());
+								if(transactionsOutIndex > -1) {
+									transactionsOut.remove(transactionsOutIndex);
+								}else{
+									transactionsOut.add(transactionsOutType.get(2));
+								}											
+							}
+							else{
+								transactionsOut.add(transactionsOutType.get(2));		
+							}		
 							String plate = db.getPlate(ticketNumber);
 							try {
 								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + ticketNumber));
@@ -2336,24 +2355,18 @@ public class SoftParkMultiView extends JFrame {
 			}
 			
 			textTicket.setText("");
-			textTicket.setEditable(true);
-			
+			textTicket.setEditable(true);			
 			labelMoney.setText("Bs.");
 			textDuration.setEditable(false);
 			textDuration.setText("");
-
 			textEntrance.setEditable(false);
-			textEntrance.setText("");
-			
+			textEntrance.setText("");			
 			textDateIn.setEditable(false);
 			textDateIn.setText("");
-
 			textCashed.setEditable(false);
 			textCashed.setText("");
-
 			textChange.setEditable(false);
-			textChange.setText("");
-			
+			textChange.setText("");			
 			textExpiration.setEditable(false);
 			textExpiration.setText("");
 			buttonCollectAccept.setEnabled(true);
@@ -2361,6 +2374,7 @@ public class SoftParkMultiView extends JFrame {
 			buttonCollectExonerate.setEnabled(false);
 
 			amount = 0;
+			
 		}
 		
 	}
@@ -2430,9 +2444,14 @@ public class SoftParkMultiView extends JFrame {
 		return subTotal;
 	}
 
-	public double getSubTotalMulti(ArrayList<TransactionsOut> transactionsOut) {
-		double subTotal = 0;
+	public Integer getParkingCounter(){
+		//TODO work on this method to  obtain the parking counter		
 		
+		return null;		
+	}
+	
+ 	public double getSubTotalMulti(ArrayList<TransactionsOut> transactionsOut) {
+		double subTotal = 0;		
 		for(TransactionsOut tOut: transactionsOut) {
 			subTotal += tOut.getMaxAmount();
 		}
@@ -2568,5 +2587,5 @@ public class SoftParkMultiView extends JFrame {
 			menu.setForeground(Color.BLACK);
 		}
 	}
-
+	
 }// END OF class SoftParkMultiView

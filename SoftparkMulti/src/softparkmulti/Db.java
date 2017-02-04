@@ -2,6 +2,7 @@ package softparkmulti;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -160,7 +161,7 @@ public class Db {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,SummaryId,TotalAmount,Printed)"
+		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,SummaryId,TotalAmount,Printed,Exonerated)"
 				+ " VALUES (" + stationId + "," 
 				+ ticketNumber + "," 
 				+ summaryId + "," 
@@ -625,6 +626,41 @@ public class Db {
 		return isTicketOut;
 	}
 
+	public static Integer getPlaces(String levelName) {
 
+		Db db = new Db();
+		Integer places = 0;
+		ResultSet rowsPlaces = db.select("SELECT Places FROM levels WHERE name = '" +  levelName + "'");
+		try {
+			if(rowsPlaces.next()) {
+				places = rowsPlaces.getInt("Places");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return places;
+	}
+	
+	public ArrayList<Integer> getParkingPlaces(Integer boardId) {
+		//TODO have to fix this method and create the storeProcedure in the DB
+		ArrayList<Integer> ParkingPlaces = new ArrayList<Integer>();
+		ResultSet setBoardSwitchMainIds;
+		CallableStatement statement;
+		
+		try {
+			statement = this.conn.prepareCall("{call SP_GET_PARKING_PLACES(?)}");
+			statement.setInt(1, boardId);
+			setBoardSwitchMainIds = statement.executeQuery();
+			
+			while(setBoardSwitchMainIds.next()) {
+				ParkingPlaces.add(setBoardSwitchMainIds.getInt(1));
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return ParkingPlaces;
+	}
 
 }
