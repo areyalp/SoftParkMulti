@@ -108,16 +108,14 @@ public class Db {
 	}
 	//Added new method insertTransactionsIn with it's arguments... check this...
 	
-	protected int insertTransactionsIn(int stationId, Timestamp entranceDate, String plate, Integer ticketNumber,
-			int transactionTypeId) {
+	protected int insertTransactionsIn(int entranceStationId, Timestamp entranceDateTime, String plate, int transactionTypeId) {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsIn (StationId,EntranceDate,Plate,TicketNumber)"
-				+ " VALUES (" + stationId + "," 
-				+ entranceDate + ","
-				+ plate +  "," 
-				+ ticketNumber + ")";
+		sql = "INSERT INTO Transactions (EntranceStationId,EntranceDateTime,Plate)"
+				+ " VALUES (" + entranceStationId + "," 
+				+ entranceDateTime + ","
+				+ plate +   ")";
 		insertedId = this.insert(sql);
 		if(insertedId > 0) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId)"
@@ -128,14 +126,13 @@ public class Db {
 		return insertedId;
 	}
 	
-	protected int insertTransactionsOut(int stationId,  int ticketNumber, int summaryId,	
+	protected int insertTransactionsOut(int entranceStationId, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed) {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,SummaryId,TotalAmount,Printed)"
-				+ " VALUES (" + stationId + "," 
-				+ ticketNumber + "," 
+		sql = "INSERT INTO Transactions (EntranceStationId,TicketNumber,SummaryId,TotalAmount,Printed)"
+				+ " VALUES (" + entranceStationId + "," 
 				+ summaryId + "," 
 				+ totalAmount + ","
 				+ printed + ")";
@@ -156,14 +153,13 @@ public class Db {
 		return insertedId;
 	}
 	
-	protected int insertExonerated(int stationId,  int ticketNumber, int summaryId,	
+	protected int insertExonerated(int entranceStationId, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, Boolean exonerated) {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsOut (StationId,TicketNumber,SummaryId,TotalAmount,Printed,Exonerated)"
-				+ " VALUES (" + stationId + "," 
-				+ ticketNumber + "," 
+		sql = "INSERT INTO Transactions (EntranceStationId,SummaryId,TotalAmount,Printed,Exonerated)"
+				+ " VALUES (" + entranceStationId + "," 
 				+ summaryId + "," 
 				+ totalAmount + ","
 				+ printed +  ","
@@ -197,20 +193,20 @@ public class Db {
 		return insertedId;
 	}
 	
-	protected Integer preTransactionIn(Integer stationId, String plate) {
+	protected Integer preTransactionIn(Integer entranceStationId, String plate) {
 		
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO TransactionsIn (StationId,Plate) VALUES(" + stationId + ",'" + plate + "')";
+		sql = "INSERT INTO Transactions (EntranceStationId,Plate) VALUES(" + entranceStationId + ",'" + plate + "')";
 		insertedId = this.insert(sql);
 		return insertedId;
 	}
 	
-	protected Integer transactionIn (Integer stationId, String plate, Integer ticketNumber){		
+	protected Integer transactionIn (Integer entranceStationId, String plate){		
 		
 		String sql;
 		int insertedId = 0;
-		sql = "UPDATE TransactionsIn SET (StationId, Plate, TicketNumber) VALUES('" + stationId + "','" + plate + "', '" + ticketNumber + "')";
+		sql = "UPDATE Transactions SET (EntkranceStationId, Plate) VALUES('" + entranceStationId + "','" + plate  + "')";
 		insertedId = this.insert(sql);
 		return insertedId;
 		
@@ -541,7 +537,7 @@ public class Db {
 		
 		Db db = new Db();
 		String plate = "";
-		ResultSet rowsPlate = db.select("SELECT Plate FROM transactionsin WHERE Id = '" +  ticketNumber + "'");
+		ResultSet rowsPlate = db.select("SELECT Plate FROM transactions WHERE Id = '" +  ticketNumber + "'");
 		try {
 			if(rowsPlate.next()) {
 				plate = rowsPlate.getString("Plate");
@@ -594,8 +590,8 @@ public class Db {
 		Db db = new Db();
 		boolean isTicketIn = false;
 		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
-				+ "FROM TransactionsIn "
-				+ "WHERE transactionsin.Id = " + ticketNumber);		
+				+ "FROM Transactions "
+				+ "WHERE transactions.Id = " + ticketNumber);		
 		try {
 			if(rowTicketIn.next()) {
 				if(rowTicketIn.getInt("cnt") > 0) {
@@ -612,8 +608,8 @@ public class Db {
 		Db db = new Db();
 		boolean isTicketOut = false;
 		ResultSet rowTicketOut = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
-				+ "FROM TransactionsOut "
-				+ "WHERE transactionsOut.TicketNumber = " + ticketNumber);		
+				+ "FROM Transactions "
+				+ "WHERE transactions.TicketNumber = " + ticketNumber);		//TODO check this method to verify when the ticket is out
 		try {
 			if(rowTicketOut.next()) {
 				if(rowTicketOut.getInt("cnt") > 0) {
@@ -626,11 +622,11 @@ public class Db {
 		return isTicketOut;
 	}
 
-	public static Integer getPlaces(String levelName) {
+	public static Integer getAvailablePlaces(Integer levelId) {
 
 		Db db = new Db();
 		Integer places = 0;
-		ResultSet rowsPlaces = db.select("SELECT Places FROM levels WHERE name = '" +  levelName + "'");
+		ResultSet rowsPlaces = db.select("SELECT Places FROM levels WHERE id = " +  levelId);
 		try {
 			if(rowsPlaces.next()) {
 				places = rowsPlaces.getInt("Places");
@@ -638,7 +634,13 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
 		return places;
+	}
+	
+	public static Integer getVehiclesIn(){
+		return null;
+		 
 	}
 	
 	public ArrayList<Integer> getParkingPlaces(Integer boardId) {

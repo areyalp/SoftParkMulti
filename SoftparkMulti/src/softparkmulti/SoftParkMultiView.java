@@ -693,14 +693,16 @@ public class SoftParkMultiView extends JFrame {
 		
 		JPanel parkingSpacesPanel = new JPanel();
 		
-		Integer places = Db.getPlaces("ALL");
+		Integer availablePlaces = Db.getAvailablePlaces(stationInfo.getId());
 		
 		JLabel labelParkingSpaces = new JLabel("Puestos Disponibles: ");
 		labelParkingSpaces.setFont(new Font(null, Font.BOLD, 14));
 		parkingSpacesPanel.add(labelParkingSpaces);
-		labelParkingCounter = new JLabel(String.valueOf(places));
+		labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
 		labelParkingCounter.setFont(new Font(null, Font.BOLD, 14));
 		parkingSpacesPanel.add(labelParkingCounter);		
+		
+		TimerTask taskCheckPlaces = new TimerTask();
 		
 		entrancePanel.add(parkingSpacesPanel);		
 		
@@ -1794,7 +1796,7 @@ public class SoftParkMultiView extends JFrame {
 			if (stationMode.equals("E/S")){					
 				//TODO Have to check the presence of the vehicle to allow print the ticket
 				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
-					new TimerCycle();		//TODO check this
+				
 					Db db = new Db();
 					String plate = textEntrancePlate.getText();		
 					ticketNumber = 0;					
@@ -2019,7 +2021,7 @@ public class SoftParkMultiView extends JFrame {
 		Boolean exonerate;
 		ArrayList<Transaction> transactions;
 		ArrayList<TransactionsOut> transactionsOut = new ArrayList<TransactionsOut>();
-		ArrayList<TransactionsIn> transactionsin = new ArrayList<TransactionsIn>();
+//		ArrayList<TransactionsIn> transactionsin = new ArrayList<TransactionsIn>();
 		S1PrinterData statusS1;
 		S2PrinterData statusS2;
 		boolean sentCmd = false;
@@ -2202,14 +2204,14 @@ public class SoftParkMultiView extends JFrame {
 	
 							if(summaryHasInvoice) {
 								for(TransactionsOut tOut: transactionsOut) {
-									db.insertTransactionsOut(stationId,  summaryId, ticketNumber, amount, 12, 
+									db.insertTransactionsOut(stationId,  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 								}
 							}else{
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
 									for(TransactionsOut tOut: transactionsOut) {
-										db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
+										db.insertTransactionsOut(stationId, summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 									}																
 								}else{
@@ -2230,7 +2232,7 @@ public class SoftParkMultiView extends JFrame {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
 										for(TransactionsOut tOut: transactionsOut)  {
-											db.insertTransactionsOut(stationId, ticketNumber, summaryId, amount, 12, 
+											db.insertTransactionsOut(stationId, summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 										}
 										stationsWithSummary = Db.getStationsWithSummary();
@@ -2303,14 +2305,14 @@ public class SoftParkMultiView extends JFrame {
 
 							if(summaryHasInvoice) {
 								for(TransactionsOut tOut: transactionsOut) {
-									db.insertExonerated(stationId,  summaryId, ticketNumber, amount, 12, 
+									db.insertExonerated(stationId,  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);			
 								}
 							}else{
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
 									for(TransactionsOut tOut: transactionsOut) {
-										db.insertExonerated(stationId, ticketNumber, summaryId, amount, 12, 
+										db.insertExonerated(stationId, summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 									}																
 								}else{
@@ -2331,7 +2333,7 @@ public class SoftParkMultiView extends JFrame {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
 										for(TransactionsOut tOut: transactionsOut)  {
-											db.insertExonerated(stationId, ticketNumber, summaryId, amount, 12, 
+											db.insertExonerated(stationId, summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 										}
 										stationsWithSummary = Db.getStationsWithSummary();
@@ -2586,6 +2588,21 @@ public class SoftParkMultiView extends JFrame {
 			menuItemDisconnect.setEnabled(false);
 			menu.setForeground(Color.BLACK);
 		}
+	}
+	
+	private class CheckPlacesTask {
+		
+		private Integer availablePlaces;
+		private Db db;
+		public CheckPlacesTask(){
+			db = new Db();
+			this.availablePlaces = db.getAvailablePlaces(stationInfo.getId());
+		}
+		
+		public  synchronized void run() {
+			
+		}
+		
 	}
 	
 }// END OF class SoftParkMultiView
