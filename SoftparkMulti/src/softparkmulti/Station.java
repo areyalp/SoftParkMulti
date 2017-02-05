@@ -5,43 +5,49 @@ import java.sql.SQLException;
 
 public class Station
     {
-        int id;
-        int type;
-        String name;
+		private Integer id;
+        private Integer type;
+        private String name;
+        private Integer levelId;
         
-        Station(int id, int type, String name)
+        Station(Integer id, Integer type, String name, Integer levelId)
         {
         	this.id = id;
         	this.type = type;
         	this.name = name;
+        	this.levelId = levelId;
         }
         
-        public int getId()
+        public Integer getId()
         {
-            return id;
+            return this.id;
         }
         
-        public int getType()
+        public Integer getType()
         {
-            return type;
+            return this.type;
         }
         
         public String getName()
         {
-            return name;
+            return this.name;
+        }
+        
+        public Integer getLevelId() 
+        {
+        	return this.levelId;
         }
         
         @Override 
         public String toString()
         {
-            // very important.  this is what shows in combobox
             return name;
         }
         
-        public static Station getStationInfo(int stationId) {
+        public static Station getStationInfo(Integer stationId) {
     		Station stationInfo = null;
     		Db db = new Db();
-    		ResultSet rowStation = db.select("SELECT Id, TypeId, Name FROM Stations WHERE Id = " + stationId);
+    		ResultSet rowStation = db.select("SELECT Id, TypeId, Name, LevelId FROM Stations WHERE Id = " + stationId);
     		
     		try {
     			
@@ -50,8 +56,8 @@ public class Station
     				stationInfo = new Station(
     						rowStation.getInt("Id"), 
     						rowStation.getInt("TypeId"), 
-    						rowStation.getString("Name"));
-    				
+    						rowStation.getString("Name"),
+    						rowStation.getInt("LevelId"));
     			}
     			
     		} catch (SQLException e) {

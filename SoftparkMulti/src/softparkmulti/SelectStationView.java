@@ -5,6 +5,9 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Vector;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -18,11 +21,9 @@ import javax.swing.SwingUtilities;
 public class SelectStationView extends JFrame{
 
 	JLabel labelStation;
-	@SuppressWarnings("rawtypes")
-	JComboBox comboStations;
+	JComboBox<Station> comboStations;
 	JButton buttonSelect, buttonCancel;
 	
-	int stationId;
 	public int userId;
 	
 	public static void main(String[] args){	
@@ -80,7 +81,7 @@ public class SelectStationView extends JFrame{
 		public void actionPerformed(ActionEvent e) {
 			if("select".equals(e.getActionCommand())){
 				Station stationData = (Station) comboStations.getSelectedItem();
-				stationId = stationData.getId();
+				Integer stationId = stationData.getId();
 				String macAddress = GetNetworkAddress.GetAddress("mac");
 				try {
 					Db db = new Db();
@@ -105,34 +106,36 @@ public class SelectStationView extends JFrame{
 			}//END OF if("select".equals(e.getActionCommand()))
 		}//END OF public void actionPerformed
 	}//END OF class ButtonListener
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private JComponent createStationCombo() {
-		Station[] stationsList = getStations();
+	
+	private JPanel createStationCombo() {
+		ArrayList<Station> stationsList = new ArrayList<Station>();
+		stationsList = this.getStations();
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		labelStation = new JLabel("Seleccione Estación:");
 		panel.add(labelStation);
-		comboStations = new JComboBox(stationsList);
+		comboStations = new JComboBox<Station>(new Vector<>(stationsList));
 		panel.add(comboStations);
 		return panel;
 	}
 
-	private Station[] getStations() {
-		Station[] stations = null;
+	private ArrayList<Station> getStations() {
+		ArrayList<Station> stations = new ArrayList<Station>();
 		try{
 			Db db = new Db();
-			ResultSet rowsStations = db.select("SELECT Id, TypeId, Name FROM Stations WHERE Active=1 AND MacAddress = ''");
-			rowsStations.last();
-			int rowsCount = rowsStations.getRow();
-			rowsStations.beforeFirst();
-			stations = new Station[rowsCount];
-			int i = 0;
+			ResultSet rowsStations = db.select("SELECT Id, TypeId, Name, LevelId FROM Stations WHERE Active=1 AND MacAddress = ''");
+//			rowsStations.last();
+//			int rowsCount = rowsStations.getRow();
+//			rowsStations.beforeFirst();
+//			stations = new Station[rowsCount];
+//			int i = 0;
 			while(rowsStations.next()){
-				stations[i] = new Station(
+				stations.add(new Station(
 						rowsStations.getInt("Id"), 
 						rowsStations.getInt("TypeId"), 
-						rowsStations.getString("Name"));
-				i++;
+						rowsStations.getString("Name"),
+						rowsStations.getInt("LevelId")
+						));
+//				i++;
 			}
 		} catch(Exception ex){
 			ex.printStackTrace();

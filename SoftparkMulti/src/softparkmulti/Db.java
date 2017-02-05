@@ -263,7 +263,7 @@ public class Db {
 	protected static ArrayList<Station> getStationsWithSummary() {
 		ArrayList<Station> stations;
 		Db db = new Db();
-		ResultSet rowsStations = db.select("SELECT su.StationId, st.TypeId, st.Name"
+		ResultSet rowsStations = db.select("SELECT su.StationId, st.TypeId, st.Name, st.LevelId"
 				+ " FROM Summary as su, Stations as st"
 				+ " WHERE su.StationId = st.id AND Status = 0 GROUP BY su.StationId");
 		stations = new ArrayList<Station>();
@@ -271,7 +271,8 @@ public class Db {
 			while(rowsStations.next()) {
 				stations.add(new Station(rowsStations.getInt("StationId"),
 						rowsStations.getInt("TypeId"),
-						rowsStations.getString("Name")
+						rowsStations.getString("Name"),
+						rowsStations.getInt("LevelId")
 						));
 			}
 		} catch (SQLException e) {
@@ -475,10 +476,11 @@ public class Db {
 	
 	//crear metodo para obtener montos de tarifas getConfig()
 	
-	public String getConfig(String name, String type){
+	public static String getConfig(String name, String type){
+		Db db = new Db();
 		String configValue = "";
 		String query = "SELECT Value FROM Configs WHERE Name = '" +  name  + "' AND Type = '" + type + "'";
-		ResultSet rowsConfigValue = this.select(query);
+		ResultSet rowsConfigValue = db.select(query);
 		try {
 			if(rowsConfigValue.next()) {
 				configValue = rowsConfigValue.getString("Value");
@@ -623,7 +625,10 @@ public class Db {
 	}
 
 	public static Integer getAvailablePlaces(Integer levelId) {
-
+		return (Db.getLevelPlaces(levelId) - Db.getVehiclesIn(levelId));
+	}
+	
+	public static int getLevelPlaces(Integer levelId) {
 		Db db = new Db();
 		Integer places = 0;
 		ResultSet rowsPlaces = db.select("SELECT Places FROM levels WHERE id = " +  levelId);
@@ -638,9 +643,21 @@ public class Db {
 		return places;
 	}
 	
-	public static Integer getVehiclesIn(){
-		return null;
-		 
+	public static Integer getVehiclesIn(Integer levelId){
+		Db db = new Db();
+		Integer vehiclesIn = 0;
+		ResultSet rowsVehiclesIn = db.select("SELECT COUNT(1) as cnt FROM transactions "
+				+ "JOIN stations ON stations.Id = transactions.EntranceStationId "
+				+ "WHERE Exited = 0 AND LevelId = " + levelId);
+		try {
+			if(rowsVehiclesIn.next()) {
+				vehiclesIn = rowsVehiclesIn.getInt("cnt");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return vehiclesIn;
 	}
 	
 	public ArrayList<Integer> getParkingPlaces(Integer boardId) {

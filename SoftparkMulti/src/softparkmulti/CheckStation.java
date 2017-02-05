@@ -5,17 +5,17 @@ import javax.swing.JOptionPane;
 public class CheckStation {
 
 	int stationId = 0;
-//	public static void main(String[] args) {
-//
-//		new CheckStation();
-//
-//	} // END OF main
+	public static void main(String[] args) {
 
-	public int CheckStation() {
+		new CheckStation();
+
+	} // END OF main
+
+	public CheckStation() {
 		try{
 			Db db = new Db();
 			String macAddress = GetNetworkAddress.GetAddress("mac");
-			                    
+			
 			if(!(macAddress == null)){
 				//if(macAddress.equalsIgnoreCase("00-19-21-20-01-4e")) { //Mac Address antigua
 				//if(macAddress.equalsIgnoreCase("00-e0-7d-fc-ea-ad")) {
@@ -25,7 +25,7 @@ public class CheckStation {
 					if(rowsMac.next()){
 						stationId = rowsMac.getInt("Id");
 //						JOptionPane.showMessageDialog(null, "Id de estacion ", null, JOptionPane.ERROR_MESSAGE, null);
-//						new SoftParkMultiView(rowsMac.getInt("Id"));
+						new SoftParkMultiView(stationId);
 					}else{
 						new SelectStationView();
 					}
@@ -41,7 +41,6 @@ public class CheckStation {
 			JOptionPane.showMessageDialog(null, ex.getCause());
 		} //END OF catch
 		
-		return stationId;
 	} // END OF CheckStation
 	
 

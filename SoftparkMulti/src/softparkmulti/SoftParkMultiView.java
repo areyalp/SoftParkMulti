@@ -689,22 +689,28 @@ public class SoftParkMultiView extends JFrame {
 		textEntrancePlate = new JTextField(12);
 		entrancePlatePanel.add(textEntrancePlate);
 		
-		entrancePanel.add(entrancePlatePanel);	
+		entrancePanel.add(entrancePlatePanel);
 		
-		JPanel parkingSpacesPanel = new JPanel();
+		if(Db.getLevelPlaces(stationInfo.getLevelId()) > -1) {
+			JPanel parkingSpacesPanel = new JPanel();
+			
+			Integer availablePlaces = Db.getAvailablePlaces(stationInfo.getLevelId());
+			
+			JLabel labelParkingSpaces = new JLabel("Puestos Disponibles: ");
+			labelParkingSpaces.setFont(new Font(null, Font.BOLD, 14));
+			parkingSpacesPanel.add(labelParkingSpaces);
+			labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
+			labelParkingCounter.setFont(new Font(null, Font.BOLD, 14));
+			parkingSpacesPanel.add(labelParkingCounter);		
+			
+			CheckPlacesTask taskCheckPlaces = new CheckPlacesTask();
+			
+			Timer timerCheckPlaces = new Timer(true);
+			timerCheckPlaces.scheduleAtFixedRate(taskCheckPlaces, 1000, 3000);
+			
+			entrancePanel.add(parkingSpacesPanel);
 		
-		Integer availablePlaces = Db.getAvailablePlaces(stationInfo.getId());
-		
-		JLabel labelParkingSpaces = new JLabel("Puestos Disponibles: ");
-		labelParkingSpaces.setFont(new Font(null, Font.BOLD, 14));
-		parkingSpacesPanel.add(labelParkingSpaces);
-		labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
-		labelParkingCounter.setFont(new Font(null, Font.BOLD, 14));
-		parkingSpacesPanel.add(labelParkingCounter);		
-		
-		TimerTask taskCheckPlaces = new TimerTask();
-		
-		entrancePanel.add(parkingSpacesPanel);		
+		}
 		
 		container.add(Box.createVerticalStrut(20));
 		container.add(entrancePanel);		
@@ -2590,17 +2596,25 @@ public class SoftParkMultiView extends JFrame {
 		}
 	}
 	
-	private class CheckPlacesTask {
+	private class CheckPlacesTask extends TimerTask {
 		
 		private Integer availablePlaces;
-		private Db db;
+		
 		public CheckPlacesTask(){
-			db = new Db();
-			this.availablePlaces = db.getAvailablePlaces(stationInfo.getId());
+			this.setAvailablePlaces(Db.getAvailablePlaces(stationInfo.getLevelId()));
 		}
 		
 		public  synchronized void run() {
-			
+			this.setAvailablePlaces(Db.getAvailablePlaces(stationInfo.getLevelId()));
+			labelParkingCounter.setText("Puestos Disponibles: " + this.getAvailablePlaces());
+		}
+
+		public Integer getAvailablePlaces() {
+			return this.availablePlaces;
+		}
+
+		public void setAvailablePlaces(Integer availablePlaces) {
+			this.availablePlaces = availablePlaces;
 		}
 		
 	}
