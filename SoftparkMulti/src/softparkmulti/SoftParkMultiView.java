@@ -140,7 +140,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
-	public Integer transactionId,ticketNumber,amount, overnightDays,places;
+	public Integer transactionId,ticketNumber, overnightDays,places;
 	public Timestamp entranceDateTime;
 	
 	
@@ -570,7 +570,7 @@ public class SoftParkMultiView extends JFrame {
 		JLabel labelDirectionState = new JLabel("Estado:");
 		directionsPanel.add(labelDirectionState);
 		comboDirectionState = new JComboBox<String>();
-		comboDirectionState.removeItem("     ");
+		comboDirectionState.removeItem("");
 		directionsPanel.add(comboDirectionState);
 
 		JLabel labelCity = new JLabel("Ciudad:");
@@ -1867,6 +1867,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		String ticketCode = "";
 		ticketNumber = 0;
+		Integer amount = 0;
 		Boolean isTicketOut = true;
 		Boolean isTicketIn = false;
 		
@@ -1905,9 +1906,9 @@ public class SoftParkMultiView extends JFrame {
 														
 						textDuration.setEditable(true);						
 						textExpiration.setEditable(true);				
-						Integer ticketTimeout = Integer.valueOf(db.getConfig("ticket_timeout", "time"));
+						Integer ticketTimeout = Integer.valueOf(Db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
-						Boolean overnightType = Boolean.valueOf(db.getConfig("overnight_type", "billing"));
+						Boolean overnightType = Boolean.valueOf(Db.getConfig("overnight_type", "billing"));
 						if (dtIn.isBefore(dtOut)){
 							//Check the overnight_type in the configs table from the DB
 							if (!overnightType){
@@ -1929,10 +1930,9 @@ public class SoftParkMultiView extends JFrame {
 									labelMoney.setText(String.valueOf(amount) + "Bs.");
 								}
 								
-							}
-							else{
+							} else {
 								//If the value = 1 then the charge will be by night (overnights)
-								Integer overnightOffset = Integer.valueOf(db.getConfig("overnight_time", "time"));
+								Integer overnightOffset = Integer.valueOf(Db.getConfig("overnight_time", "time"));
 								DateTime dtInOffset = dtIn.minusHours(overnightOffset);
 								DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
 								Integer daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
@@ -2020,8 +2020,8 @@ public class SoftParkMultiView extends JFrame {
 		@Override
 		public synchronized void run() {
 			Db db = new Db();
-			int insertedSummaryId = 0;
-			boolean isTicketProcessed = false;
+			Integer insertedSummaryId = 0;
+			Boolean isTicketProcessed = Boolean.FALSE;
 						
 			printerChecker();
 			
@@ -2038,7 +2038,7 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-									for(Transaction t: transactions) {
+									for(Transaction t: transactionsOut) {
 										try {
 											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
 													PrinterCommand.TAX1, 
@@ -2130,7 +2130,7 @@ public class SoftParkMultiView extends JFrame {
 											}
 										}
 									}
-									transactions.clear();
+									transactionsOut.clear();
 									textTicket.setText("");
 									labelPrice.setText("0,00");
 									disableButtons();
@@ -2143,20 +2143,20 @@ public class SoftParkMultiView extends JFrame {
 						} catch(NumberFormatException ne) {
 							JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
-					} else if (stationMode.equals("E/S")) {
+					} else if (stationInfo.getName().equals("E/S")) {
 						
-						if(transactions.size() > 0) {
-							Integer transactionsOutIndex = transactionSelectedMulti(transactions, allTransactions.get(2).getId());
+						if(transactionsOut.size() > 0) {
+							Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
 							if(transactionsOutIndex > -1) {
-								transactions.remove(transactionsOutIndex);
+								transactionsOut.remove(transactionsOutIndex);
 							}else{
-								transactions.add(allTransactions.get(2));
+								transactionsOut.add(allTransactions.get(2));
 							}
 						} else {
-							transactions.add(allTransactions.get(2));		
+							transactionsOut.add(allTransactions.get(2));		
 						}
 						
-						Double amount = Transaction.getTotalAmount(transactions);
+						Double amount = Transaction.getTotalAmount(transactionsOut);
 						
 						if(!exonerate){
 							if(!shiftIsDown) {
@@ -2167,7 +2167,7 @@ public class SoftParkMultiView extends JFrame {
 								}
 								//TODO fix price value to an object
 								
-								for(Transaction tOut: transactions) {
+								for(Transaction tOut: transactionsOut) {
 									try {
 										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
 												PrinterCommand.TAX1, 
@@ -2188,14 +2188,14 @@ public class SoftParkMultiView extends JFrame {
 							db = new Db();
 	
 							if(summaryHasInvoice) {
-								for(Transaction tOut: transactions) {
+								for(Transaction tOut: transactionsOut) {
 									db.insertTransactionsOut(stationInfo.getId(),  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 								}
 							}else{
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
-									for(Transaction tOut: transactions) {
+									for(Transaction tOut: transactionsOut) {
 										db.insertTransactionsOut(stationInfo.getId(), summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 									}																
@@ -2216,7 +2216,7 @@ public class SoftParkMultiView extends JFrame {
 									if(insertedSummaryId > 0) {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
-										for(Transaction tOut: transactions)  {
+										for(Transaction tOut: transactionsOut)  {
 											db.insertTransactionsOut(stationInfo.getId(), summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 										}
@@ -2278,15 +2278,15 @@ public class SoftParkMultiView extends JFrame {
 							db = new Db();
 
 							if(summaryHasInvoice) {
-								for(Transaction tOut: transactions) {
-									db.insertExonerated(stationId,  summaryId, amount, 12, 
+								for(Transaction tOut: transactionsOut) {
+									db.insertExonerated(stationInfo.getId(),  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);			
 								}
 							}else{
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
-									for(Transaction tOut: transactions) {
-										db.insertExonerated(stationId, summaryId, amount, 12, 
+									for(Transaction tOut: transactionsOut) {
+										db.insertExonerated(stationInfo.getId(), summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 									}																
 								}else{
@@ -2298,16 +2298,16 @@ public class SoftParkMultiView extends JFrame {
 										}
 										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
 										db = new Db();
-										insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
+										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
 									} else {
-										insertedSummaryId = db.insertSummary(stationId, user.getId(), 0);
+										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
 									}
 									
 									if(insertedSummaryId > 0) {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
-										for(Transaction tOut: transactions)  {
-											db.insertExonerated(stationId, summaryId, amount, 12, 
+										for(Transaction tOut: transactionsOut)  {
+											db.insertExonerated(stationInfo.getId(), summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 										}
 										stationsWithSummary = Db.getStationsWithSummary();
@@ -2348,8 +2348,6 @@ public class SoftParkMultiView extends JFrame {
 			buttonCollectAccept.setEnabled(true);
 			buttonCollectCancel.setEnabled(false);
 			buttonCollectExonerate.setEnabled(false);
-
-			amount = 0;
 			
 		}
 		

@@ -622,6 +622,7 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
 		return isTicketOut;
 	}
 
@@ -641,6 +642,12 @@ public class Db {
 			e.printStackTrace();
 		}
 		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 		return places;
 	}
 	
@@ -654,6 +661,12 @@ public class Db {
 			if(rowsVehiclesIn.next()) {
 				vehiclesIn = rowsVehiclesIn.getInt("cnt");
 			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
