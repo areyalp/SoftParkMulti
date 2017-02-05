@@ -418,7 +418,7 @@ public class Db {
 		return vehicles;
 	}
 	
-	protected static ArrayList<Transaction> loadTransactionTypes() {
+	protected static ArrayList<Transaction> loadAllTransactions() {
 		ArrayList<Transaction> transactionTypes = null;
 		Db db = new Db();
 		ResultSet rowsTransactionTypes = db.select("SELECT "
@@ -593,7 +593,8 @@ public class Db {
 		boolean isTicketIn = false;
 		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
 				+ "FROM Transactions "
-				+ "WHERE transactions.Id = " + ticketNumber);		
+				+ "WHERE transactions.Id = " + ticketNumber
+				+ " AND Exited = 0");		
 		try {
 			if(rowTicketIn.next()) {
 				if(rowTicketIn.getInt("cnt") > 0) {

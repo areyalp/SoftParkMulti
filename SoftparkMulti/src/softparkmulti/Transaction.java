@@ -1,20 +1,22 @@
 package softparkmulti;
 
+import java.util.ArrayList;
+
 public class Transaction {
-	private int id;
+	private Integer id;
 	private String name;
-	private double maxAmount;
-	private double tax;
+	private Double maxAmount;
+	private Double tax;
 	
 	
-	public Transaction(int id, String name, double maxAmount, double tax) {
+	public Transaction(Integer id, String name, Double maxAmount, Double tax) {
 		this.id = id;
 		this.name = name;
 		this.maxAmount = maxAmount;
 		this.tax = tax;
 	}
 	
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
@@ -22,16 +24,24 @@ public class Transaction {
 		return name;
 	}
 	
-	public double getMaxAmount() {
+	public Double getMaxAmount() {
 		return maxAmount;
 	}
 
-	public double getTax() {
+	public Double getTax() {
 		return tax;
 	}
 
 	public String toString() {
 		return name;
+	}
+	
+	public static Double getTotalAmount(ArrayList<Transaction> transactions) {
+		Double total = 0.00;
+		for(Transaction t:transactions) {
+			total += t.getMaxAmount();
+		}
+		return total;
 	}
 	
 }
