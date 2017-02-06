@@ -117,19 +117,19 @@ public class PrinterCommand {
 	}
 	
 	private static String getFractionToString(double itemPrice, int digits){
-		double FractionalPart = (itemPrice % 1) * 100;
+		double fractionalPart = (itemPrice % 1) * 100;
 		
-		int intFraction = (int) FractionalPart;
+		int intFraction = Integer.parseInt(String.valueOf(fractionalPart));
 		
 		String stringFraction = fillWithZeros(intFraction, digits);
 		return stringFraction;
 	}
 	
 	private static String getWholeToString(double itemPrice, int digits){
-		double FractionalPart = itemPrice % 1;
-		double WholePart = itemPrice - FractionalPart;
+		double fractionalPart = itemPrice % 1;
+		double wholePart = itemPrice - fractionalPart;
 		
-		int intWhole = (int) WholePart;
+		int intWhole = Integer.parseInt(String.valueOf(wholePart));
 		
 		String stringWhole = fillWithZeros(intWhole, digits);
 		return stringWhole;
@@ -152,14 +152,14 @@ public class PrinterCommand {
 		
 	public static String setBarcode(String string) {
 		//TODO set the values of the barcode entrance ticket
-		return "y1234567890";
+		return "y" + string;
 	}
 	
 //	public static String getTotal() {	
 //		return "101";
 //	}
 	
-	public static String programCashier(Integer cashierNumber, Integer cashierCode, String name){
+	public static String programCashier(int cashierNumber, int cashierCode, String name){
 				
 		String stringCashierNumber = fillWithZeros(cashierNumber, CASHIER_NUMBER_DIGITS);
 		String stringCashierCode = fillWithZeros(cashierCode, CASHIER_CODE_DIGITS);
@@ -172,7 +172,7 @@ public class PrinterCommand {
 		
 	}
 	
-	public static String startCashier (Integer cashierCode){
+	public static String startCashier (int cashierCode){
 		
 		String stringCashierCode = fillWithZeros(cashierCode, 5);
 		

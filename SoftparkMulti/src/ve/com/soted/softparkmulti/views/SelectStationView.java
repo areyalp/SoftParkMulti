@@ -77,7 +77,7 @@ public class SelectStationView extends JFrame{
 		public void actionPerformed(ActionEvent e) {
 			if("select".equals(e.getActionCommand())){
 				Station stationData = (Station) comboStations.getSelectedItem();
-				Integer stationId = stationData.getId();
+				int stationId = stationData.getId();
 				String macAddress = GetNetworkAddress.GetAddress("mac");
 				try {
 					Db db = new Db();

@@ -92,8 +92,8 @@ public class GetNetworkAddress {
 		return address;
 	}
 	
-	private static boolean isVMMac(byte[] mac) {
-		if(null == mac) return false;
+	private static Boolean isVMMac(byte[] mac) {
+		if(null == mac) return Boolean.FALSE;
 	    byte invalidMacs[][] = {
 	            {0x00, 0x05, 0x69},             //VMWare
 	            {0x00, 0x1C, 0x14},             //VMWare
@@ -106,10 +106,10 @@ public class GetNetworkAddress {
 	    };
 
 	    for (byte[] invalid: invalidMacs){
-	        if (invalid[0] == mac[0] && invalid[1] == mac[1] && invalid[2] == mac[2]) return true;
+	        if (invalid[0] == mac[0] && invalid[1] == mac[1] && invalid[2] == mac[2]) return Boolean.TRUE;
 	    }
 
-	    return false;
+	    return Boolean.FALSE;
 	}
 
 }

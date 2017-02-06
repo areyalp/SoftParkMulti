@@ -2,15 +2,15 @@ package ve.com.soted.softparkmulti.objects;
 
 public class User {
 	
-	int id;
-	int userTypeId;
-	String name;
-	String login;
-	String userType;
-	boolean logToProgram = false;
-	boolean canCheckOut = false;
-	boolean canPrintReportZ = false;
-	public boolean canPrintReportX = false;
+	private int id;
+	private int userTypeId;
+	private String name;
+	private String login;
+	private String userType;
+	private boolean logToProgram = false;
+	private boolean canCheckOut = false;
+	private boolean canPrintReportZ = false;
+	private boolean canPrintReportX = false;
 
 	public User(int id, int userTypeId, String name, String login, String userType, boolean logToProgram,
 			boolean canCheckOut, boolean canPrintReportZ, boolean canPrintReportX) {
@@ -45,19 +45,19 @@ public class User {
 		return userType;
 	}
 
-	public boolean isLogToProgram() {
+	public boolean canLogToProgram() {
 		return logToProgram;
 	}
 
-	public boolean isCanCheckOut() {
+	public boolean canCheckOut() {
 		return canCheckOut;
 	}
 
-	public boolean isCanPrintReportZ() {
+	public boolean canPrintReportZ() {
 		return canPrintReportZ;
 	}
 
-	public boolean isCanPrintReportX() {
+	public boolean canPrintReportX() {
 		return canPrintReportX;
 	}
 

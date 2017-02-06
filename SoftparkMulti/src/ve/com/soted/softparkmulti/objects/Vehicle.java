@@ -2,10 +2,10 @@ package ve.com.soted.softparkmulti.objects;
 
 public class Vehicle{
 	
-	int id;
-	String name;
-	double price;
-	double tax;
+	private int id;
+	private String name;
+	private double price;
+	private double tax;
 
 	public Vehicle(int id, String name, double price, double tax) {
 		this.id = id;

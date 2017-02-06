@@ -1,21 +1,21 @@
 package ve.com.soted.softparkmulti.objects;
 
 public class TransactionType {
-	Integer id;
-	String name;
-	String description;
+	private int id;
+	private String name;
+	private String description;
 	
-	public TransactionType(Integer id, String name, String description) {
+	public TransactionType(int id, String name, String description) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
 	}
 
-	public Integer getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 

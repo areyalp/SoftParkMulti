@@ -162,7 +162,7 @@ public class Db {
 	}
 	
 	public int insertExonerated(int entranceStationId, int summaryId,	
-			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, Boolean exonerated) {
+			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
 
 		String sql;
 		int insertedId = 0;
@@ -184,7 +184,7 @@ public class Db {
 		return insertedId;
 	}
 	
-	public Integer preInsertTransaction(Integer stationId) {
+	public int preInsertTransaction(int stationId) {
 		
 		String sql;
 		int insertedId = 0;
@@ -201,7 +201,7 @@ public class Db {
 		return insertedId;
 	}
 	
-	public Integer preTransactionIn(Integer entranceStationId, String plate) {
+	public int preTransactionIn(int entranceStationId, String plate) {
 		
 		String sql;
 		int insertedId = 0;
@@ -210,7 +210,7 @@ public class Db {
 		return insertedId;
 	}
 	
-	public Integer transactionIn (Integer entranceStationId, String plate){		
+	public int transactionIn (int entranceStationId, String plate){		
 		
 		String sql;
 		int insertedId = 0;
@@ -558,8 +558,8 @@ public class Db {
 		return configValue;
 	}
 	
-	public Integer getHourRates(Integer cantHoras){
-		Integer hourAmount = 0;
+	public int getHourRates(int cantHoras){
+		int hourAmount = 0;
 		String query = "SELECT Amount FROM rateamounts WHERE RangeTo = '" +  cantHoras + "'";
 		ResultSet rowsRatesAmount = this.select(query);
 		try {
@@ -572,10 +572,10 @@ public class Db {
 		return hourAmount;
 	}
 	
-	public Integer getFractionRates(Integer cantHoras){
+	public int getFractionRates(int cantHoras){
 		
 		Db db = new Db();
-		Integer fractionAmount = 0;
+		int fractionAmount = 0;
 		ResultSet rowsFractionRatesAmount = db.select("SELECT Fraction FROM rateamounts WHERE RangeFrom = '" +  cantHoras + "'");
 		try {
 			if(rowsFractionRatesAmount.next()) {
@@ -587,10 +587,10 @@ public class Db {
 		return fractionAmount;
 	}
 	
-	public Integer getOvernightRates(String overnight){
+	public int getOvernightRates(String overnight){
 		
 		Db db = new Db();
-		Integer overnightAmount = 0;
+		int overnightAmount = 0;
 		ResultSet rowsOvernightRatesAmount = db.select("SELECT MaxAmount FROM rates WHERE Name = '" +  overnight + "'");
 		try {
 			if(rowsOvernightRatesAmount.next()) {
@@ -602,7 +602,7 @@ public class Db {
 		return overnightAmount;
 	}
 	
-	public String getPlate (Integer ticketNumber){
+	public String getPlate (int ticketNumber){
 		
 		Db db = new Db();
 		String plate = "";
@@ -668,7 +668,7 @@ public class Db {
 		return isTicketProcessed;
 	}
 
-	public static Boolean isTicketIn(Integer ticketNumber) {
+	public static boolean isTicketIn(int ticketNumber) {
 		Db db = new Db();
 		boolean isTicketIn = false;
 		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
@@ -694,7 +694,7 @@ public class Db {
 		return isTicketIn;
 	}
 
-	public static Boolean isTicketOut(Integer ticketNumber) {
+	public static boolean isTicketOut(int ticketNumber) {
 		Db db = new Db();
 		boolean isTicketOut = false;
 		ResultSet rowTicketOut = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
@@ -719,13 +719,13 @@ public class Db {
 		return isTicketOut;
 	}
 
-	public static Integer getAvailablePlaces(Integer levelId) {
+	public static int getAvailablePlaces(int levelId) {
 		return (Db.getLevelPlaces(levelId) - Db.getVehiclesIn(levelId));
 	}
 	
-	public static int getLevelPlaces(Integer levelId) {
+	public static int getLevelPlaces(int levelId) {
 		Db db = new Db();
-		Integer places = 0;
+		int places = 0;
 		ResultSet rowsPlaces = db.select("SELECT Places FROM levels WHERE id = " +  levelId);
 		try {
 			if(rowsPlaces.next()) {
@@ -744,9 +744,9 @@ public class Db {
 		return places;
 	}
 	
-	public static Integer getVehiclesIn(Integer levelId){
+	public static int getVehiclesIn(int levelId){
 		Db db = new Db();
-		Integer vehiclesIn = 0;
+		int vehiclesIn = 0;
 		ResultSet rowsVehiclesIn = db.select("SELECT COUNT(1) as cnt FROM transactions "
 				+ "JOIN stations ON stations.Id = transactions.EntranceStationId "
 				+ "WHERE Exited = 0 AND LevelId = " + levelId);
@@ -767,7 +767,7 @@ public class Db {
 		return vehiclesIn;
 	}
 	
-	public ArrayList<Integer> getParkingPlaces(Integer boardId) {
+	public ArrayList<Integer> getParkingPlaces(int boardId) {
 		//TODO have to fix this method and create the storeProcedure in the DB
 		ArrayList<Integer> ParkingPlaces = new ArrayList<Integer>();
 		ResultSet setBoardSwitchMainIds;
@@ -789,7 +789,7 @@ public class Db {
 		return ParkingPlaces;
 	}
 
-	public static String getStationTypeName(Integer stationTypeId) {
+	public static String getStationTypeName(int stationTypeId) {
 		Db db = new Db();
 		String name = "";
 		ResultSet rowName = db.select("SELECT Name FROM stationstype WHERE id = " +  stationTypeId);

@@ -48,9 +48,9 @@ public class RelayDriver {
 		
 		char code = 'D';
 		
-		if(state==ACTIVE_STATE){
+		if(state==RelayDriver.ACTIVE_STATE){
 			code = 'A';
-		}else if(state==INACTIVE_STATE){
+		}else if(state==RelayDriver.INACTIVE_STATE){
 			code = 'D';
 		}
 		

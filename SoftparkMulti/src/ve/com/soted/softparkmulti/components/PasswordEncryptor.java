@@ -28,7 +28,7 @@ public class PasswordEncryptor {
 
    }
    
-   public static Boolean checkPassword(String plainPassword, String encryptedPassword){
+   public static boolean checkPassword(String plainPassword, String encryptedPassword){
 	   
 	   String plainPasswordEncrypted;
 	   

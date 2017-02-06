@@ -7,12 +7,12 @@ import ve.com.soted.softparkmulti.db.Db;
 
 public class Station
     {
-		private Integer id;
+		private int id;
         private StationType type;
         private String name;
-        private Integer levelId;
+        private int levelId;
         
-        public Station(Integer id, StationType type, String name, Integer levelId)
+        public Station(int id, StationType type, String name, int levelId)
         {
         	this.id = id;
         	this.type = type;
@@ -20,7 +20,7 @@ public class Station
         	this.levelId = levelId;
         }
         
-        public Integer getId()
+        public int getId()
         {
             return this.id;
         }
@@ -35,7 +35,7 @@ public class Station
             return this.name;
         }
         
-        public Integer getLevelId() 
+        public int getLevelId() 
         {
         	return this.levelId;
         }
@@ -46,7 +46,7 @@ public class Station
             return name;
         }
         
-        public static Station getStationInfo(Integer stationId) {
+        public static Station getStationInfo(int stationId) {
     		Station stationInfo = null;
     		Db db = new Db();
     		ResultSet rowStation = db.select("SELECT Id, TypeId, Name, LevelId FROM Stations WHERE Id = " + stationId);

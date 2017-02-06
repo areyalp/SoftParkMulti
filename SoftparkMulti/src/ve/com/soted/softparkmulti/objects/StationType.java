@@ -4,24 +4,24 @@ import ve.com.soted.softparkmulti.db.Db;
 
 public class StationType {
 	
-	private Integer id;
+	private int id;
 	private String name;
 	
-	public StationType(Integer id) {
+	public StationType(int id) {
 		this.id = id;
 		this.name = Db.getStationTypeName(id);
 	}
 	
-	public StationType(Integer id, String name) {
+	public StationType(int id, String name) {
 		this.id = id;
 		this.name = name;
 	}
 
-	public Integer getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 
