@@ -215,10 +215,10 @@ public class SoftParkMultiView extends JFrame {
 		JTabbedPane tabbedPane = new JTabbedPane();
 
 		// Add a tab
-		if(stationInfo.getType() == 5){
+		if(stationInfo.getType().getId() == 5){
 			tabbedPane.addTab("Sistema de Cobro", createCashierTab());
 			
-		}else if(stationInfo.getType() == 4){
+		}else if(stationInfo.getType().getId() == 4){
 			tabbedPane.addTab("Valet Parking", createValetTab());
 		}
 
@@ -1351,7 +1351,7 @@ public class SoftParkMultiView extends JFrame {
 			//JOptionPane.showMessageDialog(null, "parent node user object: " + stationNode.getUserObject());
 			if(SwingUtilities.isRightMouseButton(e) && reportNode.getUserObject() != null && reportNode.getLevel() == 3) {
 				DefaultMutableTreeNode stationNode = new DefaultMutableTreeNode(reportNode.getParent().getParent());
-				if(stationNode.getUserObject().toString().equalsIgnoreCase(stationInfo.getName())) {
+				if(stationNode.getUserObject().toString().equalsIgnoreCase(stationInfo.getType().getName())) {
 					PopUpMenu popUpMenu = new PopUpMenu();
 					popUpMenu.show(e.getComponent(), e.getX(), e.getY());
 				}
@@ -1449,13 +1449,13 @@ public class SoftParkMultiView extends JFrame {
 					textEntrancePlate.setText("");
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button"))  {				
-					CheckOutRun out = new CheckOutRun(stationInfo.getName());
+					CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
 					new Thread(out).start();
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.exonerate.button")){					
 					int userResponse = JOptionPane.showConfirmDialog(null, "¿Desea exonerar este ticket?", "Confirme exoneracion de un ticket", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);					
 					if(userResponse == JOptionPane.YES_OPTION) {
-						CheckOutRun out = new CheckOutRun(stationInfo.getName(), true);
+						CheckOutRun out = new CheckOutRun(stationInfo.getType().getName(), true);
 						new Thread(out).start();
 					}
 					else{
@@ -1695,7 +1695,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		@Override
 		public synchronized void run() {
-			if(stationInfo.getName().equals("Valet")){
+			if(stationInfo.getType().getName().equals("Valet")){
 				if(transactions.size() > 0) {
 					switch(actionCommand){
 					case "valet-invoice":
@@ -1777,7 +1777,7 @@ public class SoftParkMultiView extends JFrame {
 		}
 		@Override
 		public synchronized void run() {
-			if (stationInfo.getName().equals("E/S")){					
+			if (stationInfo.getType().getName().equals("Entrada/Salida")){
 				//TODO Have to check the presence of the vehicle to allow print the ticket
 				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
 				
@@ -2143,7 +2143,7 @@ public class SoftParkMultiView extends JFrame {
 						} catch(NumberFormatException ne) {
 							JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
-					} else if (stationInfo.getName().equals("E/S")) {
+					} else if (stationInfo.getType().getName().equals("E/S")) {
 						
 						if(transactionsOut.size() > 0) {
 							Integer transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());

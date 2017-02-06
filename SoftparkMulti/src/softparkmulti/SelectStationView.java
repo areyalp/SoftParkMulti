@@ -131,7 +131,7 @@ public class SelectStationView extends JFrame{
 			while(rowsStations.next()){
 				stations.add(new Station(
 						rowsStations.getInt("Id"), 
-						rowsStations.getInt("TypeId"), 
+						new StationType(rowsStations.getInt("TypeId")), 
 						rowsStations.getString("Name"),
 						rowsStations.getInt("LevelId")
 						));

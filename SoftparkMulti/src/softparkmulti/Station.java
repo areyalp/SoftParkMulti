@@ -6,11 +6,11 @@ import java.sql.SQLException;
 public class Station
     {
 		private Integer id;
-        private Integer type;
+        private StationType type;
         private String name;
         private Integer levelId;
         
-        Station(Integer id, Integer type, String name, Integer levelId)
+        Station(Integer id, StationType type, String name, Integer levelId)
         {
         	this.id = id;
         	this.type = type;
@@ -23,7 +23,7 @@ public class Station
             return this.id;
         }
         
-        public Integer getType()
+        public StationType getType()
         {
             return this.type;
         }
@@ -55,7 +55,7 @@ public class Station
     				
     				stationInfo = new Station(
     						rowStation.getInt("Id"), 
-    						rowStation.getInt("TypeId"), 
+    						new StationType(rowStation.getInt("TypeId")), 
     						rowStation.getString("Name"),
     						rowStation.getInt("LevelId"));
     			}

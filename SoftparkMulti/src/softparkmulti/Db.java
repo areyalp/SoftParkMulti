@@ -257,6 +257,14 @@ public class Db {
 		boolean updatedSummary = db.update("UPDATE Summary"
 				+ " SET Status = 1, SupervisorId = " + supervisorId + ", DateClosing = NOW()"
 				+ " WHERE Id = " + summaryId);
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return updatedSummary;
 	}
 
@@ -270,7 +278,7 @@ public class Db {
 		try {
 			while(rowsStations.next()) {
 				stations.add(new Station(rowsStations.getInt("StationId"),
-						rowsStations.getInt("TypeId"),
+						new StationType(rowsStations.getInt("TypeId")),
 						rowsStations.getString("Name"),
 						rowsStations.getInt("LevelId")
 						));
@@ -278,6 +286,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return stations;
 	}
 	
@@ -293,6 +309,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return vaultSummaryId;
 	}
 	
@@ -321,6 +345,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return userId;
 	}
 	
@@ -388,6 +420,14 @@ public class Db {
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return summaries;
 	}
 	
@@ -415,6 +455,14 @@ public class Db {
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return vehicles;
 	}
 	
@@ -440,6 +488,13 @@ public class Db {
 						));
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -471,6 +526,13 @@ public class Db {
 			e.printStackTrace();
 		}
 		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return transactionsOutTypes;
 	}
 	
@@ -488,6 +550,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return configValue;
 	}
 	
@@ -567,6 +637,13 @@ public class Db {
 			e.printStackTrace();
 		}
 		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return payTypes;
 	}
 
@@ -585,6 +662,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return isTicketProcessed;
 	}
 
@@ -604,6 +689,14 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return isTicketIn;
 	}
 
@@ -620,6 +713,13 @@ public class Db {
 				}
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -694,6 +794,27 @@ public class Db {
 		}
 		
 		return ParkingPlaces;
+	}
+
+	public static String getStationTypeName(Integer stationTypeId) {
+		Db db = new Db();
+		String name = "";
+		ResultSet rowName = db.select("SELECT Name FROM stationstype WHERE id = " +  stationTypeId);
+		try {
+			if(rowName.next()) {
+				name = rowName.getString("Name");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return name;
 	}
 
 }
