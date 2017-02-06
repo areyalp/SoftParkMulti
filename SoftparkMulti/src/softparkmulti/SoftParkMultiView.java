@@ -2424,9 +2424,9 @@ public class SoftParkMultiView extends JFrame {
 		return null;		
 	}
 	
- 	public Double getSubTotalMulti(ArrayList<TransactionsOut> transactionsOut) {
+ 	public Double getSubTotalMulti(ArrayList<Transaction> transactionsOut) {
  		Double subTotal = 0.00;		
-		for(TransactionsOut tOut: transactionsOut) {
+		for(Transaction tOut: transactionsOut) {
 			subTotal += tOut.getMaxAmount();
 		}
 		return subTotal;

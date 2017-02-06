@@ -501,8 +501,8 @@ public class Db {
 		return transactionTypes;
 	}
 	
-	protected static ArrayList<TransactionsOut> loadTransactionsOutTypes() {
-		ArrayList<TransactionsOut> transactionsOutTypes = null;
+	protected static ArrayList<Transaction> loadTransactionsOutTypes() {
+		ArrayList<Transaction> transactionsOutTypes = null;
 		Db db = new Db();
 		ResultSet rowsTransactionsOutTypes = db.select("SELECT "
 				+ "t.Name, "
@@ -512,10 +512,10 @@ public class Db {
 			+ "FROM TransactionTypes t, Rates r "
 			+ "WHERE t.Id = r.TransactionTypeId");
 		
-		transactionsOutTypes = new ArrayList<TransactionsOut>();
+		transactionsOutTypes = new ArrayList<Transaction>();
 		try {
 			while(rowsTransactionsOutTypes.next()) {
-				transactionsOutTypes.add(new TransactionsOut(
+				transactionsOutTypes.add(new Transaction(
 						rowsTransactionsOutTypes.getInt("Id"),
 						rowsTransactionsOutTypes.getString("Name"),
 						rowsTransactionsOutTypes.getDouble("MaxAmount"),

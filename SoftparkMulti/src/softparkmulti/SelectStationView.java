@@ -26,16 +26,6 @@ public class SelectStationView extends JFrame{
 	
 	public int userId;
 	
-	public static void main(String[] args){	
-		SwingUtilities.invokeLater(new Runnable(){
-            @Override
-            public void run()
-            {
-                new SelectStationView().setVisible(true);
-            }
-        });
-	}
-	
 	public SelectStationView(){
 		this.setSize(350, 150);
 		Toolkit tk = Toolkit.getDefaultToolkit();

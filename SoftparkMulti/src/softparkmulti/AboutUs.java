@@ -16,19 +16,6 @@ public class AboutUs extends JFrame {
 
 	JButton buttonAccept;
 
-	public static void main(String[] args) {
-
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				new AboutUs().setVisible(true);
-			}
-
-		});
-
-	}
-
 	public AboutUs() {
 
 		this.setSize(400, 400);
