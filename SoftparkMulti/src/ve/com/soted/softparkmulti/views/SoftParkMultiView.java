@@ -1458,7 +1458,7 @@ public class SoftParkMultiView extends JFrame {
 				if (ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
 					CheckInRun v = new CheckInRun(ev.getActionCommand());
 					new Thread(v).start();
-					textEntrancePlate.setText("");
+//					textEntrancePlate.setText("");
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button"))  {				
 					CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
@@ -1765,7 +1765,6 @@ public class SoftParkMultiView extends JFrame {
 	}
 		
 	public String Relay() {
-		// TODO Auto-generated method stub
 		Properties prop = new Properties();
 		InputStream propertiesInput;
 //		String relayPort = "";
@@ -1838,7 +1837,8 @@ public class SoftParkMultiView extends JFrame {
 							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
-						}					
+						}	
+						textEntrancePlate.setText("");
 						int activateRelay = 0;
 						int relay1 = 1;
 						int relay2 = 2;
@@ -1866,16 +1866,13 @@ public class SoftParkMultiView extends JFrame {
 							}
 						//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
 							textEntrancePlate.setText("");
-							//TODO Update the places available
 							labelParkingCounter.setText(String.valueOf(Db.getAvailablePlaces(stationInfo.getLevelId())));
-	//						labelParkingCounter.setText(String.valueOf(getSubTotal(transactions)));
 					}
 				}		//end of station mode= E/S
 			} else {
 				labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 			}
-		}
-				
+		}				
 	}
 	
  	private void preCheckOut (){
@@ -2158,9 +2155,9 @@ public class SoftParkMultiView extends JFrame {
 						} catch(NumberFormatException ne) {
 							JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
-					} else if (stationInfo.getType().getName().equals("E/S")) {
+					} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
 						
-						if(transactionsOut.size() > 0) {
+						if(transactionsOut.size() > 0) {	//TODO check null pointer 
 							int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
 							if(transactionsOutIndex > -1) {
 								transactionsOut.remove(transactionsOutIndex);

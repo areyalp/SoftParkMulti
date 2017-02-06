@@ -697,13 +697,14 @@ public class Db {
 	public static boolean isTicketOut(int ticketNumber) {
 		Db db = new Db();
 		boolean isTicketOut = false;
-		ResultSet rowTicketOut = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
-				+ "FROM Transactions "
-				+ "WHERE transactions.TicketNumber = " + ticketNumber);		//TODO check this method to verify when the ticket is out
+		ResultSet rowTicketOut = db.select("SELECT Exited FROM transactions WHERE Id = '" +  ticketNumber + "'");
 		try {
 			if(rowTicketOut.next()) {
-				if(rowTicketOut.getInt("cnt") > 0) {
+				if(rowTicketOut.getInt("Exited") == 1) {
 					isTicketOut = true;
+				}
+				else{
+					isTicketOut = false;
 				}
 			}
 		} catch (SQLException e) {
