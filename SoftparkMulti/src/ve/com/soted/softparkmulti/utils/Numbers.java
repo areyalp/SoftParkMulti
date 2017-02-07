@@ -1,14 +1,16 @@
 package ve.com.soted.softparkmulti.utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class Numbers {
 	
 	public static double roundDouble(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 
-	    long factor = (long) Math.pow(10, places);
-	    value = value * factor;
-	    long tmp = Math.round(value);
-	    return (double) tmp / factor;
+	    BigDecimal bd = new BigDecimal(value);
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    return bd.doubleValue();
 	}
 
 }
