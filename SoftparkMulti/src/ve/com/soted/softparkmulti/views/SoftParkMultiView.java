@@ -106,6 +106,7 @@ public class SoftParkMultiView extends JFrame {
 	private ArrayList<Summary> summaries;
 	private ArrayList<Station> stationsWithSummary;
 	private ArrayList<Transaction> transactions;
+	private ArrayList<Transaction> transactionsOut;
 	private ArrayList<Transaction> allTransactions;
 	private ArrayList<PayType> payTypes;
 	
@@ -184,7 +185,8 @@ public class SoftParkMultiView extends JFrame {
 		allTransactions = Db.loadAllTransactions();
 		
 		transactions = new ArrayList<Transaction>();
-		
+		transactionsOut = new ArrayList<Transaction>();			//TODO check this
+
 		payTypes = Db.loadPayTypes();
 		
 		summaryId = Db.getSummaryId(userId,stationId);
@@ -2015,7 +2017,9 @@ public class SoftParkMultiView extends JFrame {
 		
 		String stationMode;
 		boolean exonerate;
-		ArrayList<Transaction> transactionsOut;
+//		ArrayList<Transaction> transactionsOut;
+//		transactionsOut = new ArrayList<Transaction>();
+
 		S1PrinterData statusS1;
 		S2PrinterData statusS2;
 		boolean sentCmd = false;
