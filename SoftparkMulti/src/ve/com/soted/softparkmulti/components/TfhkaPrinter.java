@@ -1,6 +1,6 @@
 package ve.com.soted.softparkmulti.components;
 
-public class PrinterCommand {
+public class TfhkaPrinter {
 	
 	public static final char TAX0 = ' ';
 	public static final char TAX1 = '!';

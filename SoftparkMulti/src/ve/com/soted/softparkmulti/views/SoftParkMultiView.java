@@ -75,7 +75,7 @@ import tfhka.ve.S2PrinterData;
 import tfhka.ve.Tfhka;
 import ve.com.soted.softparkmulti.comm.CommPortUtils;
 import ve.com.soted.softparkmulti.comm.RelayDriver;
-import ve.com.soted.softparkmulti.components.PrinterCommand;
+import ve.com.soted.softparkmulti.components.TfhkaPrinter;
 import ve.com.soted.softparkmulti.components.TreeDataModel;
 import ve.com.soted.softparkmulti.db.Db;
 import ve.com.soted.softparkmulti.dialogs.LoginDialog;
@@ -1538,7 +1538,7 @@ public class SoftParkMultiView extends JFrame {
 				labelStatus.setText("Enviando prueba al puerto " + activePort);
 				try {
 					@SuppressWarnings("unused")
-					boolean sentCmd = fiscalPrinter.SendCmd(PrinterCommand.printTest());
+					boolean sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.printTest());
 				} catch (PrinterException e) {
 					e.printStackTrace();
 				}
@@ -1801,7 +1801,7 @@ public class SoftParkMultiView extends JFrame {
 						boolean sentCmd = false;
 						int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + transactionId));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + transactionId));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
@@ -1811,32 +1811,32 @@ public class SoftParkMultiView extends JFrame {
 						DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 						DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}
 						try {
-							sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
+							sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
 						} catch (PrinterException ce) {
 							ce.printStackTrace();
 						}	
@@ -2050,14 +2050,14 @@ public class SoftParkMultiView extends JFrame {
 							if(!isTicketProcessed) {
 								if(!textTicket.getText().isEmpty()) {
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									for(Transaction t: transactionsOut) {
 										try {
-											sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
-													PrinterCommand.TAX1, 
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
+													TfhkaPrinter.TAX1, 
 													t.getMaxAmount(), 
 													1, 
 													t.getName()));
@@ -2067,18 +2067,18 @@ public class SoftParkMultiView extends JFrame {
 									}
 									
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
-												PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
+												TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("TICKET VALET"));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("TICKET VALET"));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket Valet #: " + ticketNumber));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket Valet #: " + ticketNumber));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
@@ -2086,22 +2086,22 @@ public class SoftParkMultiView extends JFrame {
 									DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 									DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + dt.toString(tFormatter)));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + dt.toString(dFormatter)));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd("PAGADO"));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("PAGADO"));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
@@ -2177,7 +2177,7 @@ public class SoftParkMultiView extends JFrame {
 						if(!exonerate){
 							if(!shiftIsDown) {
 								try {
-									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setClientInfo(0, "Ticket #: " + ticketNumber));
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}
@@ -2185,8 +2185,8 @@ public class SoftParkMultiView extends JFrame {
 								
 								for(Transaction tOut: transactionsOut) {
 									try {
-										sentCmd = fiscalPrinter.SendCmd(PrinterCommand.setItem(
-												PrinterCommand.TAX1, 
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
+												TfhkaPrinter.TAX1, 
 												amount, 
 												1, 				
 												tOut.getName()));
@@ -2195,8 +2195,8 @@ public class SoftParkMultiView extends JFrame {
 									}
 								}							
 								try {
-									sentCmd = fiscalPrinter.SendCmd(PrinterCommand.checkOut(
-											PrinterCommand.PAYMENT_TYPE_EFECTIVO_01));
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
+											TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}	 
@@ -2251,7 +2251,7 @@ public class SoftParkMultiView extends JFrame {
 							
 							String plate = db.getPlate(ticketNumber);
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Ticket #: " + ticketNumber));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
@@ -2261,32 +2261,32 @@ public class SoftParkMultiView extends JFrame {
 							DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 							DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Cajero: " + user.getName()));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("Placa: " + plate));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentText("EXONERADO"));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("EXONERADO"));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
 							try {
-								sentCmd = fiscalPrinter.SendCmd(PrinterCommand.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
