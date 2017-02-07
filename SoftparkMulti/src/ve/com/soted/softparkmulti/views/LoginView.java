@@ -15,10 +15,10 @@ import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import ve.com.soted.softparkmulti.components.PasswordEncryptor;
-import ve.com.soted.softparkmulti.components.SpringUtilities;
 import ve.com.soted.softparkmulti.db.Db;
 import ve.com.soted.softparkmulti.objects.Station;
+import ve.com.soted.softparkmulti.utils.PasswordEncryptor;
+import ve.com.soted.softparkmulti.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class LoginView extends JFrame{

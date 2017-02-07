@@ -2,6 +2,8 @@ package ve.com.soted.softparkmulti.objects;
 
 import java.util.ArrayList;
 
+import ve.com.soted.softparkmulti.utils.Numbers;
+
 public class Transaction {
 	private int id;
 	private String name;
@@ -41,7 +43,7 @@ public class Transaction {
 		for(Transaction t:transactions) {
 			total += t.getMaxAmount();
 		}
-		return total;
+		return Numbers.roundDouble(total, 2);
 	}
 	
 }

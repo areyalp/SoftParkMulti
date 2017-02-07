@@ -76,7 +76,6 @@ import tfhka.ve.Tfhka;
 import ve.com.soted.softparkmulti.comm.CommPortUtils;
 import ve.com.soted.softparkmulti.comm.RelayDriver;
 import ve.com.soted.softparkmulti.components.PrinterCommand;
-import ve.com.soted.softparkmulti.components.StringTools;
 import ve.com.soted.softparkmulti.components.TreeDataModel;
 import ve.com.soted.softparkmulti.db.Db;
 import ve.com.soted.softparkmulti.dialogs.LoginDialog;
@@ -85,6 +84,7 @@ import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.Summary;
 import ve.com.soted.softparkmulti.objects.Transaction;
 import ve.com.soted.softparkmulti.objects.User;
+import ve.com.soted.softparkmulti.utils.StringTools;
 
 import java.util.Timer;
 import java.util.TimerTask;

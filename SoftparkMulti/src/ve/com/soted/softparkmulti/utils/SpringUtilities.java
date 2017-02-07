@@ -1,4 +1,4 @@
-package ve.com.soted.softparkmulti.components;
+package ve.com.soted.softparkmulti.utils;
 import javax.swing.*;
 import javax.swing.SpringLayout;
 import java.awt.*;

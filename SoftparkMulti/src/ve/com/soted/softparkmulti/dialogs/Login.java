@@ -2,8 +2,8 @@ package ve.com.soted.softparkmulti.dialogs;
 
 import java.sql.ResultSet;
 
-import ve.com.soted.softparkmulti.components.PasswordEncryptor;
 import ve.com.soted.softparkmulti.db.Db;
+import ve.com.soted.softparkmulti.utils.PasswordEncryptor;
 
 public class Login {
 

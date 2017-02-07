@@ -1,4 +1,4 @@
-package ve.com.soted.softparkmulti.components;
+package ve.com.soted.softparkmulti.utils;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
