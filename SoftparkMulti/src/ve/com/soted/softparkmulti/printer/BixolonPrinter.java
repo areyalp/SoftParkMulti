@@ -1,6 +1,6 @@
 package ve.com.soted.softparkmulti.printer;
 
-public class BixolonCommand {
+public class BixolonPrinter {
 	
 	public static final char TAX0 = ' ';
 	public static final char TAX1 = '!';
