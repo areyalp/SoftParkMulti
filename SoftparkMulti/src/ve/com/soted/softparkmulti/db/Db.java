@@ -161,17 +161,20 @@ public class Db {
 		return this.updateExonerated(ticketNumber, entranceStationId, summaryId, totalAmount, taxAmount, transactionTypeId, payTypeId, printed, false);
 	}
 	
-	public boolean updateExonerated(int ticketNumber, int entranceStationId, int summaryId,	
+	public boolean updateExonerated(int ticketNumber, int exitStationId, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
 
 		String sql;
-		sql = "UPDATE transactions SET EntranceStationId = " + entranceStationId + ","
+		sql = "UPDATE transactions SET ExitStationId = " + exitStationId + ","
 					+ "SummaryId = " + summaryId + ","
 					+ "TotalAmount = " + totalAmount + ","
+					+ "PayDateTime = CURRENT_TIMESTAMP,"
+					+ "ExitDateTime = CURRENT_TIMESTAMP,"
 					+ "Printed =  " + printed + ","
+					+ "Exited = 1," 
 					+ "Exonerated = " + (exonerated?1:0) + " "
 					+ " WHERE Id = " + ticketNumber;
-		;
+		
 		if(this.update(sql)) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
 					+ " VALUES (" + ticketNumber + "," 
@@ -179,7 +182,7 @@ public class Db {
 					+ totalAmount + ","
 					+ taxAmount + ")";
 			this.insert(sql);
-			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,TotalAmount)"
+			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
 					+ " VALUES (" + ticketNumber + "," 
 					+ payTypeId + ","
 					+ totalAmount + ")";
@@ -188,6 +191,38 @@ public class Db {
 		}
 		return false;
 	}
+	
+	public boolean insertLostTicket( int exitStationId, int summaryId,	double totalAmount,
+			double taxAmount, int transactionTypeId, int payTypeId) {
+
+		String sql;
+		int insertedId = 0;
+		sql = "INSERT INTO transactions (ExitStationId,SummaryId,TotalAmount,PayDateTime,ExitDateTime,Exited)" 
+					+ "VALUES (" + exitStationId + ","
+					+ summaryId + "," 
+					+ totalAmount + "," 
+					+ "PayDateTime = CURRENT_TIMESTAMP,"  
+					+ "ExitDateTime = CURRENT_TIMESTAMP," 
+					+ "Exited = 1,"
+					+ "lost = 1)";
+		insertedId = this.insert(sql);
+		if(insertedId > 0) {
+			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
+					+ " VALUES (" + insertedId + "," 
+					+ transactionTypeId + ","
+					+ totalAmount + ","
+					+ taxAmount + ")";
+			this.insert(sql);
+			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
+					+ " VALUES (" + insertedId + "," 
+					+ payTypeId + ","
+					+ totalAmount + ")";
+			this.insert(sql);
+			return true;
+		}
+		return false;
+	
+	} 
 	
 	public int preInsertTransaction(int stationId) {
 		
@@ -726,7 +761,7 @@ public class Db {
 	}
 
 	public static int getAvailablePlaces(int levelId) {
-		return (Db.getLevelPlaces(levelId) - Db.getVehiclesIn(levelId));
+		return (Db.getLevelPlaces(levelId) - Db.getVehiclesIn(levelId) + Db.getLostTickets(levelId));
 	}
 	
 	public static int getLevelPlaces(int levelId) {
@@ -771,6 +806,30 @@ public class Db {
 		}
 		
 		return vehiclesIn;
+	}
+
+	public static int getLostTickets(int levelId){
+		Db db = new Db();
+		int ticketsLost = 0;
+		ResultSet rowsTicketsLost = db.select("SELECT COUNT(1) as cnt FROM transactions "
+				+ "JOIN stations ON stations.Id = transactions.ExitStationId "
+				+ "WHERE Lost = 1 AND LevelId = " + levelId);
+		try {
+			if(rowsTicketsLost.next()) {
+				ticketsLost = rowsTicketsLost.getInt("cnt");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return ticketsLost;
+		
 	}
 	
 	public ArrayList<Integer> getParkingPlaces(int boardId) {
