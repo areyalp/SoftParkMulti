@@ -2171,9 +2171,9 @@ public class SoftParkMultiView extends JFrame {
 						} else {
 							transactionsOut.add(allTransactions.get(2));		
 						}
-						
+						//TODO check the amount value
 						double amount = Transaction.getTotalAmount(transactionsOut);
-						
+
 						if(!exonerate){
 							if(!shiftIsDown) {
 								try {
@@ -2181,8 +2181,6 @@ public class SoftParkMultiView extends JFrame {
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}
-								//TODO fix price value to an object
-								
 								for(Transaction tOut: transactionsOut) {
 									try {
 										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
@@ -2205,15 +2203,17 @@ public class SoftParkMultiView extends JFrame {
 	
 							if(summaryHasInvoice) {
 								for(Transaction tOut: transactionsOut) {
-									db.insertTransactionsOut(stationInfo.getId(),  summaryId, amount, 12, 
+									db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 								}
 							}else{
+								
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
 									for(Transaction tOut: transactionsOut) {
-										db.insertTransactionsOut(stationInfo.getId(), summaryId, amount, 12, 
+										db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+										
 									}																
 								}else{
 									if(shiftIsDown) {
@@ -2233,7 +2233,7 @@ public class SoftParkMultiView extends JFrame {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
 										for(Transaction tOut: transactionsOut)  {
-											db.insertTransactionsOut(stationInfo.getId(), summaryId, amount, 12, 
+											db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 										}
 										stationsWithSummary = Db.getStationsWithSummary();
@@ -2295,14 +2295,14 @@ public class SoftParkMultiView extends JFrame {
 
 							if(summaryHasInvoice) {
 								for(Transaction tOut: transactionsOut) {
-									db.insertExonerated(stationInfo.getId(),  summaryId, amount, 12, 
+									db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, amount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);			
 								}
 							}else{
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
 									for(Transaction tOut: transactionsOut) {
-										db.insertExonerated(stationInfo.getId(), summaryId, amount, 12, 
+										db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, amount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 									}																
 								}else{
@@ -2323,7 +2323,7 @@ public class SoftParkMultiView extends JFrame {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
 										for(Transaction tOut: transactionsOut)  {
-											db.insertExonerated(stationInfo.getId(), summaryId, amount, 12, 
+											db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, amount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
 										}
 										stationsWithSummary = Db.getStationsWithSummary();

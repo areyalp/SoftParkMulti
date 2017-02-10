@@ -134,54 +134,59 @@ public class Db {
 		return insertedId;
 	}
 	
-	public int insertTransactionsOut(int entranceStationId, int summaryId,	
+	public boolean updateTransactionsOut(int ticketNumber, int entranceStationId, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed) {
 
-		String sql;
-		int insertedId = 0;
-		sql = "INSERT INTO Transactions (EntranceStationId,TicketNumber,SummaryId,TotalAmount,Printed)"
-				+ " VALUES (" + entranceStationId + "," 
-				+ summaryId + "," 
-				+ totalAmount + ","
-				+ printed + ")";
-		insertedId = this.insert(sql);
-		if(insertedId > 0) {
-			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
-					+ " VALUES (" + insertedId + "," 
-					+ transactionTypeId + ","
-					+ totalAmount + ","
-					+ taxAmount + ")";
-			this.insert(sql);
-			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
-					+ " VALUES (" + insertedId + "," 
-					+ payTypeId + "," 
-					+ totalAmount + ")";
-			this.insert(sql);
-		}
-		return insertedId;
+//		String sql;
+//		int insertedId = 0;
+//		sql = "UPDATE Transactions SET (EntranceStationId,SummaryId,TotalAmount,Printed)"
+//				+ " VALUES (" + entranceStationId + "," 
+//				+ summaryId + "," 
+//				+ totalAmount + ","
+//				+ printed + ")";
+//		insertedId = this.insert(sql);
+//		if(insertedId > 0) {
+//			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
+//					+ " VALUES (" + insertedId + "," 
+//					+ transactionTypeId + ","
+//					+ totalAmount + ","
+//					+ taxAmount + ")";
+//			this.insert(sql);
+//			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
+//					+ " VALUES (" + insertedId + "," 
+//					+ payTypeId + "," 
+//					+ totalAmount + ")";
+//			this.insert(sql);
+//		}
+		return this.updateExonerated(ticketNumber, entranceStationId, summaryId, totalAmount, taxAmount, transactionTypeId, payTypeId, printed, false);
 	}
 	
-	public int insertExonerated(int entranceStationId, int summaryId,	
+	public boolean updateExonerated(int ticketNumber, int entranceStationId, int summaryId,	
 			double totalAmount, double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
 
 		String sql;
-		int insertedId = 0;
-		sql = "INSERT INTO Transactions (EntranceStationId,SummaryId,TotalAmount,Printed,Exonerated)"
-				+ " VALUES (" + entranceStationId + "," 
-				+ summaryId + "," 
-				+ totalAmount + ","
-				+ printed +  ","
-				+ (exonerated?1:0) + ")";
-		insertedId = this.insert(sql);
-		if(insertedId > 0) {
+		sql = "UPDATE transactions SET EntranceStationId = " + entranceStationId + ","
+					+ "SummaryId = " + summaryId + ","
+					+ "TotalAmount = " + totalAmount + ","
+					+ "Printed =  " + printed + ","
+					+ "Exonerated = " + (exonerated?1:0) + " "
+					+ " WHERE Id = " + ticketNumber;
+		;
+		if(this.update(sql)) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
-					+ " VALUES (" + insertedId + "," 
+					+ " VALUES (" + ticketNumber + "," 
 					+ transactionTypeId + ","
 					+ totalAmount + ","
 					+ taxAmount + ")";
-			this.insert(sql);			
+			this.insert(sql);
+			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,TotalAmount)"
+					+ " VALUES (" + ticketNumber + "," 
+					+ payTypeId + ","
+					+ totalAmount + ")";
+			this.insert(sql);
+			return true;
 		}
-		return insertedId;
+		return false;
 	}
 	
 	public int preInsertTransaction(int stationId) {

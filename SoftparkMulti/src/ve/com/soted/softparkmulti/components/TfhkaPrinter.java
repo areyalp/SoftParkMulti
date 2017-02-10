@@ -95,7 +95,7 @@ public class TfhkaPrinter {
 				+ stringQuantityFraction + "|" + itemCode + "|" + itemDescription;
 	}
 	
-	public static String setItem(char taxType, double itemPrice, double itemQuantity, String itemDescription){
+	public static String setItem(char taxType, Double itemPrice, double itemQuantity, String itemDescription){
 		
 		String stringPriceWhole = getWholeToString(itemPrice, ITEM_PRICE_WHOLE_DIGITS);
 		String stringPriceFraction = getFractionToString(itemPrice, ITEM_PRICE_FRACTIONAL_DIGITS);
@@ -119,7 +119,7 @@ public class TfhkaPrinter {
 	private static String getFractionToString(double itemPrice, int digits){
 		double fractionalPart = (itemPrice % 1) * 100;
 		
-		int intFraction = Integer.parseInt(String.valueOf(fractionalPart));
+		long intFraction =(long) fractionalPart;
 		
 		String stringFraction = fillWithZeros(intFraction, digits);
 		return stringFraction;
@@ -128,14 +128,13 @@ public class TfhkaPrinter {
 	private static String getWholeToString(double itemPrice, int digits){
 		double fractionalPart = itemPrice % 1;
 		double wholePart = itemPrice - fractionalPart;
-		
-		int intWhole = Integer.parseInt(String.valueOf(wholePart));
-		
-		String stringWhole = fillWithZeros(intWhole, digits);
+		long intWholePart = (long) wholePart;
+
+		String stringWhole = fillWithZeros(intWholePart, digits);
 		return stringWhole;
 	}
 	
-	private static String fillWithZeros(int number, int digits){
+	private static String fillWithZeros(long number, int digits){
 		String stringNumber = String.valueOf(number);
 		
 		int numberLength = stringNumber.length();
