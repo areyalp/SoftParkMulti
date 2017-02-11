@@ -647,6 +647,7 @@ public class SoftParkMultiView extends JFrame {
 						.addComponent(textStreet))			
 		);
 		
+		directionsPanel.setVisible(false);
 		container.add(directionsPanel);		
 		
 		//create here new panel for the entrance		
@@ -870,7 +871,7 @@ public class SoftParkMultiView extends JFrame {
 		);
 		
 		middleContainer.add(carsDataPanel);
-
+		middleContainer.setVisible(false);
 		//
 		return middleContainer;
 	}
@@ -1606,9 +1607,10 @@ public class SoftParkMultiView extends JFrame {
 			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.manual.ticket")) {
 				createSubPanelMiddle();
 			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.lost.ticket")) {
-//				if(boxesFrame.isClosed()){
-					createSubPanelRight();
-//				}
+				if 	(!createSubPanelMiddle().isVisible()){
+					preCheckOutLost();
+				}					
+
 			}else if(e.getActionCommand().equalsIgnoreCase("bar.button.cut.off")) {
 //				if(boardsFrame.isClosed()){
 //					createBoardsFrame();
@@ -2154,7 +2156,7 @@ public class SoftParkMultiView extends JFrame {
 						}
 					} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
 						
-						if(transactionsOut.size() > 0) {	//TODO check null pointer 
+						if(transactionsOut.size() > 0) {	
 							int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
 							if(transactionsOutIndex > -1) {
 								transactionsOut.remove(transactionsOutIndex);
@@ -2358,6 +2360,14 @@ public class SoftParkMultiView extends JFrame {
 			
 		}
 		
+	}
+	
+	private void preCheckOutLost(){
+		
+		//TODO finish the implementation of the method
+		transactionOutAmount = Db.getLostTicketRate(2);			//TODO implement gettransationTypeId method
+		labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+
 	}
 	
 	private class OpenCommPortRun implements Runnable{

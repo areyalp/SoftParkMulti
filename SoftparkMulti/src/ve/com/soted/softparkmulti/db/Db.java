@@ -642,6 +642,23 @@ public class Db {
 		return overnightAmount;
 	}
 	
+	public static double getLostTicketRate(int transactionTypeId){
+		
+		Db db = new Db();
+		double totalAmount = 0;
+		String query = "SELECT MaxAmount FROM rates WHERE TransactionTypeId = '" +  transactionTypeId + "'";
+		ResultSet rowsLostTicketRate = db.select(query);
+		try {
+			if(rowsLostTicketRate.next()) {
+				totalAmount = rowsLostTicketRate.getInt("MaxAmount");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return totalAmount;
+	}
+	
+	
 	public String getPlate (int ticketNumber){
 		
 		Db db = new Db();
