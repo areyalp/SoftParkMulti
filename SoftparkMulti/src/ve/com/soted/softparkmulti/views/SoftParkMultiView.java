@@ -88,6 +88,8 @@ import ve.com.soted.softparkmulti.utils.StringTools;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @SuppressWarnings("serial")
@@ -1793,17 +1795,22 @@ public class SoftParkMultiView extends JFrame {
 		}
 		@Override
 		public synchronized void run() {
-			if(Db.getAvailablePlaces(stationInfo.getLevelId()) > 0) {
-				if (stationInfo.getType().getName().equals("Entrada/Salida")){
+			if (stationInfo.getType().getName().equals("Entrada/Salida")){
+				if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
+					if(Db.getAvailablePlaces(stationInfo.getLevelId()) > 0) {
 					//TODO Have to check the presence of the vehicle to allow print the ticket
-					if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {					
 						Db db = new Db();
-						String plate = textEntrancePlate.getText();	
+						String plate = textEntrancePlate.getText();
+						String regex = Db.getConfig("plate_regex", "plate");
+						Pattern pattern = Pattern.compile(regex);
+						Matcher match = pattern.matcher(plate);
+						
 						if (plate.isEmpty()){
 							JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
-						}
-						else{
-							ticketNumber = 0;					
+						} else if (!match.find()) {
+							JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+						} else {
+							ticketNumber = 0;
 							boolean sentCmd = false;
 							int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
 							try {
@@ -1865,11 +1872,14 @@ public class SoftParkMultiView extends JFrame {
 								textEntrancePlate.setText("");
 								labelParkingCounter.setText(String.valueOf(Db.getAvailablePlaces(stationInfo.getLevelId())));
 						}//END of plate checkup 						
+					
+					} else {
+						JOptionPane.showMessageDialog(null, "No hay puestos disponibles en este momento");
+						labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 					}
-				}		//end of station mode= E/S
-			} else {
-				labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
-			}
+				}
+			}		//end of station mode= E/S
+			
 		}				
 	}
 	
@@ -2367,7 +2377,7 @@ public class SoftParkMultiView extends JFrame {
 		//TODO finish the implementation of the method
 		transactionOutAmount = Db.getLostTicketRate(2);			//TODO implement gettransationTypeId method
 		labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-
+		
 	}
 	
 	private class OpenCommPortRun implements Runnable{
