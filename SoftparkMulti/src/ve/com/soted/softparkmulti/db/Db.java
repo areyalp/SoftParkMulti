@@ -751,6 +751,29 @@ public class Db {
 		return isTicketIn;
 	}
 
+	public static boolean isPlateIn(String plate){
+		
+		Db db = new Db();
+		boolean isPlateIn = false;
+		ResultSet rowPlateIn = db.select("SELECT Plate FROM transactions WHERE Plate = '" +  plate + "' AND Exited = 0");	
+		try {
+			if(rowPlateIn.next()) {
+				isPlateIn = true;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return isPlateIn;
+		
+	}
+	
 	public static boolean isTicketOut(int ticketNumber) {
 		Db db = new Db();
 		boolean isTicketOut = false;

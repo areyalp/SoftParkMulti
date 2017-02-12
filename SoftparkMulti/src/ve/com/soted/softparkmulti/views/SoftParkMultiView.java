@@ -1789,7 +1789,9 @@ public class SoftParkMultiView extends JFrame {
 	
 	private class CheckInRun implements Runnable{
 
-		String actionCommand;		
+		String actionCommand;
+		boolean isPlateIn = false;		
+		
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
 		}
@@ -1804,11 +1806,17 @@ public class SoftParkMultiView extends JFrame {
 						String regex = Db.getConfig("plate_regex", "plate");
 						Pattern pattern = Pattern.compile(regex);
 						Matcher match = pattern.matcher(plate);
+						isPlateIn = Db.isPlateIn(plate);
 						
 						if (plate.isEmpty()){
 							JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
+							textEntrancePlate.setText("");
 						} else if (!match.find()) {
 							JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+							textEntrancePlate.setText("");
+						} else if (isPlateIn){
+							JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+							textEntrancePlate.setText("");
 						} else {
 							ticketNumber = 0;
 							boolean sentCmd = false;
@@ -1878,8 +1886,7 @@ public class SoftParkMultiView extends JFrame {
 						labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 					}
 				}
-			}		//end of station mode= E/S
-			
+			}		//end of station mode= E/S			
 		}				
 	}
 	
