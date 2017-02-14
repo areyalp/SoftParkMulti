@@ -142,7 +142,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private String activePort, relayPort="";
 
-	private boolean exonerate;
+	private boolean exonerate, lost;
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
@@ -2183,10 +2183,8 @@ public class SoftParkMultiView extends JFrame {
 						} else {
 							transactionsOut.add(allTransactions.get(2));		
 						}
-						//TODO check the amount value
-//						double amount = Transaction.getTotalAmount(transactionsOut);
 
-						if(!exonerate){
+						if((!exonerate) && (!lost)){
 							if(!shiftIsDown) {
 								try {
 									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
@@ -2256,7 +2254,7 @@ public class SoftParkMultiView extends JFrame {
 								}
 							}
 							//after print clear the textFields						
-						} else {
+						} else if ((exonerate) && (!lost)) {
 							
 							String plate = db.getPlate(ticketNumber);
 							try {
@@ -2344,6 +2342,73 @@ public class SoftParkMultiView extends JFrame {
 									}
 								}
 							}							
+						} else if ((!exonerate) && (lost)){
+							try {
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket Perdido "));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							for(Transaction tOut: transactionsOut) {
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
+											TfhkaPrinter.TAX1, 
+											transactionOutAmount, 
+											1, 				
+											tOut.getName()));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+							}
+							try {
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
+										TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
+							} catch (PrinterException ce) {
+								ce.printStackTrace();
+							}
+							
+							db = new Db();
+							if(summaryHasInvoice) {
+								for(Transaction tOut: transactionsOut) {
+									db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
+								}
+							}else{								
+								if(summaryId > 0) {
+									summaryHasInvoice = true;
+									for(Transaction tOut: transactionsOut) {
+										db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
+										}																
+								}else{
+									if(shiftIsDown) {
+										try{
+											statusS1 = fiscalPrinter.getS1PrinterData();
+										} catch(PrinterException se) {
+											se.printStackTrace();
+										}
+										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+										db = new Db();
+										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
+									} else {
+										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
+									}									
+									if(insertedSummaryId > 0) {
+										summaryId = insertedSummaryId;
+										summaryHasInvoice = true;
+										for(Transaction tOut: transactionsOut)  {
+											db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
+										}
+										stationsWithSummary = Db.getStationsWithSummary();
+										summaries = Db.loadSummaries();
+										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+									}else{
+										summaryId = 0;
+										summaryHasInvoice = false;
+										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+									}
+								}
+							}							
 						}
 					}//END of stationMode = "E/S"						
 //				}
@@ -2381,10 +2446,12 @@ public class SoftParkMultiView extends JFrame {
 	
 	private void preCheckOutLost(){
 		
-		//TODO finish the implementation of the method
-		transactionOutAmount = Db.getLostTicketRate(2);			//TODO implement gettransationTypeId method
+		//TODO finish the implementation of the method	
+		buttonCarEntrance.setEnabled(false);
+		textEntrancePlate.setEditable(false);
+		transactionOutAmount = Db.getLostTicketRate(2);			
 		labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-		
+		lost = true;			
 	}
 	
 	private class OpenCommPortRun implements Runnable{

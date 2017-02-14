@@ -193,16 +193,18 @@ public class Db {
 	}
 	
 	public boolean insertLostTicket( int exitStationId, int summaryId,	double totalAmount,
-			double taxAmount, int transactionTypeId, int payTypeId) {
+			double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
 
 		String sql;
 		int insertedId = 0;
-		sql = "INSERT INTO transactions (ExitStationId,SummaryId,TotalAmount,PayDateTime,ExitDateTime,Exited)" 
+		sql = "INSERT INTO transactions (ExitStationId,SummaryId,TotalAmount,PayDateTime,ExitDateTime,Printed,Exonerated,Exited,Lost)" 
 					+ "VALUES (" + exitStationId + ","
 					+ summaryId + "," 
 					+ totalAmount + "," 
 					+ "PayDateTime = CURRENT_TIMESTAMP,"  
 					+ "ExitDateTime = CURRENT_TIMESTAMP," 
+					+ "Printed =  " + printed + ","
+					+ "Exonerated = " + (exonerated?1:0) + ","
 					+ "Exited = 1,"
 					+ "lost = 1)";
 		insertedId = this.insert(sql);
