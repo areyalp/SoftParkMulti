@@ -192,38 +192,36 @@ public class Db {
 		return false;
 	}
 	
-	public boolean insertLostTicket( int exitStationId, int summaryId,	double totalAmount,
+	public boolean updateLostTicket(int lostTicketNumber, int exitStationId, int summaryId,	double totalAmount,
 			double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
 
 		String sql;
-		int insertedId = 0;
-		sql = "INSERT INTO transactions (ExitStationId,SummaryId,TotalAmount,PayDateTime,ExitDateTime,Printed,Exonerated,Exited,Lost)" 
-					+ "VALUES (" + exitStationId + ","
-					+ summaryId + "," 
-					+ totalAmount + "," 
-					+ "PayDateTime = CURRENT_TIMESTAMP,"  
-					+ "ExitDateTime = CURRENT_TIMESTAMP," 
+		sql = "UPDATE transactions SET ExitStationId = " + exitStationId + ","
+					+ "SummaryId = " + summaryId + ","
+					+ "TotalAmount = " + totalAmount + ","
+					+ "PayDateTime = CURRENT_TIMESTAMP,"
+					+ "ExitDateTime = CURRENT_TIMESTAMP,"
 					+ "Printed =  " + printed + ","
+					+ "Exited = 1," 
 					+ "Exonerated = " + (exonerated?1:0) + ","
-					+ "Exited = 1,"
-					+ "lost = 1)";
-		insertedId = this.insert(sql);
-		if(insertedId > 0) {
+					+ "lost = 1 "
+					+ " WHERE Id = " + lostTicketNumber;
+		
+		if(this.update(sql)) {
 			sql = "INSERT INTO TransactionsDetail (TransactionId,TypeId,TotalAmount,TaxAmount)"
-					+ " VALUES (" + insertedId + "," 
+					+ " VALUES (" + lostTicketNumber + "," 
 					+ transactionTypeId + ","
 					+ totalAmount + ","
 					+ taxAmount + ")";
 			this.insert(sql);
 			sql = "INSERT INTO TransactionsPay (TransactionId,PayTypeId,Amount)"
-					+ " VALUES (" + insertedId + "," 
+					+ " VALUES (" + lostTicketNumber + "," 
 					+ payTypeId + ","
 					+ totalAmount + ")";
 			this.insert(sql);
 			return true;
 		}
-		return false;
-	
+		return false;		
 	} 
 	
 	public int preInsertTransaction(int stationId) {
@@ -261,8 +259,7 @@ public class Db {
 		return insertedId;
 		
 	}
-	//
-	
+		
 	public int insertTransaction(int stationId, int summaryId, int ticketNumber, double totalAmount, double taxAmount,
 			int transactionTypeId, int payTypeId) {
 
@@ -660,7 +657,6 @@ public class Db {
 		return totalAmount;
 	}
 	
-	
 	public String getPlate (int ticketNumber){
 		
 		Db db = new Db();
@@ -674,6 +670,22 @@ public class Db {
 			e.printStackTrace();
 		}
 		return plate;
+		
+	}
+	
+	public int getLostTicketId(String plate){
+		
+		Db db = new Db();
+		int ticketNumber = 0;
+		ResultSet rowsTicketNumber = db.select("SELECT Id FROM transactions WHERE Plate = '" +  plate + "' AND Exited = 0");
+		try {
+			if(rowsTicketNumber.next()) {
+				ticketNumber = rowsTicketNumber.getInt("Id");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return ticketNumber;
 		
 	}
 	

@@ -142,7 +142,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private String activePort, relayPort="";
 
-	private boolean exonerate, lost;
+	private boolean exonerate, lost, validPlate;
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
@@ -155,7 +155,7 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
-	public int transactionId, ticketNumber, overnightDays, places;
+	public int transactionId, ticketNumber, overnightDays, places, lostTicketNumber;
 	public Timestamp entranceDateTime;
 	
 	private double transactionOutAmount;
@@ -2344,7 +2344,7 @@ public class SoftParkMultiView extends JFrame {
 							}							
 						} else if ((!exonerate) && (lost)){
 							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket Perdido "));
+								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicketNumber));
 							} catch (PrinterException ce) {
 								ce.printStackTrace();
 							}
@@ -2369,14 +2369,14 @@ public class SoftParkMultiView extends JFrame {
 							db = new Db();
 							if(summaryHasInvoice) {
 								for(Transaction tOut: transactionsOut) {
-									db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+									db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
 								}
 							}else{								
 								if(summaryId > 0) {
 									summaryHasInvoice = true;
 									for(Transaction tOut: transactionsOut) {
-										db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+										db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
 										}																
 								}else{
@@ -2396,7 +2396,7 @@ public class SoftParkMultiView extends JFrame {
 										summaryId = insertedSummaryId;
 										summaryHasInvoice = true;
 										for(Transaction tOut: transactionsOut)  {
-											db.insertLostTicket(stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
 										}
 										stationsWithSummary = Db.getStationsWithSummary();
@@ -2438,20 +2438,31 @@ public class SoftParkMultiView extends JFrame {
 			buttonCollectCancel.setEnabled(false);
 			buttonCollectExonerate.setEnabled(false);
 			buttonCarEntrance.setEnabled(true);
-			textEntrancePlate.setEditable(true);
-			
-		}
-		
+			textEntrancePlate.setEditable(true);			
+		}		
 	}
 	
 	private void preCheckOutLost(){
 		
-		//TODO finish the implementation of the method	
 		buttonCarEntrance.setEnabled(false);
-		textEntrancePlate.setEditable(false);
-		transactionOutAmount = Db.getLostTicketRate(2);			
-		labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-		lost = true;			
+		textEntrancePlate.setEditable(false);			
+		String plateSearch= JOptionPane.showInputDialog("Introduzca la placa del vehículo");
+		if(null != plateSearch && !plateSearch.isEmpty()) {
+			Db db = new Db();			
+			lostTicketNumber = db.getLostTicketId(plateSearch);
+			if(lostTicketNumber > 0) {
+				transactionOutAmount = Db.getLostTicketRate(2);			
+				labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+				lost = true;
+			} else {
+				JOptionPane.showMessageDialog(null, "Esta placa no esta registrada, intente de nuevo", "Placa no existe!", JOptionPane.ERROR_MESSAGE);
+				labelMoney.setText("");
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Debe introducir la placa del vehículo", "Placa vacía", JOptionPane.ERROR_MESSAGE);
+		}
+
+
 	}
 	
 	private class OpenCommPortRun implements Runnable{
