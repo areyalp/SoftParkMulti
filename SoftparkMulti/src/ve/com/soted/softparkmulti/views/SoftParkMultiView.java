@@ -2054,11 +2054,11 @@ public class SoftParkMultiView extends JFrame {
 			printerChecker();
 			
 			if(db.testConnection()){
-//				if(isPrinterConnected){
-					if(stationMode.equals("Valet")) {					
+				if(isPrinterConnected){
+					if(stationMode.equals("Valet")) {
 						try{
 //							ticketNumber = textTicket.getText();
-//							isTicketProcessed = Db.checkTicket(ticketNumber);
+							isTicketProcessed = Db.checkTicket(ticketNumber);
 							if(!isTicketProcessed) {
 								if(!textTicket.getText().isEmpty()) {
 									try {
@@ -2117,7 +2117,6 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-									db = new Db();
 									
 									if(summaryHasInvoice) {
 //										for(Transaction t: transactions) {
@@ -2138,7 +2137,7 @@ public class SoftParkMultiView extends JFrame {
 												se.printStackTrace();
 											}
 											int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-											db = new Db();
+											
 											insertedSummaryId = db.insertSummary(stationId, user.getId(), firstInvoiceNumber);
 											
 											if(insertedSummaryId > 0) {
@@ -2173,21 +2172,225 @@ public class SoftParkMultiView extends JFrame {
 						}
 					} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
 						
-						if(transactionsOut.size() > 0) {	
-							int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
-							if(transactionsOutIndex > -1) {
-								transactionsOut.remove(transactionsOutIndex);
-							}else{
-								transactionsOut.add(allTransactions.get(2));
+						isTicketProcessed = Db.checkTicket(ticketNumber);
+						if(!isTicketProcessed) {
+							if(transactionsOut.size() > 0) {
+								int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
+								if(transactionsOutIndex > -1) {
+									transactionsOut.remove(transactionsOutIndex);
+								}else{
+									transactionsOut.add(allTransactions.get(2));
+								}
+							} else {
+								transactionsOut.add(allTransactions.get(2));		
 							}
-						} else {
-							transactionsOut.add(allTransactions.get(2));		
-						}
-
-						if((!exonerate) && (!lost)){
-							if(!shiftIsDown) {
+	
+							if(!exonerate && !lost){
+								
+								if(summaryHasInvoice) {
+									for(Transaction tOut: transactionsOut) {
+										db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+									}
+								}else{
+									if(summaryId > 0) {
+										summaryHasInvoice = true;
+										for(Transaction tOut: transactionsOut) {
+											db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+										}
+									}else{
+										if(shiftIsDown) {
+											try{
+												statusS1 = fiscalPrinter.getS1PrinterData();
+											} catch(PrinterException se) {
+												se.printStackTrace();
+											}
+											int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+											db = new Db();
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
+										} else {
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
+										}									
+										if(insertedSummaryId > 0) {
+											summaryId = insertedSummaryId;
+											summaryHasInvoice = true;
+											for(Transaction tOut: transactionsOut)  {
+												db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+											}
+											stationsWithSummary = Db.getStationsWithSummary();
+											summaries = Db.loadSummaries();
+											tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+										}else{
+											summaryId = 0;
+											summaryHasInvoice = false;
+											JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+										}
+									}
+								}
+								if(!shiftIsDown) {
+									try {
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
+									} catch (PrinterException ce) {
+										ce.printStackTrace();
+									}
+									for(Transaction tOut: transactionsOut) {
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
+													TfhkaPrinter.TAX1, 
+													transactionOutAmount, 
+													1, 				
+													tOut.getName()));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+									}							
+									try {
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
+												TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
+									} catch (PrinterException ce) {
+										ce.printStackTrace();
+									}	 
+								}
+								
+								//after print clear the textFields						
+							} else if (exonerate) {
+								
+								String plate = db.getPlate(ticketNumber);
 								try {
-									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								
+								if(summaryHasInvoice) {
+									for(Transaction tOut: transactionsOut) {
+										db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);			
+									}
+								}else{
+									if(summaryId > 0) {
+										summaryHasInvoice = true;
+										for(Transaction tOut: transactionsOut) {
+											db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);
+										}																
+									}else{
+										if(shiftIsDown) {
+											try{
+												statusS1 = fiscalPrinter.getS1PrinterData();
+											} catch(PrinterException se) {
+												se.printStackTrace();
+											}
+											int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+											db = new Db();
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
+										} else {
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
+										}
+										
+										if(insertedSummaryId > 0) {
+											summaryId = insertedSummaryId;
+											summaryHasInvoice = true;
+											for(Transaction tOut: transactionsOut)  {
+												db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);
+											}
+											stationsWithSummary = Db.getStationsWithSummary();
+											summaries = Db.loadSummaries();
+											tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+										}else{
+											summaryId = 0;
+											summaryHasInvoice = false;
+											JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+										}
+									}
+								}
+								
+								DateTime exitDateTime = new DateTime(Db.getDbTime());
+								DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+								DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+								
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + exitDateTime.toString(tFormatter)));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + exitDateTime.toString(dFormatter)));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("EXONERADO"));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
+								} catch (PrinterException ce) {
+									ce.printStackTrace();
+								}
+	
+								
+							} else if (lost){
+								
+								if(summaryHasInvoice) {
+									for(Transaction tOut: transactionsOut) {
+										db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
+									}
+								}else{
+									if(summaryId > 0) {
+										summaryHasInvoice = true;
+										for(Transaction tOut: transactionsOut) {
+											db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
+											}																
+									}else{
+										if(shiftIsDown) {
+											try{
+												statusS1 = fiscalPrinter.getS1PrinterData();
+											} catch(PrinterException se) {
+												se.printStackTrace();
+											}
+											int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
+											db = new Db();
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
+										} else {
+											insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
+										}									
+										if(insertedSummaryId > 0) {
+											summaryId = insertedSummaryId;
+											summaryHasInvoice = true;
+											for(Transaction tOut: transactionsOut)  {
+												db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
+											}
+											stationsWithSummary = Db.getStationsWithSummary();
+											summaries = Db.loadSummaries();
+											tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+										}else{
+											summaryId = 0;
+											summaryHasInvoice = false;
+											JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
+										}
+									}
+								}
+								
+								try {
+									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicketNumber));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
 								}
@@ -2201,220 +2404,23 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-								}							
+								}
 								try {
 									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
 											TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
 								} catch (PrinterException ce) {
 									ce.printStackTrace();
-								}	 
-							}
-							db = new Db();
-	
-							if(summaryHasInvoice) {
-								for(Transaction tOut: transactionsOut) {
-									db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
-										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));			
 								}
-							}else{								
-								if(summaryId > 0) {
-									summaryHasInvoice = true;
-									for(Transaction tOut: transactionsOut) {
-										db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
-												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));										
-									}																
-								}else{
-									if(shiftIsDown) {
-										try{
-											statusS1 = fiscalPrinter.getS1PrinterData();
-										} catch(PrinterException se) {
-											se.printStackTrace();
-										}
-										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-										db = new Db();
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
-									} else {
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
-									}									
-									if(insertedSummaryId > 0) {
-										summaryId = insertedSummaryId;
-										summaryHasInvoice = true;
-										for(Transaction tOut: transactionsOut)  {
-											db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
-													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
-										}
-										stationsWithSummary = Db.getStationsWithSummary();
-										summaries = Db.loadSummaries();
-										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-									}else{
-										summaryId = 0;
-										summaryHasInvoice = false;
-										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
-									}
-								}
+								
 							}
-							//after print clear the textFields						
-						} else if ((exonerate) && (!lost)) {
-							
-							String plate = db.getPlate(ticketNumber);
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							DateTime entranceDateTime = new DateTime();
-							DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-							DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-							DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
-							DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("EXONERADO"));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							db = new Db();
-
-							if(summaryHasInvoice) {
-								for(Transaction tOut: transactionsOut) {
-									db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
-										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);			
-								}
-							}else{
-								if(summaryId > 0) {
-									summaryHasInvoice = true;
-									for(Transaction tOut: transactionsOut) {
-										db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
-												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
-									}																
-								}else{
-									if(shiftIsDown) {
-										try{
-											statusS1 = fiscalPrinter.getS1PrinterData();
-										} catch(PrinterException se) {
-											se.printStackTrace();
-										}
-										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-										db = new Db();
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
-									} else {
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
-									}
-									
-									if(insertedSummaryId > 0) {
-										summaryId = insertedSummaryId;
-										summaryHasInvoice = true;
-										for(Transaction tOut: transactionsOut)  {
-											db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
-													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),exonerate);
-										}
-										stationsWithSummary = Db.getStationsWithSummary();
-										summaries = Db.loadSummaries();
-										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-									}else{
-										summaryId = 0;
-										summaryHasInvoice = false;
-										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
-									}
-								}
-							}							
-						} else if ((!exonerate) && (lost)){
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicketNumber));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							for(Transaction tOut: transactionsOut) {
-								try {
-									sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setItem(
-											TfhkaPrinter.TAX1, 
-											transactionOutAmount, 
-											1, 				
-											tOut.getName()));
-								} catch (PrinterException ce) {
-									ce.printStackTrace();
-								}
-							}
-							try {
-								sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.checkOut(
-										TfhkaPrinter.PAYMENT_TYPE_EFECTIVO_01));
-							} catch (PrinterException ce) {
-								ce.printStackTrace();
-							}
-							
-							db = new Db();
-							if(summaryHasInvoice) {
-								for(Transaction tOut: transactionsOut) {
-									db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
-										tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
-								}
-							}else{								
-								if(summaryId > 0) {
-									summaryHasInvoice = true;
-									for(Transaction tOut: transactionsOut) {
-										db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
-												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
-										}																
-								}else{
-									if(shiftIsDown) {
-										try{
-											statusS1 = fiscalPrinter.getS1PrinterData();
-										} catch(PrinterException se) {
-											se.printStackTrace();
-										}
-										int firstInvoiceNumber = statusS1.getLastInvoiceNumber();
-										db = new Db();
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), firstInvoiceNumber);
-									} else {
-										insertedSummaryId = db.insertSummary(stationInfo.getId(), user.getId(), 0);
-									}									
-									if(insertedSummaryId > 0) {
-										summaryId = insertedSummaryId;
-										summaryHasInvoice = true;
-										for(Transaction tOut: transactionsOut)  {
-											db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
-													tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), exonerate);			
-										}
-										stationsWithSummary = Db.getStationsWithSummary();
-										summaries = Db.loadSummaries();
-										tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-									}else{
-										summaryId = 0;
-										summaryHasInvoice = false;
-										JOptionPane.showMessageDialog(null, "Error al crear el reporte", "Error de Reporte", JOptionPane.ERROR_MESSAGE);
-									}
-								}
-							}							
+						} else {
+							JOptionPane.showMessageDialog(null, "Este ticket ya fue procesado");
 						}
 					}//END of stationMode = "E/S"						
-//				}
-//				else{
-//					JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
-//				}
+				}
+				else{
+					JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
+				}
 			}else{
 				JOptionPane.showMessageDialog(null, "La red esta desconectada, conectela de nuevo", "Red desconectada", JOptionPane.ERROR_MESSAGE);
 			}

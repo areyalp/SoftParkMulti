@@ -15,6 +15,8 @@ import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
+import org.joda.time.DateTime;
+
 import ve.com.soted.softparkmulti.objects.PayType;
 import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.StationType;
@@ -193,7 +195,7 @@ public class Db {
 	}
 	
 	public boolean updateLostTicket(int lostTicketNumber, int exitStationId, int summaryId,	double totalAmount,
-			double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean exonerated) {
+			double taxAmount, int transactionTypeId, int payTypeId, int printed, boolean lost) {
 
 		String sql;
 		sql = "UPDATE transactions SET ExitStationId = " + exitStationId + ","
@@ -203,8 +205,8 @@ public class Db {
 					+ "ExitDateTime = CURRENT_TIMESTAMP,"
 					+ "Printed =  " + printed + ","
 					+ "Exited = 1," 
-					+ "Exonerated = " + (exonerated?1:0) + ","
-					+ "lost = 1 "
+					+ "Exonerated = 0"
+					+ "lost = " + lost + ","
 					+ " WHERE Id = " + lostTicketNumber;
 		
 		if(this.update(sql)) {
@@ -927,6 +929,28 @@ public class Db {
 		}
 		
 		return name;
+	}
+
+	public static Timestamp getDbTime() {
+		Db db = new Db();
+		Timestamp ts = null;
+		ResultSet rowTs = db.select("SELECT CURRENT_TIMESTAMP as ts");
+		
+		try {
+			if(rowTs.next()) {
+				ts = rowTs.getTimestamp("ts");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return ts;
 	}
 
 }
