@@ -205,8 +205,8 @@ public class Db {
 					+ "ExitDateTime = CURRENT_TIMESTAMP,"
 					+ "Printed =  " + printed + ","
 					+ "Exited = 1," 
-					+ "Exonerated = 0"
-					+ "lost = " + lost + ","
+					+ "Exonerated = 0,"
+					+ "Lost = " + lost + " "
 					+ " WHERE Id = " + lostTicketNumber;
 		
 		if(this.update(sql)) {
@@ -721,7 +721,8 @@ public class Db {
 		boolean isTicketProcessed = false;
 		ResultSet rowTicketProcessed = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
 				+ "FROM Transactions "
-				+ "WHERE TicketNumber = " + ticketNumber);
+				+ "WHERE Id = " + ticketNumber 
+				+ " AND Exited = 1");
 		try {
 			if(rowTicketProcessed.next()) {
 				if(rowTicketProcessed.getInt("cnt") > 0) {

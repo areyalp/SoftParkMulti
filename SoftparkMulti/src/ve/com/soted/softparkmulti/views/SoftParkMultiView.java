@@ -1495,6 +1495,7 @@ public class SoftParkMultiView extends JFrame {
 					textCashed.setText("");
 					textChange.setEditable(false);
 					textChange.setText("");
+					labelMoney.setText(" Bs.");
 				}
 				
 			}
@@ -1928,13 +1929,9 @@ public class SoftParkMultiView extends JFrame {
 						int dayOut = dtOut.getDayOfMonth();
 						Db db = new Db();
 						
-						textDateIn.setEditable(true);
 						textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
-						textEntrance.setEditable(true);
 						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada
-														
-						textDuration.setEditable(true);						
-						textExpiration.setEditable(true);				
+																	
 						int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 						int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
@@ -1992,8 +1989,7 @@ public class SoftParkMultiView extends JFrame {
 										transactionOutAmount = db.getFractionRates(spendHours);								
 										labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
 									}								
-								}
-								
+								}								
 							}	
 							buttonCollectCancel.setEnabled(true);
 							buttonCollectExonerate.setEnabled(true);
@@ -2001,36 +1997,28 @@ public class SoftParkMultiView extends JFrame {
 						else{
 							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 						}						
-						
 					}else{
 						JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
-					}
-					
+					}					
 				}//END OF !ISTICKETOUT
 				else{
 					JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 					textTicket.setText("");
-				}
-			
+				}			
 			}else{
 				JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
 				textTicket.setText("");
-			}
-					
+			}					
 			}catch(NumberFormatException ne) {
 				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 				textTicket.setText("");
-			}
- 
-		
+			}		
 	}
 	
 	private class CheckOutRun implements Runnable {
 		
 		String stationMode;
 		boolean exonerate;
-//		ArrayList<Transaction> transactionsOut;
-//		transactionsOut = new ArrayList<Transaction>();
 
 		S1PrinterData statusS1;
 		S2PrinterData statusS2;
@@ -2172,8 +2160,6 @@ public class SoftParkMultiView extends JFrame {
 						}
 					} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
 						
-						isTicketProcessed = Db.checkTicket(ticketNumber);
-						if(!isTicketProcessed) {
 							if(transactionsOut.size() > 0) {
 								int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
 								if(transactionsOutIndex > -1) {
@@ -2413,9 +2399,7 @@ public class SoftParkMultiView extends JFrame {
 								}
 								
 							}
-						} else {
-							JOptionPane.showMessageDialog(null, "Este ticket ya fue procesado");
-						}
+						
 					}//END of stationMode = "E/S"						
 				}
 				else{
