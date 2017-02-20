@@ -1,6 +1,7 @@
 package ve.com.soted.softparkmulti.dialogs;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import ve.com.soted.softparkmulti.db.Db;
 import ve.com.soted.softparkmulti.utils.PasswordEncryptor;
@@ -25,6 +26,7 @@ public class Login {
 		catch(Exception ex){
 			ex.printStackTrace();
 		}
+		
 		return authenticated;
 	}
 	

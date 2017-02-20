@@ -206,7 +206,7 @@ public class Db {
 					+ "Printed =  " + printed + ","
 					+ "Exited = 1," 
 					+ "Exonerated = 0,"
-					+ "Lost = " + lost + " "
+					+ "Lost = " + (lost?1:0) + " "
 					+ " WHERE Id = " + lostTicketNumber;
 		
 		if(this.update(sql)) {
@@ -656,6 +656,13 @@ public class Db {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 		return totalAmount;
 	}
 	
