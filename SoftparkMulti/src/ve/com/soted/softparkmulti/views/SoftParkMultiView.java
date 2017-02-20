@@ -1938,8 +1938,7 @@ public class SoftParkMultiView extends JFrame {
 						Db db = new Db();
 						
 						textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
-						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada
-																	
+						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada								
 						int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
 						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
 						int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
@@ -2248,17 +2247,12 @@ public class SoftParkMultiView extends JFrame {
 											ce.printStackTrace();
 										}	 
 									}
-									
+									transactionsOut.clear();	//TODO check this...
 									//after print clear the textFields						
 								} else if (exonerate) {
 									
 									String plate = db.getPlate(ticketNumber);
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									
+																		
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
 											db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
@@ -2303,6 +2297,12 @@ public class SoftParkMultiView extends JFrame {
 										}
 									}
 									
+									try {
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
+									} catch (PrinterException ce) {
+										ce.printStackTrace();
+									}
+									
 									DateTime exitDateTime = new DateTime(Db.getDbTime());
 									DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 									DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
@@ -2337,8 +2337,7 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-		
-									
+									transactionsOut.clear();	//TODO check this...									
 								} else if (lost){
 									
 									if(summaryHasInvoice) {
@@ -2406,9 +2405,8 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-									
-								}
-							
+									transactionsOut.clear();	//TODO check this...
+								}							
 						}//END of stationMode = "E/S"						
 					}
 					else{
@@ -2465,8 +2463,6 @@ public class SoftParkMultiView extends JFrame {
 		} else {
 			JOptionPane.showMessageDialog(null, "Debe introducir la placa del vehículo", "Placa vacía", JOptionPane.ERROR_MESSAGE);
 		}
-
-
 	}
 	
 	private class OpenCommPortRun implements Runnable{
@@ -2534,12 +2530,6 @@ public class SoftParkMultiView extends JFrame {
 		return subTotal;
 	}
 
-	public int getParkingCounter(){
-		//TODO work on this method to  obtain the parking counter		
-		
-		return 0;
-	}
-	
  	public double getSubTotalMulti(ArrayList<Transaction> transactionsOut) {
  		double subTotal = 0.00;		
 		for(Transaction tOut: transactionsOut) {
@@ -2548,10 +2538,10 @@ public class SoftParkMultiView extends JFrame {
 		return subTotal;
 	}
 	
-	private int transactionSelectedMulti(ArrayList<Transaction> transactions, int id) {
+	private int transactionSelectedMulti(ArrayList<Transaction> transactionsOut, int id) {
 		int selectedId = -1;
 		int i = 0;
-		for(Transaction tOut: transactions) {
+		for(Transaction tOut: transactionsOut) {
 			if(tOut.getId() == id) {
 				selectedId = i;
 				break;
