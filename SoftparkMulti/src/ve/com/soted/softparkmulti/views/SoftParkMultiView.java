@@ -2168,19 +2168,21 @@ public class SoftParkMultiView extends JFrame {
 							}
 						} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
 							
-								if(transactionsOut.size() > 0) {
-									int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
-									if(transactionsOutIndex > -1) {
-										transactionsOut.remove(transactionsOutIndex);
-									}else{
-										transactionsOut.add(allTransactions.get(2));
-									}
-								} else {
-									transactionsOut.add(allTransactions.get(2));		
+							buttonCollectAccept.setEnabled(false);
+							buttonCollectCancel.setEnabled(false);
+							buttonCollectExonerate.setEnabled(false);							
+							if(transactionsOut.size() > 0) {
+								int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
+								if(transactionsOutIndex > -1) {
+									transactionsOut.remove(transactionsOutIndex);
+								}else{
+									transactionsOut.add(allTransactions.get(2));
 								}
-		
-								if(!exonerate && !lost){
-									
+							} else {
+								transactionsOut.add(allTransactions.get(2));		
+							}
+	
+								if(!exonerate && !lost){									
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
 											db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
@@ -2251,8 +2253,7 @@ public class SoftParkMultiView extends JFrame {
 									//after print clear the textFields						
 								} else if (exonerate) {
 									
-									String plate = db.getPlate(ticketNumber);
-																		
+									String plate = db.getPlate(ticketNumber);																		
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
 											db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
@@ -2406,7 +2407,11 @@ public class SoftParkMultiView extends JFrame {
 										ce.printStackTrace();
 									}
 									transactionsOut.clear();	//TODO check this...
-								}							
+									lost = false;
+								}	
+							buttonCollectAccept.setEnabled(true);
+							buttonCollectCancel.setEnabled(true);
+							buttonCollectExonerate.setEnabled(true);	
 						}//END of stationMode = "E/S"						
 					}
 					else{
