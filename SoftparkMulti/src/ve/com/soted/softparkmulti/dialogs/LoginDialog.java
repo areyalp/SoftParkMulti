@@ -7,12 +7,8 @@ import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -31,38 +27,28 @@ public class LoginDialog extends JDialog{
 	private JTextField textUsername;
 	private JPasswordField textPassword;
 	private JButton buttonLogin, buttonCancel;
-	private JPanel titlePanel;
 	private boolean succeeded;
 
 	public LoginDialog(Frame parent) {
+        super(parent, true);
 		
-        super(parent, "Login", true);
-        //changes on the layout are beyond this line
-        //box layout 
-
-        ImageIcon image;
-		JLabel background;
-        JPanel basic = new JPanel(new BorderLayout(0, 0));       
+        JPanel leftWrapper = new JPanel(new BorderLayout(0, 0));
         
         JPanel leftPanel = new JPanel(new BorderLayout(0, 0));
         leftPanel.setMaximumSize(new Dimension(550, 550));
         		
-		image = new ImageIcon("resources/estacionamiento.jpg");
-		background = new JLabel(image);
-		add(background);
+        ImageIcon image = new ImageIcon("resources/estacionamiento.jpg");
+        JLabel background = new JLabel(image);
 		
         background.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));        
 		leftPanel.add(background, BorderLayout.WEST);              
         
-        basic.add(leftPanel);                     
-        this.add(basic, BorderLayout.WEST);
+		leftWrapper.add(leftPanel);
+        this.add(leftWrapper, BorderLayout.WEST);
         
-        JPanel container = new JPanel(new BorderLayout(0,0));  
-        this.add(container, BorderLayout.EAST);
-		
         JPanel loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints cs = new GridBagConstraints();
- 
+        
         cs.fill = GridBagConstraints.HORIZONTAL;            
         cs.insets = new Insets(5,5,5,5);
         
@@ -73,43 +59,40 @@ public class LoginDialog extends JDialog{
         cs.gridwidth = 1;
         loginPanel.add(labelName, cs);
         
-        
         labelUsername = new JLabel("Usuario: ");
         cs.gridx = 0;
         cs.gridy = 1;
         cs.gridwidth = 1;
         loginPanel.add(labelUsername, cs);
- 
-        textUsername = new JTextField(15);
+        
+        textUsername = new JTextField(8);
         cs.gridx = 1;
         cs.gridy = 1;
         cs.gridwidth = 2;
         loginPanel.add(textUsername, cs);
- 
+        
         labelPassword = new JLabel("Contraseña: ");
         cs.gridx = 0;
         cs.gridy = 2;
         cs.gridwidth = 1;
         loginPanel.add(labelPassword, cs);
- 
-        TextFieldListener lForText	= new TextFieldListener();
         
-        textPassword = new JPasswordField(15);
-        textPassword.setActionCommand("password.text.type");
-        textPassword.addActionListener(lForText);
+        textPassword = new JPasswordField(8);
         cs.gridx = 1;
         cs.gridy = 2;
         cs.gridwidth = 2;
         loginPanel.add(textPassword, cs);
         
-        buttonLogin = new JButton("Login");
-      
         ButtonListener lForButton = new ButtonListener();
-
-        buttonLogin.addActionListener(lForButton);
+        
+        buttonLogin = new JButton("Login");
         buttonLogin.setActionCommand("login");
+        buttonLogin.addActionListener(lForButton);
+        
         buttonCancel = new JButton("Cancel");
+        buttonCancel.setActionCommand("cancel");
         buttonCancel.addActionListener(lForButton);
+        
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(buttonLogin);
         buttonPanel.add(buttonCancel);
@@ -118,21 +101,17 @@ public class LoginDialog extends JDialog{
         cs.gridwidth = 2;
         loginPanel.add(buttonPanel, cs);
         
-        this.add(loginPanel, BorderLayout.SOUTH);        
-        container.add(loginPanel);        
-        this.add(container, BorderLayout.EAST);
+        JPanel rightWrapper = new JPanel(new BorderLayout(0, 0));
         
-        setTitle("Softpark - Login");
-        setSize(new Dimension(800, 550));
-        setResizable(false);
-        Toolkit tk = Toolkit.getDefaultToolkit();
-		Dimension dim = tk.getScreenSize();
-		int x = (dim.width / 2) - (this.getWidth() / 2);
-		int y = (dim.height / 2) - (this.getHeight() / 2);
-		setLocation(x, y);
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
+        rightWrapper.add(loginPanel);
+        this.add(rightWrapper, BorderLayout.EAST);
         
+        this.setTitle("Softpark - Login");
+        this.setSize(new Dimension(850, 550));
+        this.setResizable(false);
+		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		this.getRootPane().setDefaultButton(buttonLogin);
+		this.setLocationRelativeTo(null);
     }
 	
 	private class ButtonListener implements ActionListener {
@@ -160,43 +139,6 @@ public class LoginDialog extends JDialog{
 			}
 		}
 		
-	}
-	
-	private class TextFieldListener implements FocusListener, ActionListener {
-
-		@Override
-		public void focusGained(FocusEvent e) {
-			
-		}
-
-		@Override
-		public void focusLost(FocusEvent e) {
-//			if(!buttonCollectAccept.isVisible()) {
-//				textTicket.requestFocus();
-//			}
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			//add some code here when Enter has been hit in the text field
-			if(e.getActionCommand().equalsIgnoreCase("password.text.type")) {
-				if (Login.authenticate(getUsername(), getPassword())) {
-                    succeeded = true;
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(LoginDialog.this,
-                            "Invalid username or password",
-                            "Login",
-                            JOptionPane.ERROR_MESSAGE);
-                    // reset username and password
-                    textUsername.setText("");
-                    textPassword.setText("");
-                    succeeded = false;
- 
-                }
-			}
-		}		
-
 	}
 	
 	public String getUsername() {

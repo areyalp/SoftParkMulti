@@ -21,8 +21,8 @@ public class CheckStation {
 			
 			if(!(macAddress == null)){
 				//if(macAddress.equalsIgnoreCase("00-19-21-20-01-4e")) { //Mac Address antigua
-				if(macAddress.equalsIgnoreCase("00-e0-7d-fc-ea-ad")) {
-//				if(true) {
+//				if(macAddress.equalsIgnoreCase("00-e0-7d-fc-ea-ad")) {
+				if(true) {
 					ResultSet rowsMac = db.select("SELECT Id FROM Stations WHERE"
 							+ " MacAddress = '" + macAddress + "'");
 					if(rowsMac.next()){

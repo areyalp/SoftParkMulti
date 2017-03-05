@@ -55,6 +55,7 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -165,6 +166,10 @@ public class SoftParkMultiView extends JFrame {
 	private boolean printing = false;
 	
 	public SoftParkMultiView(int stationId) {
+		
+		UIManager.getLookAndFeelDefaults().put("Button.font", new Font("Arial", Font.BOLD, 18));
+		UIManager.getLookAndFeelDefaults().put("Label.font", new Font("Arial", Font.PLAIN, 16));
+		UIManager.getLookAndFeelDefaults().put("TextField.font", new Font("Arial", Font.PLAIN, 18));
 		
 		fiscalPrinter = new tfhka.ve.Tfhka("COM99");
 		
@@ -1433,8 +1438,6 @@ public class SoftParkMultiView extends JFrame {
 	
 	private class ButtonListener implements ActionListener, KeyListener {
 
-		private boolean exonerate;
-
 		@Override
 		public void keyPressed(KeyEvent ev) {
 			SelectValetRun v = new SelectValetRun(KeyEvent.getKeyText(ev.getKeyCode()));
@@ -1828,6 +1831,7 @@ public class SoftParkMultiView extends JFrame {
 								textEntrancePlate.setText("");
 							} else {
 								ticketNumber = 0;
+								@SuppressWarnings("unused")
 								boolean sentCmd = false;
 								int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
 								
@@ -1917,116 +1921,120 @@ public class SoftParkMultiView extends JFrame {
 		boolean isTicketOut = true;
 		boolean isTicketIn = false;
 		
-		try{	
+		try{
 			//Disable text entrance plate and car entrance button
 			buttonCarEntrance.setEnabled(false);
 			textEntrancePlate.setEnabled(false);
 			buttonCollectCancel.setEnabled(true);
 			buttonCollectExonerate.setEnabled(true);
 			ticketCode = textTicket.getText();
-			ticketNumber = Integer.parseInt(ticketCode.substring(17));
-			isTicketIn = Db.isTicketIn(ticketNumber);
-			isTicketOut = Db.isTicketOut(ticketNumber);
-			if(isTicketIn) {
-				if (!isTicketOut){
-					if(ticketNumber > 0) {
-						String day = ticketCode.substring(0,2);
-						String month = ticketCode.substring(2,4);
-						String year = ticketCode.substring(4,8);
-						String hour = ticketCode.substring(8,10);
-						String minutes = ticketCode.substring(10,12);
-						String seconds = ticketCode.substring(12,14);	
-						
-						DateTime dtIn = new DateTime(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minutes), Integer.parseInt(seconds), 0);
-						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");	
+			if(ticketCode.length() == 17) {
+				ticketNumber = Integer.parseInt(ticketCode.substring(17));
+				isTicketIn = Db.isTicketIn(ticketNumber);
+				isTicketOut = Db.isTicketOut(ticketNumber);
+				if(isTicketIn) {
+					if (!isTicketOut){
+						if(ticketNumber > 0) {
+							String day = ticketCode.substring(0,2);
+							String month = ticketCode.substring(2,4);
+							String year = ticketCode.substring(4,8);
+							String hour = ticketCode.substring(8,10);
+							String minutes = ticketCode.substring(10,12);
+							String seconds = ticketCode.substring(12,14);	
+							
+							DateTime dtIn = new DateTime(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minutes), Integer.parseInt(seconds), 0);
+							DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+							DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");	
+																	
+							DateTime dtOut = new DateTime();
+							DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy");
+							DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
 																
-						DateTime dtOut = new DateTime();
-						DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy");
-						DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
-															
-						Period period = new Period(dtIn, dtOut);
-						int dayIn = dtIn.getDayOfMonth();
-						int dayOut = dtOut.getDayOfMonth();
-						Db db = new Db();
-						
-						textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
-						textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada								
-						int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
-						textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
-						int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
-						if (dtIn.isBefore(dtOut)){
-							//Check the overnight_type in the configs table from the DB
-							if (overnightType == 0){
-								//If the value = 0 then the charge will be by hours
-								int hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();								
-								DecimalFormat df = new DecimalFormat("00");
-								String durationMinutes = df.format(period.getMinutes());
-								String durationSeconds = df.format(period.getSeconds());														
-								String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
-								textDuration.setText(durationTime);
-								int spendMinutes = period.getMinutes();
-								transactionOutAmount = 0;
-								if ( spendMinutes > 29){
-									transactionOutAmount = db.getHourRates(hoursLapse + 1);
-									labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-								}
-								else{
-									transactionOutAmount = db.getFractionRates(hoursLapse);								
-									labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
-								}
-								
-							} else if (overnightType == 1){
-								//If the value = 1 then the charge will be by night (overnights)
-								int overnightOffset = Integer.parseInt(Db.getConfig("overnight_time", "time"));
-								DateTime dtInOffset = dtIn.minusHours(overnightOffset);
-								DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
-								int daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
-								overnightDays = daysBetween;
-								
-								if (overnightDays > 0){
-									JOptionPane.showMessageDialog(null, "Vehiculo con pernocta desde hace " + overnightDays + " dias", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-									textDuration.setText(String.valueOf(daysBetween + " días "));
-									transactionOutAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
-									labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-								} else {
+							Period period = new Period(dtIn, dtOut);
+							int dayIn = dtIn.getDayOfMonth();
+							int dayOut = dtOut.getDayOfMonth();
+							Db db = new Db();
+							
+							textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
+							textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada								
+							int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
+							textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
+							int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
+							if (dtIn.isBefore(dtOut)){
+								//Check the overnight_type in the configs table from the DB
+								if (overnightType == 0){
+									//If the value = 0 then the charge will be by hours
+									int hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();								
 									DecimalFormat df = new DecimalFormat("00");
-									String durationHours = df.format(period.getHours());
 									String durationMinutes = df.format(period.getMinutes());
 									String durationSeconds = df.format(period.getSeconds());														
-									String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
+									String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
 									textDuration.setText(durationTime);
-
 									int spendMinutes = period.getMinutes();
-									int spendHours = period.getHours();
 									transactionOutAmount = 0;
 									if ( spendMinutes > 29){
-										transactionOutAmount = db.getHourRates(spendHours + 1);
+										transactionOutAmount = db.getHourRates(hoursLapse + 1);
 										labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
 									}
 									else{
-										transactionOutAmount = db.getFractionRates(spendHours);								
+										transactionOutAmount = db.getFractionRates(hoursLapse);								
 										labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
+									}
+									
+								} else if (overnightType == 1){
+									//If the value = 1 then the charge will be by night (overnights)
+									int overnightOffset = Integer.parseInt(Db.getConfig("overnight_time", "time"));
+									DateTime dtInOffset = dtIn.minusHours(overnightOffset);
+									DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
+									int daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
+									overnightDays = daysBetween;
+									
+									if (overnightDays > 0){
+										JOptionPane.showMessageDialog(null, "Vehiculo con pernocta desde hace " + overnightDays + " dias", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+										textDuration.setText(String.valueOf(daysBetween + " días "));
+										transactionOutAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
+										labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+									} else {
+										DecimalFormat df = new DecimalFormat("00");
+										String durationHours = df.format(period.getHours());
+										String durationMinutes = df.format(period.getMinutes());
+										String durationSeconds = df.format(period.getSeconds());														
+										String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
+										textDuration.setText(durationTime);
+	
+										int spendMinutes = period.getMinutes();
+										int spendHours = period.getHours();
+										transactionOutAmount = 0;
+										if ( spendMinutes > 29){
+											transactionOutAmount = db.getHourRates(spendHours + 1);
+											labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+										}
+										else{
+											transactionOutAmount = db.getFractionRates(spendHours);								
+											labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
+										}								
 									}								
-								}								
-							}	
-							
+								}	
+								
+							}
+							else{
+								JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+							}
+						}else{
+							JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 						}
-						else{
-							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-						}
-					}else{
-						JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
-					}
-				}//END OF !ISTICKETOUT
-				else{
-					JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+					}//END OF !ISTICKETOUT
+					else{
+						JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+						textTicket.setText("");
+					}			
+				}else{
+					JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
 					textTicket.setText("");
-				}			
-			}else{
-				JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
-				textTicket.setText("");
-			}					
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, "Numero de ticket invalido","Numero de ticket invalido", JOptionPane.ERROR_MESSAGE);
+			}
 			}catch(NumberFormatException ne) {
 				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 				textTicket.setText("");
@@ -2039,7 +2047,8 @@ public class SoftParkMultiView extends JFrame {
 		boolean exonerate;
 
 		S1PrinterData statusS1;
-		S2PrinterData statusS2;
+//		S2PrinterData statusS2;
+		@SuppressWarnings("unused")
 		boolean sentCmd = false;
 		
 		public CheckOutRun(String stationMode) {
@@ -2064,7 +2073,6 @@ public class SoftParkMultiView extends JFrame {
 					if(isPrinterConnected){
 						if(stationMode.equals("Valet")) {
 							try{
-	//							ticketNumber = textTicket.getText();
 								isTicketProcessed = Db.checkTicket(ticketNumber);
 								if(!isTicketProcessed) {
 									if(!textTicket.getText().isEmpty()) {
@@ -2261,7 +2269,7 @@ public class SoftParkMultiView extends JFrame {
 										}	 
 									}
 									transactionsOut.clear();	//TODO check this...
-									//after print clear the textFields						
+									//after print clear the textFields
 								} else if (exonerate) {
 									
 									String plate = db.getPlate(ticketNumber);																		
