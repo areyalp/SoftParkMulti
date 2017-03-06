@@ -72,7 +72,6 @@ import org.joda.time.format.DateTimeFormatter;
 import jssc.SerialPortList;
 import tfhka.PrinterException;
 import tfhka.ve.S1PrinterData;
-import tfhka.ve.S2PrinterData;
 import tfhka.ve.Tfhka;
 import ve.com.soted.softparkmulti.comm.CommPortUtils;
 import ve.com.soted.softparkmulti.comm.RelayDriver;
@@ -166,7 +165,7 @@ public class SoftParkMultiView extends JFrame {
 	private boolean printing = false;
 	
 	public SoftParkMultiView(int stationId) {
-		
+				
 		UIManager.getLookAndFeelDefaults().put("Button.font", new Font("Arial", Font.BOLD, 18));
 		UIManager.getLookAndFeelDefaults().put("Label.font", new Font("Arial", Font.PLAIN, 16));
 		UIManager.getLookAndFeelDefaults().put("TextField.font", new Font("Arial", Font.PLAIN, 18));
@@ -227,7 +226,7 @@ public class SoftParkMultiView extends JFrame {
 
 		this.setTitle("Softpark - (" + user.getLogin() + ") " + user.getName());
 
-		this.setLayout(new BorderLayout(20, 20));
+		this.setLayout(new BorderLayout(5, 5));
 
 		// Create the box panel to wrap the menu and the toolbar
 		JPanel toolBarPanel = new JPanel();
@@ -510,12 +509,37 @@ public class SoftParkMultiView extends JFrame {
 		paymentPanel.add(labelCashed);
 		textCashed = new JTextField(14);
 		textCashed.setEditable(false);
+		textCashed.addKeyListener(lForText);
 		paymentPanel.add(textCashed);
 		
 		JLabel labelChange = new JLabel("Vuelto");
 		paymentPanel.add(labelChange);
 		textChange = new JTextField(14);
 		textChange.setEditable(false);
+		textChange.addKeyListener(new KeyListener() {
+			
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+
+//				updateChange();
+
+			}
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		textChange.setActionCommand("multi.text.change");
 		paymentPanel.add(textChange);	
 		
 		payment.setHorizontalGroup(
@@ -1429,7 +1453,7 @@ public class SoftParkMultiView extends JFrame {
 
 		@Override
 		public void keyTyped(KeyEvent arg0) {
-			
+
 		}
 
 		
@@ -2485,6 +2509,15 @@ public class SoftParkMultiView extends JFrame {
 		} else {
 			JOptionPane.showMessageDialog(null, "Debe introducir la placa del vehículo", "Placa vacía", JOptionPane.ERROR_MESSAGE);
 		}
+	}
+	
+	private void updateChange(){
+		
+		double change = 0;
+		double cashed = Integer.valueOf(textCashed.getText());
+		change = cashed - transactionOutAmount;
+		textChange.setText(String.valueOf(change));
+		
 	}
 	
 	private class OpenCommPortRun implements Runnable{

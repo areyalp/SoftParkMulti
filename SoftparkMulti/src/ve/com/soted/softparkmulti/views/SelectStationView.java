@@ -15,7 +15,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import ve.com.soted.softparkmulti.comm.GetNetworkAddress;
 import ve.com.soted.softparkmulti.db.Db;

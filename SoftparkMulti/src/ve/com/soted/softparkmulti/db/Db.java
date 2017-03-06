@@ -15,8 +15,6 @@ import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
-import org.joda.time.DateTime;
-
 import ve.com.soted.softparkmulti.objects.PayType;
 import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.StationType;
