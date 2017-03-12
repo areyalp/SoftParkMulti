@@ -241,10 +241,13 @@ public class SoftParkMultiView extends JFrame {
 
 		// Add a tab
 		if(stationInfo.getType().getId() == 5){
-			tabbedPane.addTab("Sistema de Cobro", createCashierTab());
-			
-		}else if(stationInfo.getType().getId() == 4){
+			tabbedPane.addTab("Sistema de Cobro", createCashierTab());			
+		}
+		else if(stationInfo.getType().getId() == 4){
 			tabbedPane.addTab("Valet Parking", createValetTab());
+		}
+		else if(stationInfo.getType().getId() == 2){
+			tabbedPane.addTab("Entrada", createEntranceTab());
 		}
 
 		this.add(toolBarPanel, BorderLayout.NORTH);
@@ -370,6 +373,95 @@ public class SoftParkMultiView extends JFrame {
 		wrapContainerPanel.add(theTab);
 		
 		return wrapContainerPanel;
+	}
+
+	private JPanel createEntranceTab(){
+		
+		JPanel wrapContainerPanel = new JPanel();
+		
+		wrapContainerPanel.setLayout(new BoxLayout(wrapContainerPanel, BoxLayout.Y_AXIS));
+		
+		JPanel theTab = new JPanel();
+
+		theTab.setLayout(new GridLayout(0, 2));		
+		
+		theTab.add(createSubPanelEntrance());
+
+		wrapContainerPanel.add(theTab);
+		
+		return wrapContainerPanel;
+	}
+	
+	private JPanel createSubPanelEntrance(){
+		
+		JPanel wrapEntrancePanel = new JPanel();
+		wrapEntrancePanel.setLayout(new BoxLayout(wrapEntrancePanel, BoxLayout.X_AXIS));
+		
+		JPanel container = new JPanel();
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS)); // top to bottom
+
+		JPanel entrancePanel = new JPanel();
+		entrancePanel.setLayout(new BoxLayout(entrancePanel, BoxLayout.Y_AXIS));		
+
+		JPanel entranceTitlePanel = new JPanel();
+		
+		JLabel labelEntranceTitle = new JLabel("Ingreso de Vehículos");
+		labelEntranceTitle.setFont(new Font("Arial", Font.BOLD, 20));
+		entranceTitlePanel.add(labelEntranceTitle);
+		
+		entrancePanel.add(entranceTitlePanel);
+		
+//		JPanel entrancePlatePanel = new JPanel();
+//		
+//		JLabel labelEntrancePlate = new JLabel("Placa:");
+//		entrancePlatePanel.add(labelEntrancePlate);
+//		textEntrancePlate = new JTextField(12);
+//		entrancePlatePanel.add(textEntrancePlate);		
+//		entrancePanel.add(entrancePlatePanel);
+//		
+		JPanel entranceButtonPanel = new JPanel();
+		
+		ButtonListener lForSwitchButton = new ButtonListener();
+		
+		buttonCarEntrance = new JButton("Ingresar");
+		buttonCarEntrance.setPreferredSize(getPreferredSize());
+		buttonCarEntrance.setActionCommand("entrance.vehicle.in.button");
+		buttonCarEntrance.addActionListener(lForSwitchButton);
+		
+		entranceButtonPanel.add(buttonCarEntrance);
+		
+		entrancePanel.add(entranceButtonPanel);
+				
+		if(Db.getLevelPlaces(stationInfo.getLevelId()) > -1) {
+			JPanel parkingSpacesPanel = new JPanel();
+			
+			int availablePlaces = Db.getAvailablePlaces(stationInfo.getLevelId());
+			
+			labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
+			parkingSpacesPanel.add(labelParkingCounter);		
+			
+			CheckPlacesTask taskCheckPlaces = new CheckPlacesTask();
+			
+			Timer timerCheckPlaces = new Timer(true);
+			timerCheckPlaces.scheduleAtFixedRate(taskCheckPlaces, 1000, 3000);
+			
+			entrancePanel.add(parkingSpacesPanel);		
+		}
+		
+//		JLabel labelReturnMessage = new JLabel("");	
+		JLabel labelReturnMessage = new JLabel("ESPERE, NO HAY PUESTOS DISPONIBLES");	//Label set to show warning message to the user indicating parking spaces availability
+		labelReturnMessage.setFont(new Font("Arial", Font.BOLD, 18));
+		labelReturnMessage.setForeground(Color.RED);
+		entrancePanel.add(labelReturnMessage);
+		
+		container.add(Box.createVerticalStrut(40));
+		container.add(entrancePanel);		
+		container.add(Box.createVerticalStrut(70));
+				
+		wrapEntrancePanel.add(container);
+		wrapEntrancePanel.add(Box.createHorizontalStrut(40));
+		
+		return wrapEntrancePanel;
 	}
 
 	private JPanel createSubPanelCharge() {
@@ -528,7 +620,7 @@ public class SoftParkMultiView extends JFrame {
 			public void keyReleased(KeyEvent e) {
 				// TODO Auto-generated method stub
 
-//				updateChange();
+				updateChange();
 
 			}
 			
@@ -1494,10 +1586,9 @@ public class SoftParkMultiView extends JFrame {
 				} else {
 					shiftIsDown = false;
 				}
-				if (ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) {
+				if ((ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) || (ev.getActionCommand().equalsIgnoreCase("entrance.vehicle.in.button")) ){
 					CheckInRun v = new CheckInRun(ev.getActionCommand());
 					new Thread(v).start();
-//					textEntrancePlate.setText("");
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button"))  {				
 					CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
@@ -1530,6 +1621,11 @@ public class SoftParkMultiView extends JFrame {
 					textEntrancePlate.setEnabled(true);
 					buttonCollectExonerate.setEnabled(false);
 				}
+//				else if (ev.getActionCommand().equalsIgnoreCase("entrance.vehicle.in.button")) {
+//					CheckInRun v = new CheckInRun(ev.getActionCommand());
+//					new Thread(v).start();
+////					textEntrancePlate.setText("");
+//				}
 				
 			}
 		}
