@@ -82,6 +82,7 @@ import ve.com.soted.softparkmulti.dialogs.LoginDialog;
 import ve.com.soted.softparkmulti.objects.PayType;
 import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.Summary;
+import ve.com.soted.softparkmulti.objects.Ticket;
 import ve.com.soted.softparkmulti.objects.Transaction;
 import ve.com.soted.softparkmulti.objects.User;
 import ve.com.soted.softparkmulti.utils.StringTools;
@@ -145,7 +146,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private String activePort, relayPort="";
 
-	private boolean exonerate, lost, validPlate;
+	private boolean exonerate, validPlate;
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
@@ -158,7 +159,8 @@ public class SoftParkMultiView extends JFrame {
 	private JComboBox<String> comboCountry, comboDirectionState;
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
-	public int transactionId, ticketNumber, overnightDays, places, lostTicketNumber;
+	private int transactionId, ticketNumber, overnightDays, places;
+	private Ticket lostTicket;
 	public Timestamp entranceDateTime;
 	
 	private double transactionOutAmount;
@@ -2321,7 +2323,7 @@ public class SoftParkMultiView extends JFrame {
 								transactionsOut.add(allTransactions.get(2));		
 							}
 	
-								if(!exonerate && !lost){									
+								if(!exonerate && lostTicket == null){									
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
 											db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
@@ -2478,18 +2480,18 @@ public class SoftParkMultiView extends JFrame {
 										ce.printStackTrace();
 									}
 									transactionsOut.clear();	//TODO check this...									
-								} else if (lost){
+								} else if (lostTicket != null){
 									
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
-											db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											db.updateLostTicket(lostTicket.getId(),stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
 										}
 									}else{
 										if(summaryId > 0) {
 											summaryHasInvoice = true;
 											for(Transaction tOut: transactionsOut) {
-												db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+												db.updateLostTicket(lostTicket.getId(),stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
 												}																
 										}else{
@@ -2509,7 +2511,7 @@ public class SoftParkMultiView extends JFrame {
 												summaryId = insertedSummaryId;
 												summaryHasInvoice = true;
 												for(Transaction tOut: transactionsOut)  {
-													db.updateLostTicket(lostTicketNumber,stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+													db.updateLostTicket(lostTicket.getId(),stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 															tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1), true);			
 												}
 												stationsWithSummary = Db.getStationsWithSummary();
@@ -2524,7 +2526,7 @@ public class SoftParkMultiView extends JFrame {
 									}
 									
 									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicketNumber));
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicket.getId()));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
@@ -2546,8 +2548,8 @@ public class SoftParkMultiView extends JFrame {
 										ce.printStackTrace();
 									}
 									transactionsOut.clear();	//TODO check this...
-									lost = false;
 								}
+								lostTicket = null;
 						}//END of stationMode = "E/S"						
 					}
 					else{
@@ -2586,23 +2588,33 @@ public class SoftParkMultiView extends JFrame {
 	}
 	
 	private void preCheckOutLost(){
-		
-		buttonCarEntrance.setEnabled(false);
-		textEntrancePlate.setEnabled(false);
-		buttonCollectExonerate.setEnabled(false);
 		String plateSearch= JOptionPane.showInputDialog("Introduzca la placa del vehículo");
 		if(null != plateSearch && !plateSearch.isEmpty()) {
+			buttonCarEntrance.setEnabled(false);
+			textEntrancePlate.setEnabled(false);
+			buttonCollectExonerate.setEnabled(false);
 			Db db = new Db();			
-			lostTicketNumber = db.getLostTicketId(plateSearch);
-			if(lostTicketNumber > 0) {
-				transactionOutAmount = Db.getLostTicketRate(2);			
-				labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-				lost = true;
+			lostTicket = db.findTicketByPlate(plateSearch);
+			if(lostTicket != null) {
+				lostTicket.setTotalAmount(Db.getLostTicketRate(2));
+				textTicket.setText(lostTicket.toString());
+				labelMoney.setText(lostTicket.getTotalAmount() + " Bs.");
+				buttonCollectAccept.setEnabled(true);
+				buttonCollectCancel.setEnabled(true);
 			} else {
+				
+				buttonCollectAccept.setEnabled(false);
+				buttonCollectCancel.setEnabled(false);
+				textEntrancePlate.setEnabled(true);
+				buttonCarEntrance.setEnabled(true);
+				buttonCollectExonerate.setEnabled(true);
 				JOptionPane.showMessageDialog(null, "Esta placa no esta registrada, intente de nuevo", "Placa no existe!", JOptionPane.ERROR_MESSAGE);
 				labelMoney.setText("");
 			}
 		} else {
+			buttonCarEntrance.setEnabled(true);
+			buttonCollectExonerate.setEnabled(true);
+			textEntrancePlate.requestFocus();
 			JOptionPane.showMessageDialog(null, "Debe introducir la placa del vehículo", "Placa vacía", JOptionPane.ERROR_MESSAGE);
 		}
 	}

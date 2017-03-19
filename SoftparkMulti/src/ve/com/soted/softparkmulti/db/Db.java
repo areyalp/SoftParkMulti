@@ -19,6 +19,7 @@ import ve.com.soted.softparkmulti.objects.PayType;
 import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.StationType;
 import ve.com.soted.softparkmulti.objects.Summary;
+import ve.com.soted.softparkmulti.objects.Ticket;
 import ve.com.soted.softparkmulti.objects.Transaction;
 import ve.com.soted.softparkmulti.objects.User;
 import ve.com.soted.softparkmulti.objects.Vehicle;
@@ -957,6 +958,36 @@ public class Db {
 		}
 		
 		return ts;
+	}
+
+	public Ticket findTicketByPlate(String plate) {
+		Ticket ticket = null;
+		ResultSet setTicket = this.select("SELECT * FROM transactions WHERE plate = '" + plate + "' AND printed = 0 AND exonerated = 0 AND exited = 0 AND lost = 0");
+		
+		try {
+			if(setTicket.next()) {
+				int id = setTicket.getInt("Id");
+				int entranceStationId = setTicket.getInt("EntranceStationId");
+				int cardId = setTicket.getInt("CardId");
+				int exitStationId = setTicket.getInt("ExitStationId");
+				int summaryId = setTicket.getInt("SummaryId");
+				String picture = setTicket.getString("Picture");
+				double totalAmount = setTicket.getDouble("TotalAmount");
+				Timestamp entranceDateTime = setTicket.getTimestamp("EntranceDateTime");
+				Timestamp payDateTime = setTicket.getTimestamp("PayDateTime");
+				Timestamp exitDateTime = setTicket.getTimestamp("ExitDateTime");
+				int printed  = setTicket.getInt("Printed");
+				int exonerated = setTicket.getInt("Exonerated");
+				int exited = setTicket.getInt("Exited");
+				int lost = setTicket.getInt("Lost");
+				
+				ticket = new Ticket(id, entranceStationId, cardId, exitStationId, summaryId, plate, picture, totalAmount, entranceDateTime, payDateTime, exitDateTime, printed, exonerated, exited, lost);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return ticket;
 	}
 
 }

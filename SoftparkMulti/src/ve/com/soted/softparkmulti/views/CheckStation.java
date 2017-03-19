@@ -21,7 +21,7 @@ public class CheckStation {
 			
 			if(!(macAddress == null)){
 				//if(macAddress.equalsIgnoreCase("00-19-21-20-01-4e")) { //Mac Address antigua
-//				if(macAddress.equalsIgnoreCase("00-e0-7d-fc-ea-ad")) {
+//				if(macAddress.equalsIgnoreCase("00-e0-4d-76-ba-c1")) {
 				if(true) {
 					ResultSet rowsMac = db.select("SELECT Id FROM Stations WHERE"
 							+ " MacAddress = '" + macAddress + "'");
@@ -37,6 +37,7 @@ public class CheckStation {
 				}
 			}else{
 				JOptionPane.showMessageDialog(null, "No esta conectado a la red", "Conectese a la red", JOptionPane.ERROR_MESSAGE);
+				System.exit(0);
 			}
 		} //END OF try
 		catch(Exception ex){
