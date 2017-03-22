@@ -81,15 +81,6 @@ public class SelectStationView extends JFrame{
 				try {
 					Db db = new Db();
 					if(db.update("UPDATE Stations SET MacAddress = '" + macAddress + "' WHERE Id = " + stationId + ";")){
-						LoginDialog loginDialog = new LoginDialog(null);
-						
-						loginDialog.setVisible(true);
-						
-						if(!loginDialog.isSucceeded()) {
-							System.exit(0);
-						}
-						
-						userId = Db.getUserId(loginDialog.getUsername());
 						dispose();
 						new SoftParkMultiView(stationId);
 					}
