@@ -442,7 +442,7 @@ public class SoftParkMultiView extends JFrame {
 			
 			int availablePlaces = Db.getAvailablePlaces(stationInfo.getLevelId());
 			
-			labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
+			labelParkingCounter = new JLabel("Puestos Disponibles: " + String.valueOf(availablePlaces));
 			parkingSpacesPanel.add(labelParkingCounter);		
 			
 			CheckPlacesTask taskCheckPlaces = new CheckPlacesTask();
@@ -831,7 +831,7 @@ public class SoftParkMultiView extends JFrame {
 			
 			int availablePlaces = Db.getAvailablePlaces(stationInfo.getLevelId());
 			
-			labelParkingCounter = new JLabel(String.valueOf(availablePlaces));
+			labelParkingCounter = new JLabel("Puestos Disponibles: " + String.valueOf(availablePlaces));
 			labelParkingCounter.setFont(new Font(null, Font.BOLD, 14));
 			parkingSpacesPanel.add(labelParkingCounter);		
 			
