@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -69,6 +70,7 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javafx.scene.input.KeyCode;
 import jssc.SerialPortList;
 import tfhka.PrinterException;
 import tfhka.ve.S1PrinterData;
@@ -266,6 +268,35 @@ public class SoftParkMultiView extends JFrame {
 		cbMenuItemStatusbar.setSelected(true);
 		
 		this.add(createReportTree(), BorderLayout.EAST);
+		
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+			
+			@Override
+			public boolean dispatchKeyEvent(KeyEvent e) {
+				if(KeyEvent.KEY_PRESSED == e.getID()) {
+//					JOptionPane.showMessageDialog(null, "KeyCode: " + e.getKeyCode() + " -- KeyChar: " + e.getKeyChar());
+					int keyCode = e.getKeyCode();
+					switch(keyCode) {
+						case KeyEvent.VK_F2:
+							if(buttonCarEntrance.isEnabled()) {
+								CheckInRun v = new CheckInRun("vehicle.in.button");
+								new Thread(v).start();
+							}
+							break;
+						case KeyEvent.VK_F8:
+							preCheckOutLost();
+							break;
+						case KeyEvent.VK_F11:
+							if(buttonCollectAccept.isEnabled()) {
+								CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
+								new Thread(out).start();
+							}
+							break;
+					}
+				}
+				return false;
+			}
+		});
 
 		this.setVisible(true);
 
@@ -566,7 +597,7 @@ public class SoftParkMultiView extends JFrame {
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelDuration)
 						.addComponent(textDuration))
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(labelExpiration)
-						.addComponent(textExpiration))				
+						.addComponent(textExpiration))
 		);
 		
 		//add thePanel to the boxlayoutPanel
