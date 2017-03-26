@@ -85,6 +85,7 @@ import ve.com.soted.softparkmulti.objects.Summary;
 import ve.com.soted.softparkmulti.objects.Ticket;
 import ve.com.soted.softparkmulti.objects.Transaction;
 import ve.com.soted.softparkmulti.objects.User;
+import ve.com.soted.softparkmulti.utils.Numbers;
 import ve.com.soted.softparkmulti.utils.StringTools;
 
 import java.util.Timer;
@@ -160,6 +161,7 @@ public class SoftParkMultiView extends JFrame {
 	private JButton buttonCollectAccept, buttonCollectCancel, buttonCarEntrance, buttonCollectExonerate;
 	
 	private int transactionId, ticketNumber, overnightDays, places;
+	private Ticket ticketInfo;
 	private Ticket lostTicket;
 	public Timestamp entranceDateTime;
 	
@@ -171,6 +173,7 @@ public class SoftParkMultiView extends JFrame {
 		UIManager.getLookAndFeelDefaults().put("Button.font", new Font("Arial", Font.BOLD, 18));
 		UIManager.getLookAndFeelDefaults().put("Label.font", new Font("Arial", Font.PLAIN, 16));
 		UIManager.getLookAndFeelDefaults().put("TextField.font", new Font("Arial", Font.PLAIN, 18));
+		UIManager.getLookAndFeelDefaults().put("FormattedTextField.font", new Font("Arial", Font.PLAIN, 18));
 		
 		fiscalPrinter = new tfhka.ve.Tfhka();
 		
@@ -602,43 +605,46 @@ public class SoftParkMultiView extends JFrame {
 		JLabel labelCashed = new JLabel("Entregado");
 		paymentPanel.add(labelCashed);
 		textCashed = new JTextField(14);
-		textCashed.setEditable(false);
-		textCashed.addKeyListener(lForText);
-		paymentPanel.add(textCashed);
-		
-		JLabel labelChange = new JLabel("Vuelto");
-		paymentPanel.add(labelChange);
-		textChange = new JTextField(14);
-		textChange.setEditable(false);
-		textChange.addKeyListener(new KeyListener() {
+		textCashed.setEnabled(false);
+		textCashed.addKeyListener(new KeyListener() {
 			
 			@Override
 			public void keyTyped(KeyEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 			
 			@Override
 			public void keyReleased(KeyEvent e) {
-				// TODO Auto-generated method stub
-
-				updateChange();
-
+				JTextField textCashed = (JTextField) e.getSource();
+				String cashed = textCashed.getText();
+				if(!cashed.isEmpty() && Numbers.isNumeric(cashed)) {
+					double changeAmount = Double.valueOf(cashed) - transactionOutAmount;
+					if(changeAmount < 0) {
+						textChange.setText("Faltan " + changeAmount + " BsF");
+					} else {
+						textChange.setText("Devolver " + changeAmount + " BsF");
+					}
+				} else {
+					textChange.setText("");
+				}
 			}
 			
 			@Override
 			public void keyPressed(KeyEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 		});
+		paymentPanel.add(textCashed);
 		
-		textChange.setActionCommand("multi.text.change");
-		paymentPanel.add(textChange);	
+		JLabel labelChange = new JLabel("Vuelto");
+		paymentPanel.add(labelChange);
+		textChange = new JTextField(14);
+		textChange.setEnabled(false);
+		paymentPanel.add(textChange);
 		
 		payment.setHorizontalGroup(
 				payment.createSequentialGroup()
-
+		
 		.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(labelPayment)
 				.addComponent(labelTotal).addComponent(labelCashed).addComponent(labelChange))
 				.addGroup(payment.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -664,17 +670,18 @@ public class SoftParkMultiView extends JFrame {
 		
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
-		ButtonListener lForSwitchButton = new ButtonListener();
+		ButtonListener lForButton = new ButtonListener();
 		
 		buttonCollectAccept = new JButton("Aceptar");
 		buttonCollectAccept.setActionCommand("multi.accept.button");
-		buttonCollectAccept.addActionListener(lForSwitchButton);
+		buttonCollectAccept.addActionListener(lForButton);
+		buttonCollectAccept.setEnabled(false);
 		
 		buttonPanel.add(buttonCollectAccept);
 		
 		buttonCollectCancel = new JButton("Cancelar");
 		buttonCollectCancel.setActionCommand("multi.cancel.button");
-		buttonCollectCancel.addActionListener(lForSwitchButton);
+		buttonCollectCancel.addActionListener(lForButton);
 		buttonCollectCancel.setEnabled(false);
 		
 		buttonPanel.add(buttonCollectCancel);	
@@ -1579,8 +1586,7 @@ public class SoftParkMultiView extends JFrame {
 				stationsWithSummary = Db.getStationsWithSummary();
 				summaries = Db.loadSummaries();
 				tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-			}
-			else{
+			} else {
 				if(ev.getModifiers() == 17) {
 					shiftIsDown = true;
 				} else {
@@ -1612,13 +1618,15 @@ public class SoftParkMultiView extends JFrame {
 					textDuration.setText("");
 					textExpiration.setEditable(false);
 					textExpiration.setText("");
-					textCashed.setEditable(false);
+					textCashed.setEnabled(false);
 					textCashed.setText("");
-					textChange.setEditable(false);
+					textChange.setEnabled(false);
 					textChange.setText("");
 					labelMoney.setText(" Bs.");
 					buttonCarEntrance.setEnabled(true);
 					textEntrancePlate.setEnabled(true);
+					buttonCollectAccept.setEnabled(false);
+					buttonCollectCancel.setEnabled(false);
 					buttonCollectExonerate.setEnabled(false);
 				}
 //				else if (ev.getActionCommand().equalsIgnoreCase("entrance.vehicle.in.button")) {
@@ -1943,12 +1951,15 @@ public class SoftParkMultiView extends JFrame {
 							if (plate.isEmpty()){
 								JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
 								textEntrancePlate.setText("");
+								textEntrancePlate.requestFocus();
 							} else if (!match.find()) {
 								JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
 								textEntrancePlate.setText("");
+								textEntrancePlate.requestFocus();
 							} else if (isPlateIn){
 								JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
 								textEntrancePlate.setText("");
+								textEntrancePlate.requestFocus();
 							} else {
 								ticketNumber = 0;
 								@SuppressWarnings("unused")
@@ -1963,11 +1974,12 @@ public class SoftParkMultiView extends JFrame {
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
-									DateTime entranceDateTime = new DateTime();
+									DateTime entranceDateTime = new DateTime(Db.getDbTime());
 									DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 									DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 									DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 									DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+									
 									try {
 										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
 									} catch (PrinterException ce) {
@@ -1975,6 +1987,11 @@ public class SoftParkMultiView extends JFrame {
 									}
 									try {
 										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+									} catch (PrinterException ce) {
+										ce.printStackTrace();
+									}
+									try {
+										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Entrada: " + stationInfo.getId() + " " + stationInfo.getName()));
 									} catch (PrinterException ce) {
 										ce.printStackTrace();
 									}
@@ -2028,123 +2045,114 @@ public class SoftParkMultiView extends JFrame {
 		boolean isTicketIn = false;
 		
 		try{
-			//Disable text entrance plate and car entrance button
-			buttonCarEntrance.setEnabled(false);
-			textEntrancePlate.setEnabled(false);
-			buttonCollectAccept.setEnabled(true);
-			buttonCollectCancel.setEnabled(true);
-			textCashed.setEnabled(true);
-			textChange.setEnabled(true);
-			buttonCollectExonerate.setEnabled(true);
 			ticketCode = textTicket.getText();
-			if(ticketCode.length() == 17) {
-				ticketNumber = Integer.parseInt(ticketCode.substring(17));
-				isTicketIn = Db.isTicketIn(ticketNumber);
-				isTicketOut = Db.isTicketOut(ticketNumber);
+			if(ticketCode.length() < 11 && ticketCode.length() > 0) {
+//				ticketNumber = Integer.parseInt(ticketCode.substring(17));
+				ticketInfo = Db.getTicketInfo(ticketCode);
+				isTicketIn = Db.isTicketIn(ticketInfo.getId());
 				if(isTicketIn) {
+					isTicketOut = Db.isTicketOut(ticketInfo.getId());
 					if (!isTicketOut){
-						if(ticketNumber > 0) {
-							String day = ticketCode.substring(0,2);
-							String month = ticketCode.substring(2,4);
-							String year = ticketCode.substring(4,8);
-							String hour = ticketCode.substring(8,10);
-							String minutes = ticketCode.substring(10,12);
-							String seconds = ticketCode.substring(12,14);	
-							
-							DateTime dtIn = new DateTime(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minutes), Integer.parseInt(seconds), 0);
-							DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-							DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");	
-																	
-							DateTime dtOut = new DateTime();
-							DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy");
-							DateTimeFormatter dtf2 = DateTimeFormat.forPattern("HH:mm:ss");
-																
-							Period period = new Period(dtIn, dtOut);
-							int dayIn = dtIn.getDayOfMonth();
-							int dayOut = dtOut.getDayOfMonth();
-							Db db = new Db();
-							
-							textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
-							textEntrance.setText(ticketCode.substring(14,17));	//estacion de entrada								
-							int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
-							textExpiration.setText(String.valueOf(dtf2.print(dtOut.plusMinutes(ticketTimeout))));				
-							int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
-							if (dtIn.isBefore(dtOut)){
-								//Check the overnight_type in the configs table from the DB
-								if (overnightType == 0){
-									//If the value = 0 then the charge will be by hours
-									int hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();								
+						buttonCarEntrance.setEnabled(false);
+						textEntrancePlate.setEnabled(false);
+						buttonCollectAccept.setEnabled(true);
+						buttonCollectCancel.setEnabled(true);
+						textCashed.setEnabled(true);
+						textChange.setEnabled(false);
+						buttonCollectExonerate.setEnabled(true);
+//							String day = ticketCode.substring(0,2);
+//							String month = ticketCode.substring(2,4);
+//							String year = ticketCode.substring(4,8);
+//							String hour = ticketCode.substring(8,10);
+//							String minutes = ticketCode.substring(10,12);
+//							String seconds = ticketCode.substring(12,14);	
+						
+//							DateTime dtIn = new DateTime(Integer.parseInt(year), Integer.parseInt(month), Integer.parseInt(day), Integer.parseInt(hour), Integer.parseInt(minutes), Integer.parseInt(seconds), 0);
+						DateTime dtIn = new DateTime(ticketInfo.getEntranceDateTime());
+						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+						
+						DateTime dtOut = new DateTime(Db.getDbTime());
+						DateTimeFormatter dtf = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+						
+						Period periodStayedIn = new Period(dtIn, dtOut);
+						Db db = new Db();
+						
+						textDateIn.setText(dFormatter.print(dtIn) + " " + tFormatter.print(dtIn));
+//							textDateIn.setText(day + month + year + hour + minutes + seconds);		//fecha y hora de entrada
+						textEntrance.setText(String.valueOf(ticketInfo.getEntranceStationId()));	//estacion de entrada								
+						int ticketTimeout = Integer.parseInt(Db.getConfig("ticket_timeout", "time"));
+						textExpiration.setText(dtf.print(dtOut.plusMinutes(ticketTimeout)));
+						int overnightType = Integer.parseInt((Db.getConfig("overnight_type", "billing")));
+						if (dtIn.isBefore(dtOut)){
+							//Check the overnight_type in the configs table from the DB
+							if (overnightType == 0){
+								//If the value = 0 then the charge will be by hours
+								int hoursLapse = Hours.hoursBetween(dtIn, dtOut).getHours();
+								DecimalFormat df = new DecimalFormat("00");
+								String durationMinutes = df.format(periodStayedIn.getMinutes());
+								String durationSeconds = df.format(periodStayedIn.getSeconds());														
+								String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
+								textDuration.setText(durationTime);
+								int spentMinutes = periodStayedIn.getMinutes();
+								// TODO check if everything is working well here
+								if ( spentMinutes > 29){
+									transactionOutAmount = db.getHourRateByHours(hoursLapse + 1);
+									labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+								} else {
+									transactionOutAmount = db.getFractionRateByHours(hoursLapse);								
+									labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
+								}
+								
+							} else if (overnightType == 1){
+								//If the value = 1 then the charge will be by night (overnights)
+								int overnightOffset = Integer.parseInt(Db.getConfig("overnight_time", "time"));
+								DateTime dtInOffset = dtIn.minusHours(overnightOffset);
+								DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
+								int daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
+								overnightDays = daysBetween;
+								
+								if (overnightDays > 0){
+									JOptionPane.showMessageDialog(null, "Vehiculo con pernocta desde hace " + overnightDays + " dias", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
+									textDuration.setText(String.valueOf(daysBetween + " días "));
+									transactionOutAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
+									labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+								} else {
 									DecimalFormat df = new DecimalFormat("00");
-									String durationMinutes = df.format(period.getMinutes());
-									String durationSeconds = df.format(period.getSeconds());														
-									String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
+									String durationHours = df.format(periodStayedIn.getHours());
+									String durationMinutes = df.format(periodStayedIn.getMinutes());
+									String durationSeconds = df.format(periodStayedIn.getSeconds());														
+									String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
 									textDuration.setText(durationTime);
-									int spendMinutes = period.getMinutes();
-									transactionOutAmount = 0;
-									if ( spendMinutes > 29){
-										transactionOutAmount = db.getHourRates(hoursLapse + 1);
+
+									int spentMinutes = periodStayedIn.getMinutes();
+									int spentHours = periodStayedIn.getHours();
+									if ( spentMinutes > 29){
+										transactionOutAmount = db.getHourRates(spentHours + 1);
 										labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
 									}
 									else{
-										transactionOutAmount = db.getFractionRates(hoursLapse);								
+										transactionOutAmount = db.getFractionRates(spentHours);								
 										labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
-									}
-									
-								} else if (overnightType == 1){
-									//If the value = 1 then the charge will be by night (overnights)
-									int overnightOffset = Integer.parseInt(Db.getConfig("overnight_time", "time"));
-									DateTime dtInOffset = dtIn.minusHours(overnightOffset);
-									DateTime dtOutOffset = dtOut.minusHours(overnightOffset);
-									int daysBetween = Days.daysBetween(dtInOffset, dtOutOffset).getDays();
-									overnightDays = daysBetween;
-									
-									if (overnightDays > 0){
-										JOptionPane.showMessageDialog(null, "Vehiculo con pernocta desde hace " + overnightDays + " dias", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-										textDuration.setText(String.valueOf(daysBetween + " días "));
-										transactionOutAmount = (db.getOvernightRates("ticket_pernocta") * overnightDays);
-										labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-									} else {
-										DecimalFormat df = new DecimalFormat("00");
-										String durationHours = df.format(period.getHours());
-										String durationMinutes = df.format(period.getMinutes());
-										String durationSeconds = df.format(period.getSeconds());														
-										String durationTime = durationHours + ":" + durationMinutes+ ":" +durationSeconds;							
-										textDuration.setText(durationTime);
-	
-										int spendMinutes = period.getMinutes();
-										int spendHours = period.getHours();
-										transactionOutAmount = 0;
-										if ( spendMinutes > 29){
-											transactionOutAmount = db.getHourRates(spendHours + 1);
-											labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
-										}
-										else{
-											transactionOutAmount = db.getFractionRates(spendHours);								
-											labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
-										}								
 									}								
-								}	
-								
-							}
-							else{
-								JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
-							}
-						}else{
-							JOptionPane.showMessageDialog(null, "El numero de ticket no puede estar vacio", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
+								}								
+							}	
+							
+						} else {
+							JOptionPane.showMessageDialog(null, "La hora de ticket inválida", "Atención", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 						}
-					}//END OF !ISTICKETOUT
-					else{
+					} else {
 						JOptionPane.showMessageDialog(null, "Ticket con salida", "Ticket  Procesado", JOptionPane.WARNING_MESSAGE);  //Add the exit hour to this message
 						textTicket.setText("");
 					}			
-				}else{
+				} else {
 					JOptionPane.showMessageDialog(null, "El Ticket  no ha sido generado, inserte el numero correcto","Ticket procesado", JOptionPane.ERROR_MESSAGE);
 					textTicket.setText("");
 				}
 			} else {
 				JOptionPane.showMessageDialog(null, "Numero de ticket invalido","Numero de ticket invalido", JOptionPane.ERROR_MESSAGE);
 			}
-			}catch(NumberFormatException ne) {
+			} catch(NumberFormatException ne) {
 				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 				textTicket.setText("");
 			}		
@@ -2481,9 +2489,22 @@ public class SoftParkMultiView extends JFrame {
 									
 									RelayDriver rd = new RelayDriver();
 									labelStatus.setText(labelStatus.getText() + "Abriendo Barrera");
+									
+									Properties prop = new Properties();
+									InputStream propertiesInput;
+									String port = "";
+									
+									try {
+										propertiesInput = getClass().getResourceAsStream("config.properties");
+										prop.load(propertiesInput);
+										port = prop.getProperty("host");
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+									
 									try {
 										rd.getSerialPort();
-										rd.connect("COM5");
+										rd.connect(port);
 										rd.switchRelay(1, RelayDriver.ACTIVE_STATE);
 										rd.switchRelay(1, RelayDriver.INACTIVE_STATE);									
 									} catch (Exception e) {
@@ -2592,18 +2613,15 @@ public class SoftParkMultiView extends JFrame {
 			textTicket.setText("");
 			textTicket.setEditable(true);			
 			labelMoney.setText("Bs.");
-//			textDuration.setEditable(false);
 			textDuration.setText("");
-//			textEntrance.setEditable(false);
 			textEntrance.setText("");			
-//			textDateIn.setEditable(false);
 			textDateIn.setText("");
-//			textCashed.setEditable(false);
 			textCashed.setText("");
-//			textChange.setEditable(false);
-			textChange.setText("");			
-//			textExpiration.setEditable(false);
+			textCashed.setEnabled(false);
+			textChange.setText("");
+			textChange.setEnabled(false);
 			textExpiration.setText("");
+			textExpiration.setEnabled(false);
 			buttonCollectAccept.setEnabled(false);
 			buttonCollectCancel.setEnabled(false);
 			buttonCarEntrance.setEnabled(true);
@@ -2619,14 +2637,13 @@ public class SoftParkMultiView extends JFrame {
 			lostTicket = db.findTicketByPlate(plateSearch);
 			if(lostTicket != null) {
 				lostTicket.setTotalAmount(Db.getLostTicketRate(2));
-				textTicket.setText(lostTicket.toString());
+				textTicket.setText(String.valueOf(lostTicket.getId()));
 				labelMoney.setText(lostTicket.getTotalAmount() + " Bs.");
 				buttonCarEntrance.setEnabled(false);
 				textEntrancePlate.setEnabled(false);
 				buttonCollectAccept.setEnabled(true);
 				buttonCollectCancel.setEnabled(true);
 				textCashed.setEnabled(true);
-				textChange.setEnabled(true);
 				buttonCollectExonerate.setEnabled(true);
 			} else {
 				JOptionPane.showMessageDialog(null, "Esta placa no esta registrada, intente de nuevo", "Placa no existe!", JOptionPane.ERROR_MESSAGE);

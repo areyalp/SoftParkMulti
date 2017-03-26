@@ -749,12 +749,13 @@ public class Db {
 	}
 
 	public static boolean isTicketIn(int ticketNumber) {
+		if(ticketNumber == 0) return false;
 		Db db = new Db();
 		boolean isTicketIn = false;
-		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(*),0) as cnt "
+		ResultSet rowTicketIn = db.select("SELECT IFNULL(COUNT(1),0) as cnt "
 				+ "FROM Transactions "
-				+ "WHERE transactions.Id = " + ticketNumber
-				+ " AND Exited = 0");		
+				+ "WHERE Id = " + ticketNumber
+				+ " AND Exited = 0");
 		try {
 			if(rowTicketIn.next()) {
 				if(rowTicketIn.getInt("cnt") > 0) {
@@ -800,13 +801,12 @@ public class Db {
 	public static boolean isTicketOut(int ticketNumber) {
 		Db db = new Db();
 		boolean isTicketOut = false;
-		ResultSet rowTicketOut = db.select("SELECT Exited FROM transactions WHERE Id = '" +  ticketNumber + "'");
+		ResultSet rowTicketOut = db.select("SELECT Exited FROM Transactions WHERE Id = " +  ticketNumber);
 		try {
 			if(rowTicketOut.next()) {
 				if(rowTicketOut.getInt("Exited") == 1) {
 					isTicketOut = true;
-				}
-				else{
+				} else {
 					isTicketOut = false;
 				}
 			}
@@ -988,6 +988,75 @@ public class Db {
 		}
 		
 		return ticket;
+	}
+
+	public static Ticket getTicketInfo(String ticketCode) {
+		Ticket ticket = null;
+		Db db = new Db();
+		ResultSet setTicket = db.select("SELECT * FROM transactions WHERE id = " + ticketCode);
+		
+		try {
+			if(setTicket.next()) {
+				int id = setTicket.getInt("Id");
+				int entranceStationId = setTicket.getInt("EntranceStationId");
+				int cardId = setTicket.getInt("CardId");
+				int exitStationId = setTicket.getInt("ExitStationId");
+				int summaryId = setTicket.getInt("SummaryId");
+				String plate = setTicket.getString("Plate");
+				String picture = setTicket.getString("Picture");
+				double totalAmount = setTicket.getDouble("TotalAmount");
+				Timestamp entranceDateTime = setTicket.getTimestamp("EntranceDateTime");
+				Timestamp payDateTime = setTicket.getTimestamp("PayDateTime");
+				Timestamp exitDateTime = setTicket.getTimestamp("ExitDateTime");
+				int printed  = setTicket.getInt("Printed");
+				int exonerated = setTicket.getInt("Exonerated");
+				int exited = setTicket.getInt("Exited");
+				int lost = setTicket.getInt("Lost");
+				
+				ticket = new Ticket(id, entranceStationId, cardId, exitStationId, summaryId, plate, picture, totalAmount, entranceDateTime, payDateTime, exitDateTime, printed, exonerated, exited, lost);
+			} else {
+				ticket = new Ticket();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		try {
+			db.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return ticket;
+	}
+
+	public double getHourRateByHours(int hoursLapse) {
+		double amount = 0.00;
+		ResultSet setRate = this.select("SELECT HourAmount FROM rates WHERE TransactionTypeId = 3");
+		
+		try {
+			if(setRate.next()) {
+				amount = setRate.getDouble("HourAmount");
+			}
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return amount * hoursLapse;
+	}
+
+	public double getFractionRateByHours(int hoursLapse) {
+		double amount = 0.00;
+		ResultSet setRate = this.select("SELECT FractionAmount FROM rates WHERE TransactionTypeId = 3");
+		
+		try {
+			if(setRate.next()) {
+				amount = setRate.getDouble("FractionAmount");
+			}
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return amount + this.getHourRateByHours(hoursLapse);
 	}
 
 }

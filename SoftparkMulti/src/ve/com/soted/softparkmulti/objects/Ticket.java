@@ -23,6 +23,10 @@ public class Ticket {
 	private int exited;
 	private int lost;
 	
+	public Ticket() {
+		super();
+	}
+	
 	public Ticket(int id, int entranceStationId, int cardId, int exitStationId, int summaryId, String plate,
 			String picture, double totalAmount, Timestamp entranceDateTime, Timestamp payDateTime,
 			Timestamp exitDateTime, int printed, int exonerated, int exited, int lost) {
