@@ -222,7 +222,7 @@ public class SoftParkMultiView extends JFrame {
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setMinimumSize(new Dimension(800, 600));
-
+		
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension dim = tk.getScreenSize();
 
@@ -268,6 +268,11 @@ public class SoftParkMultiView extends JFrame {
 		cbMenuItemStatusbar.setSelected(true);
 		
 		this.add(createReportTree(), BorderLayout.EAST);
+		
+		CheckPrinterTask taskCheckPrinter = new CheckPrinterTask();
+		
+		Timer timerCheckPrinter = new Timer(true);
+		timerCheckPrinter.scheduleAtFixedRate(taskCheckPrinter, 1000, 3000);
 		
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
 			
@@ -459,7 +464,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		ButtonListener lForSwitchButton = new ButtonListener();
 		
-		buttonCarEntrance = new JButton("Ingresar");
+		buttonCarEntrance = new JButton("Ingresar (F2)");
 		buttonCarEntrance.setPreferredSize(getPreferredSize());
 		buttonCarEntrance.setActionCommand("entrance.vehicle.in.button");
 		buttonCarEntrance.addActionListener(lForSwitchButton);
@@ -703,7 +708,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		ButtonListener lForButton = new ButtonListener();
 		
-		buttonCollectAccept = new JButton("Aceptar");
+		buttonCollectAccept = new JButton("Aceptar (F11)");
 		buttonCollectAccept.setActionCommand("multi.accept.button");
 		buttonCollectAccept.addActionListener(lForButton);
 		buttonCollectAccept.setEnabled(false);
@@ -1407,7 +1412,7 @@ public class SoftParkMultiView extends JFrame {
 
 		toolBar.addSeparator();
 
-		toolBarButtonLostTicket = new JButton("Ticket Perdido", new ImageIcon("resources/lost_ticket.png"));
+		toolBarButtonLostTicket = new JButton("Ticket Perdido (F8)", new ImageIcon("resources/lost_ticket.png"));
 
 		toolBarButtonLostTicket.setActionCommand("bar.button.lost.ticket");
 		
@@ -1532,13 +1537,14 @@ public class SoftParkMultiView extends JFrame {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			DefaultMutableTreeNode reportNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-			
-			//JOptionPane.showMessageDialog(null, "parent node user object: " + stationNode.getUserObject());
-			if(SwingUtilities.isRightMouseButton(e) && reportNode.getUserObject() != null && reportNode.getLevel() == 3) {
-				DefaultMutableTreeNode stationNode = new DefaultMutableTreeNode(reportNode.getParent().getParent());
-				if(stationNode.getUserObject().toString().equalsIgnoreCase(stationInfo.getType().getName())) {
-					PopUpMenu popUpMenu = new PopUpMenu();
-					popUpMenu.show(e.getComponent(), e.getX(), e.getY());
+			if(null != reportNode) {
+//				JOptionPane.showMessageDialog(null, "Report Node Level: " + reportNode.getLevel());
+				if(SwingUtilities.isRightMouseButton(e) && reportNode.getUserObject() != null && reportNode.getLevel() == 3) {
+					DefaultMutableTreeNode stationNode = new DefaultMutableTreeNode(reportNode.getParent().getParent());
+					if(stationNode.getUserObject().toString().equalsIgnoreCase(stationInfo.getName())) {
+						PopUpMenu popUpMenu = new PopUpMenu();
+						popUpMenu.show(e.getComponent(), e.getX(), e.getY());
+					}
 				}
 			}
 		}
@@ -1639,19 +1645,14 @@ public class SoftParkMultiView extends JFrame {
 					}
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.cancel.button")) {
-					textTicket.setEditable(true);
+					textTicket.setEnabled(true);
 					textTicket.setText("");
-					textDateIn.setEditable(false);
 					textDateIn.setText("");
-					textEntrance.setEditable(false);
 					textEntrance.setText("");
-					textDuration.setEditable(false);
 					textDuration.setText("");
-					textExpiration.setEditable(false);
 					textExpiration.setText("");
 					textCashed.setEnabled(false);
 					textCashed.setText("");
-					textChange.setEnabled(false);
 					textChange.setText("");
 					labelMoney.setText(" Bs.");
 					buttonCarEntrance.setEnabled(true);
@@ -1931,7 +1932,7 @@ public class SoftParkMultiView extends JFrame {
 					buttonValetLostTicket.setEnabled(false);
 					buttonAccept.setEnabled(false);
 					buttonCancel.setEnabled(false);
-					textTicket.setEditable(false);
+					textTicket.setEnabled(false);
 //					CheckOutRun co = new CheckOutRun(transactions);
 //					Thread t = new Thread(co);
 //					t.start();
@@ -1966,104 +1967,108 @@ public class SoftParkMultiView extends JFrame {
 		}
 		@Override
 		public synchronized void run() {
-			if (!printing){
-				printing = true;
-				if (stationInfo.getType().getName().equals("Entrada/Salida")){
-					if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
-						if(Db.getAvailablePlaces(stationInfo.getLevelId()) > 0) {
-						//TODO Have to check the presence of the vehicle to allow print the ticket
-							Db db = new Db();
-							String plate = textEntrancePlate.getText();
-							String regex = Db.getConfig("plate_regex", "plate");
-							Pattern pattern = Pattern.compile(regex);
-							Matcher match = pattern.matcher(plate);
-							isPlateIn = Db.isPlateIn(plate);
-							
-							if (plate.isEmpty()){
-								JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
-								textEntrancePlate.setText("");
-								textEntrancePlate.requestFocus();
-							} else if (!match.find()) {
-								JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
-								textEntrancePlate.setText("");
-								textEntrancePlate.requestFocus();
-							} else if (isPlateIn){
-								JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
-								textEntrancePlate.setText("");
-								textEntrancePlate.requestFocus();
-							} else {
-								ticketNumber = 0;
-								@SuppressWarnings("unused")
-								boolean sentCmd = false;
-								int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
+			printerChecker();
+			if(isPrinterConnected){
+				if (!printing){
+					printing = true;
+					if (stationInfo.getType().getName().equals("Entrada/Salida")){
+						if(actionCommand.equalsIgnoreCase("vehicle.in.button")) {
+							if(Db.getAvailablePlaces(stationInfo.getLevelId()) > 0) {
+							//TODO Have to check the presence of the vehicle to allow print the ticket
+								Db db = new Db();
+								String plate = textEntrancePlate.getText();
+								String regex = Db.getConfig("plate_regex", "plate");
+								Pattern pattern = Pattern.compile(regex);
+								Matcher match = pattern.matcher(plate);
+								isPlateIn = Db.isPlateIn(plate);
 								
-								if(user.getLogin().equalsIgnoreCase("test")) {
-									labelStatus.setText("Imprimiendo ticket de entrada");
+								if (plate.isEmpty()){
+									JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
+									textEntrancePlate.setText("");
+									textEntrancePlate.requestFocus();
+								} else if (!match.find()) {
+									JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+									textEntrancePlate.setText("");
+									textEntrancePlate.requestFocus();
+								} else if (isPlateIn){
+									JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+									textEntrancePlate.setText("");
+									textEntrancePlate.requestFocus();
 								} else {
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + transactionId));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									DateTime entranceDateTime = new DateTime(Db.getDbTime());
-									DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-									DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-									DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
-									DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+									ticketNumber = 0;
+									@SuppressWarnings("unused")
+									boolean sentCmd = false;
+									int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
 									
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
+									if(user.getLogin().equalsIgnoreCase("test")) {
+										labelStatus.setText("Imprimiendo ticket de entrada");
+									} else {
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + transactionId));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										DateTime entranceDateTime = new DateTime(Db.getDbTime());
+										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+										DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+										DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+										
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Entrada: " + stationInfo.getId() + " " + stationInfo.getName()));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
 									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Entrada: " + stationInfo.getId() + " " + stationInfo.getName()));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-									try {
-										sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
-									} catch (PrinterException ce) {
-										ce.printStackTrace();
-									}
-								}
-								textEntrancePlate.setText("");
-								
-								//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
+									textEntrancePlate.setText("");
+									
+									//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
+									labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
+								}//END of plate checkup
+							
+							} else {
+								JOptionPane.showMessageDialog(null, "No hay puestos disponibles en este momento");
 								labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
-							}//END of plate checkup
-						
-						} else {
-							JOptionPane.showMessageDialog(null, "No hay puestos disponibles en este momento");
-							labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
+							}
+							textEntrancePlate.setText("");
 						}
-						textEntrancePlate.setText("");
-					}
-				}//end of station mode= E/S
-				printing = false;
-			}// End of printing
-			else{
-				JOptionPane.showMessageDialog(null, "Por favor espere, se esta imprimiendo el Ticket anterior");
+					}//end of station mode= E/S
+					printing = false;
+				} else {
+					JOptionPane.showMessageDialog(null, "Por favor espere, se esta imprimiendo el Ticket anterior");
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
 			}
 		}				
 	}
@@ -2077,6 +2082,8 @@ public class SoftParkMultiView extends JFrame {
 		
 		try{
 			ticketCode = textTicket.getText();
+			textTicket.setEnabled(false);
+			
 			if(ticketCode.length() < 11 && ticketCode.length() > 0) {
 //				ticketNumber = Integer.parseInt(ticketCode.substring(17));
 				ticketInfo = Db.getTicketInfo(ticketCode);
@@ -2628,21 +2635,19 @@ public class SoftParkMultiView extends JFrame {
 								}
 								lostTicket = null;
 						}//END of stationMode = "E/S"						
-					}
-					else{
+					} else {
 						JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
 					}
-				}else{
+				} else {
 					JOptionPane.showMessageDialog(null, "La red esta desconectada, conectela de nuevo", "Red desconectada", JOptionPane.ERROR_MESSAGE);
 				}			
 				printing = false;
-			}// End of printing
-			else{
+			} else {
 				JOptionPane.showMessageDialog(null, "Por favor espere, se esta imprimiendo el Ticket anterior");
 			}
 			
 			textTicket.setText("");
-			textTicket.setEditable(true);			
+			textTicket.setEnabled(true);
 			labelMoney.setText("Bs.");
 			textDuration.setText("");
 			textEntrance.setText("");			
@@ -2650,9 +2655,7 @@ public class SoftParkMultiView extends JFrame {
 			textCashed.setText("");
 			textCashed.setEnabled(false);
 			textChange.setText("");
-			textChange.setEnabled(false);
 			textExpiration.setText("");
-			textExpiration.setEnabled(false);
 			buttonCollectAccept.setEnabled(false);
 			buttonCollectCancel.setEnabled(false);
 			buttonCarEntrance.setEnabled(true);
@@ -2858,30 +2861,29 @@ public class SoftParkMultiView extends JFrame {
 			printerChecker();
 			
 			if(isPrinterConnected) {
-				
-			if(loginDialog.isSucceeded() && supervisor.canPrintReportX()) {
-				try {
-					fiscalPrinter.printXReport();
-				} catch (PrinterException e1) {
-					sentCmd = false;
-				}
-				if(sentCmd) {
-					DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-					boolean closed = Db.closeSummary((int) treeNode.getUserObject(), supervisorId);
-					if(closed) {
-						treeNode.removeFromParent();
-						stationsWithSummary = Db.getStationsWithSummary();
-						summaries = Db.loadSummaries();
-						tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
-						summaryId = 0;
-						summaryHasInvoice = false;
+				if(loginDialog.isSucceeded() && supervisor.canPrintReportX()) {
+					try {
+						fiscalPrinter.printXReport();
+					} catch (PrinterException e1) {
+						sentCmd = false;
+					}
+					if(sentCmd) {
+						DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+						boolean closed = Db.closeSummary((int) treeNode.getUserObject(), supervisorId);
+						if(closed) {
+							treeNode.removeFromParent();
+							stationsWithSummary = Db.getStationsWithSummary();
+							summaries = Db.loadSummaries();
+							tree.setModel(new TreeDataModel(stationsWithSummary, summaries));
+							summaryId = 0;
+							summaryHasInvoice = false;
+						}
+					}else{
+						JOptionPane.showMessageDialog(null, "Error al imprimir el reporte X","Error al imprimir", JOptionPane.ERROR_MESSAGE);
 					}
 				}else{
-					JOptionPane.showMessageDialog(null, "Error al imprimir el reporte X","Error al imprimir", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Acceso no autorizado");
 				}
-			}else{
-				JOptionPane.showMessageDialog(null, "Acceso no autorizado");
-			}
 			}else{
 				JOptionPane.showMessageDialog(null, "Impresora desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
 			}
@@ -2890,19 +2892,29 @@ public class SoftParkMultiView extends JFrame {
 		
 	}
 	
-	private void printerChecker(){
-		
-		if(fiscalPrinter.CheckFprinter()){
-			isPrinterConnected = true;
-			menuItemConnect.setEnabled(false);
-			menuItemDisconnect.setEnabled(true);
-			menu.setForeground(Color.GREEN);
-		}else{
-			isPrinterConnected = false;
-			menuItemConnect.setEnabled(true);
-			menuItemDisconnect.setEnabled(false);
-			menu.setForeground(Color.BLACK);
+	private synchronized void printerChecker(){
+		if(!printing) {
+			if(fiscalPrinter.CheckFprinter()){
+				isPrinterConnected = true;
+				menuItemConnect.setEnabled(false);
+				menuItemDisconnect.setEnabled(true);
+				menu.setForeground(Color.GREEN);
+			}else{
+				isPrinterConnected = false;
+				menuItemConnect.setEnabled(true);
+				menuItemDisconnect.setEnabled(false);
+				menu.setForeground(Color.BLACK);
+			}
 		}
+	}
+	
+	private class CheckPrinterTask extends TimerTask {
+
+		@Override
+		public void run() {
+			printerChecker();
+		}
+		
 	}
 	
 	private class CheckPlacesTask extends TimerTask {
