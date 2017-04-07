@@ -44,6 +44,10 @@ public class RelayDriver {
 		}
 	}
 	
+	public void disconnect() {
+		commPort.close();
+	}
+	
 	public void switchRelay(int relay, int state){
 		
 		char code = 'D';

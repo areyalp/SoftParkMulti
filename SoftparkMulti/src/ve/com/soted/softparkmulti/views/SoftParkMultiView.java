@@ -22,6 +22,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -63,6 +68,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.apache.logging.log4j.*;
+
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Hours;
@@ -70,12 +77,12 @@ import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import javafx.scene.input.KeyCode;
 import jssc.SerialPortList;
 import tfhka.PrinterException;
 import tfhka.ve.S1PrinterData;
 import tfhka.ve.Tfhka;
 import ve.com.soted.softparkmulti.comm.CommPortUtils;
+import ve.com.soted.softparkmulti.comm.GetNetworkAddress;
 import ve.com.soted.softparkmulti.comm.RelayDriver;
 import ve.com.soted.softparkmulti.components.TfhkaPrinter;
 import ve.com.soted.softparkmulti.components.TreeDataModel;
@@ -170,8 +177,13 @@ public class SoftParkMultiView extends JFrame {
 	private double transactionOutAmount;
 	private boolean printing = false;
 	
+	private static final Logger log = LogManager.getLogger(SoftParkMultiView.class.getName());
+	
+	private boolean debug = false;
+	
 	public SoftParkMultiView(int stationId) {
-				
+		
+		log.debug("Initializing");
 		UIManager.getLookAndFeelDefaults().put("Button.font", new Font("Arial", Font.BOLD, 18));
 		UIManager.getLookAndFeelDefaults().put("Label.font", new Font("Arial", Font.PLAIN, 16));
 		UIManager.getLookAndFeelDefaults().put("TextField.font", new Font("Arial", Font.PLAIN, 18));
@@ -184,8 +196,10 @@ public class SoftParkMultiView extends JFrame {
 		loginDialog.setVisible(true);
 		
 		if(!loginDialog.isSucceeded()) {
+			log.error("No success login details: user=" + loginDialog.getUsername() + ", ip=" + GetNetworkAddress.GetAddress("ip") + ", mac=" + GetNetworkAddress.GetAddress("mac"));
 			System.exit(0);
 		}
+		log.debug("Login Successfull");
 		
 		userId = Db.getUserId(loginDialog.getUsername());
 		
@@ -195,10 +209,15 @@ public class SoftParkMultiView extends JFrame {
 		
 		if(user == null) {
 			JOptionPane.showMessageDialog(null, "Usuario invalido", "Usuario invalido", JOptionPane.ERROR_MESSAGE);
+			log.error("Invalid user");
 			System.exit(0);
 		}
 		
+		log.debug("User Info: id=" + user.getId() + ", name=" + user.getName() + ", user type=" + user.getUserType());
+		
 		stationInfo = Station.getStationInfo(stationId);
+		
+		log.debug("Station Info: id=" + stationInfo.getId() + ", level=" + stationInfo.getLevelId() + ", name=" + stationInfo.getName() + ", type=" + stationInfo.getType().getName());
 		
 		allTransactions = Db.loadAllTransactions();
 		
@@ -211,6 +230,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		if(summaryId > 0) {
 			invoiceCount = db.countSummaryInvoices(summaryId);
+			log.info("There is an active summary with following details: id=" + summaryId + ", invoices=" + invoiceCount);
 		}
 		
 		if(invoiceCount > 0) {
@@ -241,8 +261,10 @@ public class SoftParkMultiView extends JFrame {
 
 		// Create the menu bar.
 		this.setJMenuBar(createMenu());
+		log.debug("Menu created");
 		// Create the tool bar.
 		toolBarPanel.add(createToolBar());
+		log.debug("Toolbar created");
 
 		JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -285,7 +307,10 @@ public class SoftParkMultiView extends JFrame {
 						case KeyEvent.VK_F2:
 							if(buttonCarEntrance.isEnabled()) {
 								CheckInRun v = new CheckInRun("vehicle.in.button");
-								new Thread(v).start();
+								Thread t = new Thread(v);
+								t.setPriority(Thread.MAX_PRIORITY);
+								t.start();
+								//new Thread(v).start();
 							}
 							break;
 						case KeyEvent.VK_F8:
@@ -294,7 +319,10 @@ public class SoftParkMultiView extends JFrame {
 						case KeyEvent.VK_F11:
 							if(buttonCollectAccept.isEnabled()) {
 								CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
-								new Thread(out).start();
+								Thread t = new Thread(out);
+								t.setPriority(Thread.MAX_PRIORITY);
+								t.start();
+								//new Thread(out).start();
 							}
 							break;
 					}
@@ -302,6 +330,8 @@ public class SoftParkMultiView extends JFrame {
 				return false;
 			}
 		});
+		
+		fiscalPrinter.OpenFpctrl("COM1");
 
 		this.setVisible(true);
 
@@ -1527,6 +1557,7 @@ public class SoftParkMultiView extends JFrame {
 			
 			PrintXReport x = new PrintXReport();
 			Thread t = new Thread(x);
+			t.setPriority(Thread.MAX_PRIORITY);
 			t.start();
 		}
 		
@@ -1600,11 +1631,14 @@ public class SoftParkMultiView extends JFrame {
 
 		@Override
 		public void keyPressed(KeyEvent ev) {
-			SelectValetRun v = new SelectValetRun(KeyEvent.getKeyText(ev.getKeyCode()));
-			new Thread(v).start();
+			//SelectValetRun v = new SelectValetRun(KeyEvent.getKeyText(ev.getKeyCode()));
+			//new Thread(v).start();
 			
 			CheckOutRun v1 = new CheckOutRun(KeyEvent.getKeyText(ev.getKeyCode()));
-			new Thread(v1).start();
+			Thread t = new Thread(v1);
+			t.setPriority(Thread.MAX_PRIORITY);
+			t.start();
+			//new Thread(v1).start();
 		}
 
 		@Override
@@ -1631,17 +1665,26 @@ public class SoftParkMultiView extends JFrame {
 				}
 				if ((ev.getActionCommand().equalsIgnoreCase("vehicle.in.Button")) || (ev.getActionCommand().equalsIgnoreCase("entrance.vehicle.in.button")) ){
 					CheckInRun v = new CheckInRun(ev.getActionCommand());
-					new Thread(v).start();
+					Thread t = new Thread(v);
+					t.setPriority(Thread.MAX_PRIORITY);
+					t.start();
+					//new Thread(v).start();
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.accept.button"))  {				
 					CheckOutRun out = new CheckOutRun(stationInfo.getType().getName());
-					new Thread(out).start();
+					Thread t = new Thread(out);
+					t.setPriority(Thread.MAX_PRIORITY);
+					t.start();
+					//new Thread(out).start();
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.exonerate.button")){					
 					int userResponse = JOptionPane.showConfirmDialog(null, "¿Desea exonerar este ticket?", "Confirme exoneracion de un ticket", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);					
 					if(userResponse == JOptionPane.YES_OPTION) {
 						CheckOutRun out = new CheckOutRun(stationInfo.getType().getName(), true);
-						new Thread(out).start();
+						Thread t = new Thread(out);
+						t.setPriority(Thread.MAX_PRIORITY);
+						t.start();
+						//new Thread(out).start();
 					}
 				}
 				else if (ev.getActionCommand().equalsIgnoreCase("multi.cancel.button")) {
@@ -1682,7 +1725,10 @@ public class SoftParkMultiView extends JFrame {
 				labelStatus.setText(activePort + " seleccionado");
 				OpenCommPortRun o = new OpenCommPortRun(activePort);
 				if (!activePort.isEmpty() && !activePort.equals(null)) {
-					new Thread(o).start();
+					Thread t = new Thread(o);
+					t.setPriority(Thread.MAX_PRIORITY);
+					t.start();
+					//new Thread(o).start();
 				} else {
 					labelStatus.setText("No hay puerto COM activo");
 				}
@@ -1698,7 +1744,10 @@ public class SoftParkMultiView extends JFrame {
 				}
 				OpenCommPortRun o = new OpenCommPortRun(activePort);
 				if (!activePort.isEmpty() && !activePort.equals(null)) {
-					new Thread(o).start();
+					Thread t = new Thread(o);
+					t.setPriority(Thread.MAX_PRIORITY);
+					t.start();
+					//new Thread(o).start();
 				} else {
 					labelStatus.setText("No hay puerto COM activo");
 				}
@@ -1706,6 +1755,7 @@ public class SoftParkMultiView extends JFrame {
 			case "disconnect":
 				CloseCommPortRun c = new CloseCommPortRun();
 				Thread t = new Thread(c);
+				t.setPriority(Thread.MAX_PRIORITY);
 				t.start();
 				break;
 			case "test":
@@ -1755,6 +1805,7 @@ public class SoftParkMultiView extends JFrame {
 			case "reporte_z":
 				PrintZReport z = new PrintZReport();
 				Thread t = new Thread(z);
+				t.setPriority(Thread.MAX_PRIORITY);
 				t.start();
 				break;
 			case "aboutus":
@@ -2215,24 +2266,41 @@ public class SoftParkMultiView extends JFrame {
 			this.exonerate = exonerate;
 		}
 
+		private void log(String arg0) {
+			
+			Path file = Paths.get("log.txt");
+			ArrayList<String> logLines = new ArrayList<String>();
+			logLines.add(arg0);
+			try {
+				Files.write(file, logLines, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+		
 		@Override
 		public synchronized void run() {
 			Db db = new Db();
 			int insertedSummaryId = 0;
 			boolean isTicketProcessed = false;
-						
+			
+			//this.log("Init CheckOutRun");
+			
 			printerChecker();
 			if (!printing){
-				printing = true;				
+				this.log("Not printing before");
+				printing = true;
 				if(db.testConnection()){
+					//this.log("Db connection is OK");
 					if(isPrinterConnected){
+						//this.log("Printer is connected");
 						if(stationMode.equals("Valet")) {
 							try{
-								isTicketProcessed = Db.checkTicket(ticketNumber);
+								isTicketProcessed = Db.checkTicket(ticketInfo.getId());
 								if(!isTicketProcessed) {
 									if(!textTicket.getText().isEmpty()) {
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketInfo.getId()));
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
@@ -2260,7 +2328,7 @@ public class SoftParkMultiView extends JFrame {
 											ce.printStackTrace();
 										}
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket Valet #: " + ticketNumber));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket Valet #: " + ticketInfo.getId()));
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
@@ -2341,10 +2409,11 @@ public class SoftParkMultiView extends JFrame {
 								JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 							}
 						} else if (stationInfo.getType().getName().equals("Entrada/Salida")) {
-							
+							//this.log("Estacion de E/S");
 							buttonCollectAccept.setEnabled(false);
 							buttonCollectCancel.setEnabled(false);
 							buttonCollectExonerate.setEnabled(false);
+							//this.log("Buttons disabled");
 							if(transactionsOut.size() > 0) {
 								int transactionsOutIndex = transactionSelectedMulti(transactionsOut, allTransactions.get(2).getId());
 								if(transactionsOutIndex > -1) {
@@ -2353,20 +2422,23 @@ public class SoftParkMultiView extends JFrame {
 									transactionsOut.add(allTransactions.get(2));
 								}
 							} else {
+								//this.log("Obtener transaccion de ticket de estacionamiento");
 								transactionsOut.add(allTransactions.get(2));		
 							}
 	
 								if(!exonerate && lostTicket == null){
+									//this.log("Cobro normal");
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
-											db.updateTransactionsOut(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											db.updateTransactionsOut(ticketInfo.getId(), stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
+											//this.log("Info updated for ticket #" + ticketInfo.getId());
 										}
 									}else{
 										if(summaryId > 0) {
 											summaryHasInvoice = true;
 											for(Transaction tOut: transactionsOut) {
-												db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+												db.updateTransactionsOut(ticketInfo.getId(),stationInfo.getId(), summaryId, transactionOutAmount, 12, 
 														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 											}
 										}else{
@@ -2386,7 +2458,7 @@ public class SoftParkMultiView extends JFrame {
 												summaryId = insertedSummaryId;
 												summaryHasInvoice = true;
 												for(Transaction tOut: transactionsOut)  {
-													db.updateTransactionsOut(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+													db.updateTransactionsOut(ticketInfo.getId(),stationInfo.getId(), summaryId, transactionOutAmount, 12, 
 															tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1));
 												}
 												stationsWithSummary = Db.getStationsWithSummary();
@@ -2400,8 +2472,9 @@ public class SoftParkMultiView extends JFrame {
 										}
 									}
 									if(!shiftIsDown) {
+										//this.log("Starting printing fiscal invoice");
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketNumber));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, "Ticket #: " + ticketInfo.getId()));
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
@@ -2427,27 +2500,32 @@ public class SoftParkMultiView extends JFrame {
 									labelStatus.setText(labelStatus.getText() + "Abriendo Barrera");
 									try {
 										rd.getSerialPort();
+										//this.log("Se conectara a tarjeta de relays");
 										rd.connect("COM5");
+										//this.log("Conectado a la tarjeta de relays");
 										rd.switchRelay(1, RelayDriver.ACTIVE_STATE);
-										rd.switchRelay(1, RelayDriver.INACTIVE_STATE);									
+										rd.switchRelay(1, RelayDriver.INACTIVE_STATE);
+										rd.disconnect();
+										//this.log("Desconectando de tarjeta de relays");
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
 									transactionsOut.clear();	//TODO check this...
+									//this.log("Se limpiaron las transacciones");
 									//after print clear the textFields
 								} else if (exonerate) {
 									
-									String plate = db.getPlate(ticketNumber);																		
+									String plate = db.getPlate(ticketInfo.getId());																		
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
-											db.updateExonerated(ticketNumber, stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
+											db.updateExonerated(ticketInfo.getId(), stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
 												tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);			
 										}
 									}else{
 										if(summaryId > 0) {
 											summaryHasInvoice = true;
 											for(Transaction tOut: transactionsOut) {
-												db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+												db.updateExonerated(ticketInfo.getId(),stationInfo.getId(), summaryId, transactionOutAmount, 12, 
 														tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);
 											}																
 										}else{
@@ -2468,7 +2546,7 @@ public class SoftParkMultiView extends JFrame {
 												summaryId = insertedSummaryId;
 												summaryHasInvoice = true;
 												for(Transaction tOut: transactionsOut)  {
-													db.updateExonerated(ticketNumber,stationInfo.getId(), summaryId, transactionOutAmount, 12, 
+													db.updateExonerated(ticketInfo.getId(),stationInfo.getId(), summaryId, transactionOutAmount, 12, 
 															tOut.getId(), payTypes.get(0).getId(), (shiftIsDown?0:1),true);
 												}
 												stationsWithSummary = Db.getStationsWithSummary();
@@ -2484,7 +2562,7 @@ public class SoftParkMultiView extends JFrame {
 									
 									if(!shiftIsDown) {
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketNumber));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketInfo.getId()));
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
