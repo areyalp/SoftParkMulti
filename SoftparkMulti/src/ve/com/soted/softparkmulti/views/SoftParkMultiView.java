@@ -2081,6 +2081,9 @@ public class SoftParkMultiView extends JFrame {
 		
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
+			textEntrancePlate.setEnabled(false);
+			buttonCarEntrance.setEnabled(false);
+			textTicket.setEnabled(false);
 		}
 		@Override
 		public void run() {
@@ -2214,7 +2217,9 @@ public class SoftParkMultiView extends JFrame {
 				log.error("Printer disconnected. Could not print entrance ticket");
 				JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
 			}
-			
+			textEntrancePlate.setEnabled(true);
+			buttonCarEntrance.setEnabled(true);
+			textTicket.setEnabled(true);
 			log.debug(tEnd("checkinrun"));
 		}
 	}
@@ -2368,6 +2373,13 @@ public class SoftParkMultiView extends JFrame {
 		public CheckOutRun(String stationMode, boolean exonerate) {
 			this.stationMode = stationMode;
 			this.exonerate = exonerate;
+			textTicket.setEnabled(false);
+			textCashed.setEnabled(false);
+			buttonCollectAccept.setEnabled(false);
+			buttonCollectCancel.setEnabled(false);
+			textEntrancePlate.setEnabled(false);
+			buttonCarEntrance.setEnabled(false);
+			buttonCollectExonerate.setEnabled(false);
 		}
 
 		@SuppressWarnings("unused")
