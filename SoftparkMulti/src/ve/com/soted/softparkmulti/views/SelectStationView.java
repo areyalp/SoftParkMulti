@@ -18,7 +18,6 @@ import javax.swing.JPanel;
 
 import ve.com.soted.softparkmulti.comm.GetNetworkAddress;
 import ve.com.soted.softparkmulti.db.Db;
-import ve.com.soted.softparkmulti.dialogs.LoginDialog;
 import ve.com.soted.softparkmulti.objects.Station;
 import ve.com.soted.softparkmulti.objects.StationType;
 
