@@ -2163,16 +2163,16 @@ public class SoftParkMultiView extends JFrame {
 											ce.printStackTrace();
 										}
 										log.debug(tEnd("printingEntryStation"));
-										tStart("printingCashierName");
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										log.debug(tEnd("printingCashierName"));
+//										tStart("printingCashierName");
+//										try {
+//											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										log.debug(tEnd("printingCashierName"));
 										tStart("printingPlate");
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("Placa: " + plate));
 										} catch (PrinterException ce) {
 											ce.printStackTrace();
 										}
@@ -2184,13 +2184,13 @@ public class SoftParkMultiView extends JFrame {
 //											ce.printStackTrace();
 //										}
 //										log.debug(tEnd("printingBarcode"));
-										tStart("printingEndOfDocument");
-										try {
-											fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										log.debug(tEnd("printingEndOfDocument"));
+//										tStart("printingEndOfDocument");
+//										try {
+//											fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
+//										} catch (PrinterException ce) {
+//											ce.printStackTrace();
+//										}
+//										log.debug(tEnd("printingEndOfDocument"));
 										log.debug(tEnd("printing"));
 									}
 									textEntrancePlate.setText("");
