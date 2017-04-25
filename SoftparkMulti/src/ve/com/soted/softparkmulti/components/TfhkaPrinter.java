@@ -41,14 +41,14 @@ public class TfhkaPrinter {
 	
 	public static String DnfDocumentText(String text){
 		if(text.length() > DNF_DOCUMENT_TEXT_DIGITS){
-			text = text.substring(0, DNF_DOCUMENT_TEXT_DIGITS);
+			text = text.substring(0, DNF_DOCUMENT_TEXT_DIGITS - 1);
 		}
 		return "800" + text;
 	}
 	
 	public static String DnfDocumentEnd(String text){
 		if(text.length() > DNF_DOCUMENT_TEXT_DIGITS){
-			text = text.substring(0, DNF_DOCUMENT_TEXT_DIGITS);
+			text = text.substring(0, DNF_DOCUMENT_TEXT_DIGITS - 1);
 		}
 		return "810" + text;
 	}

@@ -1,54 +1,58 @@
 package ve.com.soted.softparkmulti.comm;
 
-import java.io.IOException;
-import java.io.OutputStream;
 
-import javax.swing.JOptionPane;
-
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
+import jssc.SerialPort;
+import jssc.SerialPortException;
 
 public class RelayDriver {
-
+	
+	String portName = "";
 	String relays = "@DDDD$";
-	CommPort commPort;
 	SerialPort serialPort;
-	OutputStream portOutput;
 	
 	private boolean busy = false;
 	
 	public static final int ACTIVE_STATE = 1;
 	public static final int INACTIVE_STATE = 2;
 	
-	public RelayDriver(){
+	public RelayDriver(String portName){
 		super();
+		this.portName = portName;
+		serialPort = new SerialPort(this.portName);
 	}
 	
-	public void connect(String portName) throws Exception{
-		
-		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-		//JOptionPane.showMessageDialog(null, portIdentifier);
-		if(portIdentifier.isCurrentlyOwned()){
-			System.out.println("Error: puerto ocupado");
-			JOptionPane.showMessageDialog(null, "Error: puerto ocupado");
-		}else{
-			commPort = portIdentifier.open(this.getClass().getName(),2000);
-			
-			if(commPort instanceof SerialPort){
-				serialPort = (SerialPort) commPort;
-				serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-				
-				portOutput = serialPort.getOutputStream();
+	public boolean connect() throws Exception{
+		boolean connected = false;
+		if(!serialPort.isOpened()) {
+			try {
+				connected = serialPort.openPort();
+				serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			} catch (SerialPortException e1) {
+				e1.printStackTrace();
 			}
 		}
+		return connected;
 	}
 	
-	public void disconnect() {
-		commPort.close();
+	public boolean isOpened() {
+		return serialPort.isOpened();
 	}
 	
-	public void switchRelay(int relay, int state){
+	public boolean disconnect() {
+		boolean disconnected = false;
+		if(serialPort.isOpened()) {
+			try {
+				disconnected = serialPort.closePort();
+			} catch (SerialPortException e) {
+				e.printStackTrace();
+			}
+		}
+		return disconnected;
+	}
+	
+	public boolean switchRelay(int relay, int state){
+		
+		boolean writed = false;
 		
 		char code = 'D';
 		
@@ -58,8 +62,30 @@ public class RelayDriver {
 			code = 'D';
 		}
 		
-		new Thread(new SerialWriter(relay,code)).start();
+		getSerialPort();
 		
+		StringBuilder sb = new StringBuilder(relays);
+		String out = "";
+		if(relay==0){
+			out = "@" + code + code + code + code + "$";
+		}else if(relay==1){
+			sb.setCharAt(1, code);
+			out = sb.toString();
+		}else if(relay==2){
+			sb.setCharAt(2, code);
+			out = sb.toString();
+		}
+		relays = sb.toString();
+		
+		try {
+			writed = serialPort.writeBytes(out.getBytes());
+		} catch (SerialPortException e) {
+			e.printStackTrace();
+		}
+		
+		leaveSerialPort();
+		
+		return writed;
 	}
 
 	public synchronized void getSerialPort() {		
@@ -79,49 +105,4 @@ public class RelayDriver {
 		notifyAll();
 		
 	}
-	
-	protected class SerialWriter implements Runnable{
-
-		String out;
-		int relay;
-		char code;
-
-		public SerialWriter(int relay, char code){
-			this.relay = relay;
-			this.code = code;
-		}
-		
-		@Override
-		public synchronized void run() {
-			getSerialPort();
-			StringBuilder sb = new StringBuilder(relays);
-			if(relay==0){
-				out = "@" + code + code + code + code + "$";
-			}else if(relay==1){
-				sb.setCharAt(1, code);
-				out = sb.toString();
-			}else if(relay==2){
-				sb.setCharAt(2, code);
-				out = sb.toString();
-			}
-			relays = sb.toString();
-			
-			for(int i = 0; i < out.length(); i++){
-				try {
-					portOutput.write(out.charAt(i));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			try {
-				portOutput.write(13);
-				portOutput.write(10);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			leaveSerialPort();
-		}
-		
-	}
-	
 }
