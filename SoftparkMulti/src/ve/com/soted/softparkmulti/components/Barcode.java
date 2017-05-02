@@ -16,7 +16,6 @@ public class Barcode {
 		
 
 	public Barcode(String barcode) {
-		// TODO Auto-generated constructor stub
 
 		strentryStationId = barcode.substring(0,3);
 		strstationId = barcode.substring(3,6);

@@ -87,7 +87,6 @@ import tfhka.ve.S1PrinterData;
 import tfhka.ve.Tfhka;
 import ve.com.soted.softparkmulti.comm.CommPortUtils;
 import ve.com.soted.softparkmulti.comm.GetNetworkAddress;
-import ve.com.soted.softparkmulti.comm.OldRelayDriver;
 import ve.com.soted.softparkmulti.comm.RelayDriver;
 import ve.com.soted.softparkmulti.components.TfhkaPrinter;
 import ve.com.soted.softparkmulti.components.TreeDataModel;
@@ -106,7 +105,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-@SuppressWarnings("serial")
+@SuppressWarnings({ "serial", "unused" })
 public class SoftParkMultiView extends JFrame {
 	
 	// Ticket example 2502201712000000100000000004
@@ -160,7 +159,6 @@ public class SoftParkMultiView extends JFrame {
 	
 	private String activePort, relayPort="";
 
-	@SuppressWarnings("unused")
 	private JTextField textTicket, textPlate, textOwnerId, textOwnerName, textOwnerLastName, textDescription;
 	private JTextField textExpiration,textDuration, textEntrance,textCashed,textChange;
 	private JTextField textEntrancePlate;
@@ -180,6 +178,7 @@ public class SoftParkMultiView extends JFrame {
 	
 	private double transactionOutAmount;
 	private boolean printing = false;
+	private boolean discounted = false;
 	
 	private static final Logger log = LogManager.getLogger(SoftParkMultiView.class.getName());
 	
@@ -226,7 +225,7 @@ public class SoftParkMultiView extends JFrame {
 		allTransactions = Db.loadAllTransactions();
 		
 		transactions = new ArrayList<Transaction>();
-		transactionsOut = new ArrayList<Transaction>();			//TODO check this
+		transactionsOut = new ArrayList<Transaction>();
 
 		payTypes = Db.loadPayTypes();
 		
@@ -317,6 +316,14 @@ public class SoftParkMultiView extends JFrame {
 								Thread t = new Thread(v);
 								t.setPriority(Thread.MAX_PRIORITY);
 								t.start();
+							}
+							break;
+						case KeyEvent.VK_F7:
+							if(transactionOutAmount > 0 && !discounted) {
+								Db db = new Db();
+								transactionOutAmount -= db.getFractionRate();
+								labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+								discounted = true;
 							}
 							break;
 						case KeyEvent.VK_F8:
@@ -612,17 +619,20 @@ public class SoftParkMultiView extends JFrame {
 				Component oppositeComponent = e.getOppositeComponent();
 				if(oppositeComponent instanceof JTextField) {
 					JTextField textField = (JTextField) oppositeComponent;
-					if(!textField.equals(textEntrancePlate)) {
-						if(textTicket.isEnabled()) {
-							textTicket.requestFocus();
+					if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+						if(!textField.equals(textEntrancePlate)) {
+							if(textTicket.isEnabled()) {
+								textTicket.requestFocus();
+							}
 						}
+					} else {
+						textTicket.requestFocus();
 					}
 				}
 			}
 			
 			@Override
 			public void focusGained(FocusEvent e) {
-				// TODO Auto-generated method stub
 				
 			}
 		});
@@ -936,8 +946,10 @@ public class SoftParkMultiView extends JFrame {
 		
 		JLabel labelEntrancePlate = new JLabel("Placa:");
 		entrancePlatePanel.add(labelEntrancePlate);
-		textEntrancePlate = new JTextField(12);
-		entrancePlatePanel.add(textEntrancePlate);
+		if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+			textEntrancePlate = new JTextField(12);
+			entrancePlatePanel.add(textEntrancePlate);
+		}
 		
 		entrancePanel.add(entrancePlatePanel);
 		
@@ -945,7 +957,7 @@ public class SoftParkMultiView extends JFrame {
 		
 		ButtonListener lForSwitchButton = new ButtonListener();
 		
-		buttonCarEntrance = new JButton("Ingresar");
+		buttonCarEntrance = new JButton("Ingresar (F2)");
 		buttonCarEntrance.setPreferredSize(getPreferredSize());
 		buttonCarEntrance.setActionCommand("vehicle.in.button");
 		buttonCarEntrance.addActionListener(lForSwitchButton);
@@ -1764,7 +1776,9 @@ public class SoftParkMultiView extends JFrame {
 					textChange.setText("");
 					labelMoney.setText(" Bs.");
 					buttonCarEntrance.setEnabled(true);
-					textEntrancePlate.setEnabled(true);
+					if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+						textEntrancePlate.setEnabled(true);
+					}
 					buttonCollectAccept.setEnabled(false);
 					buttonCollectCancel.setEnabled(false);
 					buttonCollectExonerate.setEnabled(false);
@@ -1804,9 +1818,11 @@ public class SoftParkMultiView extends JFrame {
 
 			switch (ev.getActionCommand()) {
 			case "connect":
+				log.debug("Connect button pressed on Status Bar");
 				if (activePort.isEmpty()) {
 					activePort = SerialPortList.getPortNames()[0];
 				}
+				log.debug("activePort=" + activePort);
 				OpenCommPortRun o = new OpenCommPortRun(activePort);
 				if (!activePort.isEmpty() && !activePort.equals(null)) {
 					Thread t = new Thread(o);
@@ -1826,7 +1842,6 @@ public class SoftParkMultiView extends JFrame {
 			case "test":
 				labelStatus.setText("Enviando prueba al puerto " + activePort);
 				try {
-					@SuppressWarnings("unused")
 					boolean sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.printTest());
 				} catch (PrinterException e) {
 					e.printStackTrace();
@@ -1990,7 +2005,6 @@ public class SoftParkMultiView extends JFrame {
 
 	}// END OF class CheckBoxListener
 	
-	@SuppressWarnings("unused")
 	private class SelectValetRun implements Runnable {
 
 		String actionCommand;
@@ -2077,11 +2091,12 @@ public class SoftParkMultiView extends JFrame {
 	private class CheckInRun implements Runnable{
 
 		String actionCommand;
-		boolean isPlateIn = false;
 		
 		CheckInRun(String actionCommand) {
 			this.actionCommand = actionCommand;
-			textEntrancePlate.setEnabled(false);
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.setEnabled(false);
+			}
 			buttonCarEntrance.setEnabled(false);
 			textTicket.setEnabled(false);
 		}
@@ -2102,28 +2117,28 @@ public class SoftParkMultiView extends JFrame {
 							if(Db.getAvailablePlaces(stationInfo.getLevelId()) > 0) {
 							//TODO Have to check the presence of the vehicle to allow print the ticket
 								Db db = new Db();
-								String plate = textEntrancePlate.getText();
-								String regex = Db.getConfig("plate_regex", "plate");
-								Pattern pattern = Pattern.compile(regex);
-								Matcher match = pattern.matcher(plate);
-								isPlateIn = Db.isPlateIn(plate);
-								
-								if (plate.isEmpty()){
-									JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
-									textEntrancePlate.setText("");
-									textEntrancePlate.requestFocus();
-								} else if (!match.find()) {
-									log.error("Erroneus plate #" + plate);
-									JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
-									textEntrancePlate.setText("");
-									textEntrancePlate.requestFocus();
-								} else if (isPlateIn){
-									JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
-									log.info("Plate #" + plate + " is already in");
-									textEntrancePlate.setText("");
-									textEntrancePlate.requestFocus();
-								} else {
-									@SuppressWarnings("unused")
+								String plate = "";
+//								String plate = textEntrancePlate.getText();
+//								String regex = Db.getConfig("plate_regex", "plate");
+//								Pattern pattern = Pattern.compile(regex);
+//								Matcher match = pattern.matcher(plate);
+//								isPlateIn = Db.isPlateIn(plate);
+//								
+//								if (plate.isEmpty()){
+//									JOptionPane.showMessageDialog(null, "El Número de Placa no puede estar vacío", "Número de placa invalido", JOptionPane.WARNING_MESSAGE);
+//									textEntrancePlate.setText("");
+//									textEntrancePlate.requestFocus();
+//								} else if (!match.find()) {
+//									log.error("Erroneus plate #" + plate);
+//									JOptionPane.showMessageDialog(null, "Por favor ingrese un numero de placa valido", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+//									textEntrancePlate.setText("");
+//									textEntrancePlate.requestFocus();
+//								} else if (isPlateIn){
+//									JOptionPane.showMessageDialog(null, "El Número de Placa ya se encuentra ingresado", "Numero de placa invalido", JOptionPane.ERROR_MESSAGE);
+//									log.info("Plate #" + plate + " is already in");
+//									textEntrancePlate.setText("");
+//									textEntrancePlate.requestFocus();
+//								} else {
 									boolean sentCmd = false;
 									int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
 									
@@ -2135,23 +2150,23 @@ public class SoftParkMultiView extends JFrame {
 										try {
 											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + transactionId));
 										} catch (PrinterException ce) {
-											ce.printStackTrace();
+											log.error(ce.getMessage());
 										}
 										log.debug(tEnd("printingTicketNo"));
-//										tStart("getDateTimeFormat");
-//										DateTime entranceDateTime = new DateTime(Db.getDbTime());
-//										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-//										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-//										DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
-//										DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
-//										log.debug(tEnd("getDateTimeFormat"));
-//										tStart("printingTime");
-//										try {
-//											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
-//										} catch (PrinterException ce) {
-//											ce.printStackTrace();
-//										}
-//										log.debug(tEnd("printingTime"));
+										tStart("getDateTimeFormat");
+										DateTime entranceDateTime = new DateTime(Db.getDbTime());
+										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+										DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+										DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+										log.debug(tEnd("getDateTimeFormat"));
+										tStart("printingTime");
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + entranceDateTime.toString(tFormatter)));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										log.debug(tEnd("printingTime"));
 //										tStart("printingDate");
 //										try {
 //											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + entranceDateTime.toString(dFormatter)));
@@ -2161,9 +2176,9 @@ public class SoftParkMultiView extends JFrame {
 //										log.debug(tEnd("printingDate"));
 										tStart("printingEntryStation");
 										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Entrada: " + stationInfo.getId() + " " + stationInfo.getName()));
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("Entrada: " + stationInfo.getId() + " " + stationInfo.getName()));
 										} catch (PrinterException ce) {
-											ce.printStackTrace();
+											log.error(ce.getMessage());
 										}
 										log.debug(tEnd("printingEntryStation"));
 //										tStart("printingCashierName");
@@ -2173,13 +2188,15 @@ public class SoftParkMultiView extends JFrame {
 //											ce.printStackTrace();
 //										}
 //										log.debug(tEnd("printingCashierName"));
-										tStart("printingPlate");
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("Placa: " + plate));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
+										if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+											tStart("printingPlate");
+											try {
+												sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("Placa: " + plate));
+											} catch (PrinterException ce) {
+												log.error(ce.getMessage());
+											}
+											log.debug(tEnd("printingPlate"));
 										}
-										log.debug(tEnd("printingPlate"));
 //										tStart("printingBarcode");
 //										try {
 //											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setBarcode(entranceDateTime.toString(dFormatter2) + entranceDateTime.toString(tFormatter2) + StringTools.fillWithZeros(stationId, 3) + StringTools.fillWithZeros(transactionId,11)));
@@ -2196,17 +2213,21 @@ public class SoftParkMultiView extends JFrame {
 //										log.debug(tEnd("printingEndOfDocument"));
 										log.debug(tEnd("printing"));
 									}
-									textEntrancePlate.setText("");
+									if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+										textEntrancePlate.setText("");
+									}
 									
 									//Check the second  entrance sensor if the state is inactive then send the INACTIVE_STATE<
 									labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
-								}//END of plate checkup
+//								}//END of plate checkup
 							
 							} else {
 								JOptionPane.showMessageDialog(null, "No hay puestos disponibles en este momento");
 								labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 							}
-							textEntrancePlate.setText("");
+							if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+								textEntrancePlate.setText("");
+							}
 						}
 					}//end of station mode= E/S
 					printing = false;
@@ -2217,7 +2238,9 @@ public class SoftParkMultiView extends JFrame {
 				log.error("Printer disconnected. Could not print entrance ticket");
 				JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
 			}
-			textEntrancePlate.setEnabled(true);
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.setEnabled(true);
+			}
 			buttonCarEntrance.setEnabled(true);
 			textTicket.setEnabled(true);
 			log.debug(tEnd("checkinrun"));
@@ -2229,6 +2252,7 @@ public class SoftParkMultiView extends JFrame {
 		String ticketCode = "";
 		boolean isTicketOut = true;
 		boolean isTicketIn = false;
+		discounted = false;
 		
 		try{
 			ticketCode = textTicket.getText();
@@ -2242,7 +2266,9 @@ public class SoftParkMultiView extends JFrame {
 					isTicketOut = Db.isTicketOut(ticketInfo.getId());
 					if (!isTicketOut){
 						buttonCarEntrance.setEnabled(false);
-						textEntrancePlate.setEnabled(false);
+						if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+							textEntrancePlate.setEnabled(false);
+						}
 						buttonCollectAccept.setEnabled(true);
 						buttonCollectCancel.setEnabled(true);
 						textCashed.setEnabled(true);
@@ -2283,14 +2309,18 @@ public class SoftParkMultiView extends JFrame {
 								String durationTime = hoursLapse + ":" + durationMinutes+ ":" +durationSeconds;							
 								textDuration.setText(durationTime);
 								int spentMinutes = periodStayedIn.getMinutes();
-								// TODO check if everything is working well here
-								if ( spentMinutes > 29){
-									transactionOutAmount = db.getHourRateByHours(hoursLapse + 1);
-									labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
+								
+								if(hoursLapse > 0) {
+									if ( spentMinutes > 29){
+										transactionOutAmount = db.getHourRateByHours(hoursLapse + 1);
+									} else {
+										transactionOutAmount = db.getFractionRateByHours(hoursLapse);								
+									}
 								} else {
-									transactionOutAmount = db.getFractionRateByHours(hoursLapse);								
-									labelMoney.setText(String.valueOf(transactionOutAmount) + "Bs.");
+									transactionOutAmount = db.getHourRateByHours(1);
 								}
+								
+								labelMoney.setText(String.valueOf(transactionOutAmount) + " Bs.");
 								
 							} else if (overnightType == 1){
 								//If the value = 1 then the charge will be by night (overnights)
@@ -2340,10 +2370,13 @@ public class SoftParkMultiView extends JFrame {
 			} else {
 				JOptionPane.showMessageDialog(null, "Numero de ticket invalido","Numero de ticket invalido", JOptionPane.ERROR_MESSAGE);
 			}
+			
 			} catch(NumberFormatException ne) {
 				JOptionPane.showMessageDialog(null, "Introduzca un numero de ticket valido", "Numero de ticket invalido", JOptionPane.WARNING_MESSAGE);
 				textTicket.setText("");
-			}		
+				textTicket.setEnabled(true);
+			}
+		textTicket.setEnabled(true);
 	}
 	
 	public void tStart(String key) {
@@ -2363,7 +2396,6 @@ public class SoftParkMultiView extends JFrame {
 
 		S1PrinterData statusS1;
 //		S2PrinterData statusS2;
-		@SuppressWarnings("unused")
 		boolean sentCmd = false;
 		
 		public CheckOutRun(String stationMode) {
@@ -2377,12 +2409,13 @@ public class SoftParkMultiView extends JFrame {
 			textCashed.setEnabled(false);
 			buttonCollectAccept.setEnabled(false);
 			buttonCollectCancel.setEnabled(false);
-			textEntrancePlate.setEnabled(false);
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.setEnabled(false);
+			}
 			buttonCarEntrance.setEnabled(false);
 			buttonCollectExonerate.setEnabled(false);
 		}
 
-		@SuppressWarnings("unused")
 		private void log(String arg0) {
 			
 			Path file = Paths.get("log.txt");
@@ -2590,6 +2623,44 @@ public class SoftParkMultiView extends JFrame {
 											}
 										}
 									}
+									
+									Properties prop = new Properties();
+									InputStream propertiesInput;
+									String relayPort = "";
+									int relay = 2;
+
+									try {
+										propertiesInput = getClass().getResourceAsStream("config.properties");
+										prop.load(propertiesInput);
+										relayPort = prop.getProperty("relaysport");
+										relay = Integer.valueOf(prop.getProperty("relay"));
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+									
+									RelayDriver rd = new RelayDriver(relayPort);
+									log.trace("Opening barrier");
+									try {
+										log.trace("Connecting to relay board on port " + relayPort);
+										if(rd.connect()) {
+											log.trace("Connected to relay board");
+										}
+										log.trace("Opening relay #" + relay);
+										if(rd.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+											log.trace("relay #" + relay + " was activated");
+										}
+										Thread.sleep(2000);
+										if(rd.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+											log.trace("relay #" + relay + " was unactivated");
+										}
+										if(rd.disconnect()) {
+											log.trace("Disconnected from relay board");
+										}
+									} catch (Exception e) {
+										log.error("Error opening barrier (" + e.getMessage().toString() + ")");
+										e.printStackTrace();
+									}
+									
 									if(!shiftIsDown) {
 										log.debug("Starting printing fiscal invoice");
 										try {
@@ -2617,11 +2688,6 @@ public class SoftParkMultiView extends JFrame {
 									}
 									log.debug("Finished printing fiscal invoice");
 									
-									Properties prop = new Properties();
-									InputStream propertiesInput;
-									String relayPort = "";
-									int relay = 1;
-									
 									try {
 										propertiesInput = getClass().getResourceAsStream("config.properties");
 										prop.load(propertiesInput);
@@ -2631,29 +2697,7 @@ public class SoftParkMultiView extends JFrame {
 										e.printStackTrace();
 									}
 									
-									RelayDriver rd = new RelayDriver(relayPort);
-									log.trace("Opening barrier");
-									try {
-										log.trace("Connecting to relay board on port " + relayPort);
-										if(rd.connect()) {
-											log.trace("Connected to relay board");
-										}
-										log.trace("Opening relay #" + relay);
-										if(rd.switchRelay(relay, OldRelayDriver.ACTIVE_STATE)) {
-											log.trace("relay #" + relay + " was activated");
-										}
-										Thread.sleep(2000);
-										if(rd.switchRelay(relay, OldRelayDriver.INACTIVE_STATE)) {
-											log.trace("relay #" + relay + " was unactivated");
-										}
-										if(rd.disconnect()) {
-											log.trace("Disconnected from relay board");
-										}
-									} catch (Exception e) {
-										log.error("Error opening barrier (" + e.getMessage().toString() + ")");
-										e.printStackTrace();
-									}
-									transactionsOut.clear();	//TODO check this...
+									transactionsOut.clear();
 									log.debug("Transactions cleared");
 									//after print clear the textFields
 								} else if (exonerate) {
@@ -2703,55 +2747,10 @@ public class SoftParkMultiView extends JFrame {
 										}
 									}
 									
-									if(!shiftIsDown) {
-										log.debug("Starting printing fiscal invoice");
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketInfo.getId()));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										
-										DateTime exitDateTime = new DateTime(Db.getDbTime());
-										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
-										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
-										
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Hora: " + exitDateTime.toString(tFormatter)));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Fecha: " + exitDateTime.toString(dFormatter)));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Cajero: " + user.getName()));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + plate));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("EXONERADO"));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-										try {
-											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd(Db.getConfig("client_name", "platform")));
-										} catch (PrinterException ce) {
-											ce.printStackTrace();
-										}
-									}
-									log.debug("Finished printing fiscal invoice");
-									
 									Properties prop = new Properties();
 									InputStream propertiesInput;
 									String relayPort = "";
-									int relay = 1;
+									int relay = 2;
 									
 									try {
 										propertiesInput = getClass().getResourceAsStream("config.properties");
@@ -2770,11 +2769,11 @@ public class SoftParkMultiView extends JFrame {
 											log.trace("Connected to relay board");
 										}
 										log.trace("Opening relay #" + relay);
-										if(rd.switchRelay(relay, OldRelayDriver.ACTIVE_STATE)) {
+										if(rd.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
 											log.trace("relay #" + relay + " was activated");
 										}
 										Thread.sleep(2000);
-										if(rd.switchRelay(relay, OldRelayDriver.INACTIVE_STATE)) {
+										if(rd.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
 											log.trace("relay #" + relay + " was unactivated");
 										}
 										if(rd.disconnect()) {
@@ -2785,10 +2784,39 @@ public class SoftParkMultiView extends JFrame {
 										e.printStackTrace();
 									}
 									
-									transactionsOut.clear();	//TODO check this...
+									if(!shiftIsDown) {
+										log.debug("Starting printing fiscal invoice");
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Ticket #: " + ticketInfo.getId()));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+										
+//										DateTime exitDateTime = new DateTime(Db.getDbTime());
+//										DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+//										DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+										
+										if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+											try {
+												sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentText("Placa: " + ""));
+											} catch (PrinterException ce) {
+												ce.printStackTrace();
+											}
+										}
+										try {
+											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.DnfDocumentEnd("EXONERADO"));
+										} catch (PrinterException ce) {
+											ce.printStackTrace();
+										}
+									}
+									log.debug("Finished printing fiscal invoice");
+									
+									transactionsOut.clear();
 									log.debug("Transactions cleared");
 								} else if (lostTicket != null){
 									log.debug("Charging ticket as lost");
+									int transactionId = db.preTransactionIn(stationInfo.getId(),"");
+									lostTicket.setId(transactionId);
 									if(summaryHasInvoice) {
 										for(Transaction tOut: transactionsOut) {
 											db.updateLostTicket(lostTicket.getId(),stationInfo.getId(),  summaryId, transactionOutAmount, 12, 
@@ -2832,6 +2860,43 @@ public class SoftParkMultiView extends JFrame {
 										}
 									}
 									
+									Properties prop = new Properties();
+									InputStream propertiesInput;
+									String relayPort = "";
+									int relay = 2;
+
+									try {
+										propertiesInput = getClass().getResourceAsStream("config.properties");
+										prop.load(propertiesInput);
+										relayPort = prop.getProperty("relaysport");
+										relay = Integer.valueOf(prop.getProperty("relay"));
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+									
+									RelayDriver rd = new RelayDriver(relayPort);
+									log.trace("Opening barrier");
+									try {
+										log.trace("Connecting to relay board on port " + relayPort);
+										if(rd.connect()) {
+											log.trace("Connected to relay board");
+										}
+										log.trace("Opening relay #" + relay);
+										if(rd.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+											log.trace("relay #" + relay + " was activated");
+										}
+										Thread.sleep(2000);
+										if(rd.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+											log.trace("relay #" + relay + " was unactivated");
+										}
+										if(rd.disconnect()) {
+											log.trace("Disconnected from relay board");
+										}
+									} catch (Exception e) {
+										log.error("Error opening barrier (" + e.getMessage().toString() + ")");
+										e.printStackTrace();
+									}
+									
 									if(!shiftIsDown) {
 										try {
 											sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.setClientInfo(0, " Ticket Perdido #  " + lostTicket.getId()));
@@ -2858,44 +2923,7 @@ public class SoftParkMultiView extends JFrame {
 									}
 									log.debug("Finished printing fiscal invoice");
 									
-									Properties prop = new Properties();
-									InputStream propertiesInput;
-									String relayPort = "";
-									int relay = 1;
-									
-									try {
-										propertiesInput = getClass().getResourceAsStream("config.properties");
-										prop.load(propertiesInput);
-										relayPort = prop.getProperty("relaysport");
-										relay = Integer.valueOf(prop.getProperty("relay"));
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-									
-									RelayDriver rd = new RelayDriver(relayPort);
-									log.trace("Opening barrier");
-									try {
-										log.trace("Connecting to relay board on port " + relayPort);
-										if(rd.connect()) {
-											log.trace("Connected to relay board");
-										}
-										log.trace("Opening relay #" + relay);
-										if(rd.switchRelay(relay, OldRelayDriver.ACTIVE_STATE)) {
-											log.trace("relay #" + relay + " was activated");
-										}
-										Thread.sleep(2000);
-										if(rd.switchRelay(relay, OldRelayDriver.INACTIVE_STATE)) {
-											log.trace("relay #" + relay + " was unactivated");
-										}
-										if(rd.disconnect()) {
-											log.trace("Disconnected from relay board");
-										}
-									} catch (Exception e) {
-										log.error("Error opening barrier (" + e.getMessage().toString() + ")");
-										e.printStackTrace();
-									}
-									
-									transactionsOut.clear();	//TODO check this...
+									transactionsOut.clear();
 									log.debug("Transactions cleared");
 								}
 								lostTicket = null;
@@ -2912,6 +2940,7 @@ public class SoftParkMultiView extends JFrame {
 				JOptionPane.showMessageDialog(null, "Por favor espere, se esta imprimiendo el Ticket anterior");
 			}
 			
+			transactionOutAmount = 0;
 			textTicket.setText("");
 			textTicket.setEnabled(true);
 			labelMoney.setText("Bs.");
@@ -2925,22 +2954,31 @@ public class SoftParkMultiView extends JFrame {
 			buttonCollectAccept.setEnabled(false);
 			buttonCollectCancel.setEnabled(false);
 			buttonCarEntrance.setEnabled(true);
-			textEntrancePlate.setEnabled(true);
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.setEnabled(true);
+			}
 			buttonCollectExonerate.setEnabled(false);
+			discounted = false;
+			textTicket.requestFocus();
 		}		
 	}
 	
 	private void preCheckOutLost(){
 		String plateSearch= JOptionPane.showInputDialog("Introduzca la placa del vehículo");
 		if(null != plateSearch && !plateSearch.isEmpty()) {
-			Db db = new Db();			
-			lostTicket = db.findTicketByPlate(plateSearch);
+			Db db = new Db();
+//			lostTicket = db.findTicketByPlate(plateSearch);
+			lostTicket = new Ticket();
 			if(lostTicket != null) {
 				lostTicket.setTotalAmount(Db.getLostTicketRate(2));
-				textTicket.setText(String.valueOf(lostTicket.getId()));
-				labelMoney.setText(lostTicket.getTotalAmount() + " Bs.");
+//				textTicket.setText(String.valueOf(lostTicket.getId()));
+				transactionOutAmount = lostTicket.getTotalAmount();
+				labelMoney.setText(transactionOutAmount + " Bs.");
+				textTicket.setEnabled(false);
 				buttonCarEntrance.setEnabled(false);
-				textEntrancePlate.setEnabled(false);
+				if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+					textEntrancePlate.setEnabled(false);
+				}
 				buttonCollectAccept.setEnabled(true);
 				buttonCollectCancel.setEnabled(true);
 				textCashed.setEnabled(true);
@@ -2951,13 +2989,17 @@ public class SoftParkMultiView extends JFrame {
 			}
 		} else {
 			buttonCarEntrance.setEnabled(true);
-			textEntrancePlate.setEnabled(true);
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.setEnabled(true);
+			}
 			buttonCollectAccept.setEnabled(false);
 			buttonCollectCancel.setEnabled(false);
 			textCashed.setEnabled(false);
 			textChange.setEnabled(false);
 			buttonCollectExonerate.setEnabled(false);
-			textEntrancePlate.requestFocus();
+			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+				textEntrancePlate.requestFocus();
+			}
 			JOptionPane.showMessageDialog(null, "Debe introducir la placa del vehículo", "Placa vacía", JOptionPane.ERROR_MESSAGE);
 		}
 	}

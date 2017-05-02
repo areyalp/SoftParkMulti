@@ -1045,6 +1045,10 @@ public class Db {
 	}
 
 	public double getFractionRateByHours(int hoursLapse) {
+		return this.getFractionRate() + this.getHourRateByHours(hoursLapse);
+	}
+
+	public double getFractionRate() {
 		double amount = 0.00;
 		ResultSet setRate = this.select("SELECT FractionAmount FROM rates WHERE TransactionTypeId = 3");
 		
@@ -1056,7 +1060,7 @@ public class Db {
 			e.printStackTrace();
 		}
 		
-		return amount + this.getHourRateByHours(hoursLapse);
+		return amount;
 	}
 
 }
