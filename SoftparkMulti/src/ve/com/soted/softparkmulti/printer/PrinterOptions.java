@@ -1,9 +1,17 @@
-package ve.com.soted.softparkmulti.components;
+package ve.com.soted.softparkmulti.printer;
+
 public class PrinterOptions {
 
 
-    String commandSet="";
-
+    private String commandSet="";
+    
+    public PrinterOptions() {
+    	this.resetAll();
+    	this.initialize();
+    	this.feedBack((byte)2);
+    	this.color(0);
+    	this.alignCenter();
+    }
 
     public String initialize()
     {
@@ -310,10 +318,15 @@ public String underLine(int Options)
     {
         commandSet+=s;
     }
+    
+    public void setTextLn(String s) {
+    	this.setText(s);
+    	this.newLine();
+    }
 
-    public String finalCommandSet()
+    public String getCommandSet()
     {
-        return commandSet;
+        return this.commandSet;
     }
 
 

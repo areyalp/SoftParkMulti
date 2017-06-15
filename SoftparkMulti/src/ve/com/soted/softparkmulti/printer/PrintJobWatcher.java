@@ -1,4 +1,4 @@
-package ve.com.soted.softparkmulti.components;
+package ve.com.soted.softparkmulti.printer;
 
 import javax.print.DocPrintJob;
 import javax.print.event.PrintJobAdapter;

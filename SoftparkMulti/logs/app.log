@@ -1,0 +1,51 @@
+2017-59-13 01:59:04 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-59-13 01:59:10 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-59-13 01:59:10 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-59-13 01:59:10 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-59-13 01:59:11 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-59-13 01:59:11 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-59-13 01:59:11 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-59-13 01:59:11 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Reports Tree added
+2017-59-13 01:59:11 [AWT-EventQueue-0] ERROR ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Cannot open printer port COM99
+2017-36-13 09:36:11 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-36-13 09:36:16 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-36-13 09:36:16 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-36-13 09:36:16 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-36-13 09:36:16 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-36-13 09:36:16 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-36-13 09:36:16 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-36-13 09:36:16 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Reports Tree added
+2017-15-13 10:15:56 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-16-13 10:16:00 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-16-13 10:16:00 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-16-13 10:16:00 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-16-13 10:16:00 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-16-13 10:16:00 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-16-13 10:16:00 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-16-13 10:16:01 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Reports Tree added
+2017-17-13 10:17:38 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-17-13 10:17:41 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-17-13 10:17:41 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-17-13 10:17:41 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-17-13 10:17:41 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-17-13 10:17:41 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-20-13 10:20:01 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-20-13 10:20:05 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-20-13 10:20:05 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-20-13 10:20:05 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-20-13 10:20:05 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-20-13 10:20:05 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-21-13 10:21:40 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-21-13 10:21:44 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-21-13 10:21:44 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-21-13 10:21:44 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-21-13 10:21:44 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-21-13 10:21:44 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-21-13 10:21:44 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-35-13 10:35:39 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-35-13 10:35:42 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Login Successfull
+2017-35-13 10:35:42 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> User Info: id=1, name=Jesus Flores, user type=Administrador
+2017-35-13 10:35:42 [main] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added

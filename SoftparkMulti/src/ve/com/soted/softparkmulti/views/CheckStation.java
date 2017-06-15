@@ -8,6 +8,8 @@ import ve.com.soted.softparkmulti.db.Db;
 public class CheckStation {
 
 	int stationId = 0;
+	boolean debugging = true;
+	
 	public static void main(String[] args) {
 
 		new CheckStation();
@@ -21,7 +23,7 @@ public class CheckStation {
 			
 			if(!(macAddress == null)){
 				//if(macAddress.equalsIgnoreCase("00-19-21-20-01-4e")) { //Mac Address antigua
-				if(macAddress.equalsIgnoreCase("00-e0-4d-76-ba-c1") || macAddress.equalsIgnoreCase("08-00-27-73-9c-b9")) { //MAC Pollera
+				if(macAddress.equalsIgnoreCase("00-e0-4d-76-ba-c1") || macAddress.equalsIgnoreCase("08-00-27-73-9c-b9") || debugging) { //MAC Pollera
 				//if(true) {
 					ResultSet rowsMac = db.select("SELECT Id FROM Stations WHERE"
 							+ " MacAddress = '" + macAddress + "'");
