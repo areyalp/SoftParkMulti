@@ -78,9 +78,9 @@ public class RelayDriver extends SerialPort {
 			writed = this.writeString(out);
 		} catch (SerialPortException e) {
 			e.printStackTrace();
+		} finally {
+			leaveSerialPort();
 		}
-		
-		leaveSerialPort();
 		
 		return writed;
 	}
