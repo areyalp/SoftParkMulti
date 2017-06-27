@@ -15,7 +15,7 @@ public class PrinterOptions {
 
     public String initialize()
     {
-        final byte[] Init={27,64};
+        final byte[] Init={};
 
         commandSet+=new String(Init);
         return new String(Init);

@@ -4,9 +4,8 @@ package ve.com.soted.softparkmulti.comm;
 import jssc.SerialPort;
 import jssc.SerialPortException;
 
-public class RelayDriver {
+public class RelayDriver extends SerialPort {
 	
-	String portName = "";
 	String relays = "@DDDD$";
 	SerialPort serialPort;
 	
@@ -16,9 +15,7 @@ public class RelayDriver {
 	public static final int INACTIVE_STATE = 2;
 	
 	public RelayDriver(String portName){
-		super();
-		this.portName = portName;
-		serialPort = new SerialPort(this.portName);
+		super(portName);
 	}
 	
 	public boolean connect() throws Exception{
@@ -75,10 +72,10 @@ public class RelayDriver {
 			sb.setCharAt(2, code);
 			out = sb.toString();
 		}
-		relays = sb.toString();
+		relays = out;
 		
 		try {
-			writed = serialPort.writeBytes(out.getBytes());
+			writed = this.writeString(out);
 		} catch (SerialPortException e) {
 			e.printStackTrace();
 		}

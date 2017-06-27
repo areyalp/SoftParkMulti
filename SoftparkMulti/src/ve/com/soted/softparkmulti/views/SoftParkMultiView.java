@@ -36,9 +36,18 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.print.Doc;
+import javax.print.DocFlavor;
+import javax.print.DocPrintJob;
+import javax.print.PrintServiceLookup;
+import javax.print.SimpleDoc;
+import javax.print.attribute.AttributeSet;
+import javax.print.attribute.HashPrintServiceAttributeSet;
+import javax.print.attribute.standard.PrinterName;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -104,6 +113,7 @@ import ve.com.soted.softparkmulti.objects.Summary;
 import ve.com.soted.softparkmulti.objects.Ticket;
 import ve.com.soted.softparkmulti.objects.Transaction;
 import ve.com.soted.softparkmulti.objects.User;
+import ve.com.soted.softparkmulti.printer.PrintJobWatcher;
 import ve.com.soted.softparkmulti.printer.PrinterOptions;
 import ve.com.soted.softparkmulti.utils.Numbers;
 import java.util.Timer;
@@ -185,7 +195,7 @@ public class SoftParkMultiView extends JFrame {
 	private Ticket lostTicket;
 	public Timestamp entranceDateTime;
 	
-	private SerialPort relayBoard;
+	private RelayDriver relayBoard;
 	
 	private double transactionOutAmount;
 	private boolean printing = false;
@@ -203,35 +213,39 @@ public class SoftParkMultiView extends JFrame {
 		UIManager.getLookAndFeelDefaults().put("TextField.font", new Font("Arial", Font.PLAIN, 18));
 		UIManager.getLookAndFeelDefaults().put("FormattedTextField.font", new Font("Arial", Font.PLAIN, 18));
 		
-		fiscalPrinter = new tfhka.ve.Tfhka();
-		
-		LoginDialog loginDialog = new LoginDialog(this);
-		
-		loginDialog.setVisible(true);
-		
-		if(!loginDialog.isSucceeded()) {
-			log.error("No success login details: user=" + loginDialog.getUsername() + ", ip=" + GetNetworkAddress.GetAddress("ip") + ", mac=" + GetNetworkAddress.GetAddress("mac"));
-			System.exit(0);
-		}
-		log.debug("Login Successfull");
-		
-		userId = Db.getUserId(loginDialog.getUsername());
-		
-		Db db = new Db();
-		
-		user = db.loadUserInfo(userId);
-		
-		if(user == null) {
-			JOptionPane.showMessageDialog(null, "Usuario invalido", "Usuario invalido", JOptionPane.ERROR_MESSAGE);
-			log.fatal("Invalid user");
-			System.exit(0);
-		}
-		
-		log.debug("User Info: id=" + user.getId() + ", name=" + user.getName() + ", user type=" + user.getUserType());
-		
 		stationInfo = Station.getStationInfo(stationId);
 		
 		log.debug("Station Info: id=" + stationInfo.getId() + ", level=" + stationInfo.getLevelId() + ", name=" + stationInfo.getName() + ", type=" + stationInfo.getType().getName());
+		
+		fiscalPrinter = new tfhka.ve.Tfhka();
+		
+		Db db = new Db();
+		
+		if(!stationInfo.getType().getName().equalsIgnoreCase("Entrada")) {
+		
+			LoginDialog loginDialog = new LoginDialog(this);
+			
+			loginDialog.setVisible(true);
+			
+			if(!loginDialog.isSucceeded()) {
+				log.error("No success login details: user=" + loginDialog.getUsername() + ", ip=" + GetNetworkAddress.GetAddress("ip") + ", mac=" + GetNetworkAddress.GetAddress("mac"));
+				System.exit(0);
+			}
+			log.debug("Login Successfull");
+			
+			userId = Db.getUserId(loginDialog.getUsername());
+			
+			user = db.loadUserInfo(userId);
+			
+			if(user == null) {
+				JOptionPane.showMessageDialog(null, "Usuario invalido", "Usuario invalido", JOptionPane.ERROR_MESSAGE);
+				log.fatal("Invalid user");
+				System.exit(0);
+			}
+			
+			log.debug("User Info: id=" + user.getId() + ", name=" + user.getName() + ", user type=" + user.getUserType());
+			
+		}
 		
 		allTransactions = Db.loadAllTransactions();
 		
@@ -240,7 +254,9 @@ public class SoftParkMultiView extends JFrame {
 
 		payTypes = Db.loadPayTypes();
 		
-		summaryId = Db.getSummaryId(userId,stationId);
+		if(!stationInfo.getType().getName().equalsIgnoreCase("Entrada")) {
+			summaryId = Db.getSummaryId(userId,stationId);
+		}
 		
 		if(summaryId > 0) {
 			invoiceCount = db.countSummaryInvoices(summaryId);
@@ -264,8 +280,12 @@ public class SoftParkMultiView extends JFrame {
 		int y = (dim.height / 2) - (this.getHeight() / 2);
 
 		this.setLocation(x, y);
-
-		this.setTitle("Softpark - (" + user.getLogin() + ") " + user.getName());
+		
+		if(!stationInfo.getType().getName().equalsIgnoreCase("Entrada")) {
+			this.setTitle("Softpark - (" + user.getLogin() + ") " + user.getName());
+		} else {
+			this.setTitle("Softpark - Entrada");
+		}
 
 		this.setLayout(new BorderLayout(5, 5));
 
@@ -578,7 +598,20 @@ public class SoftParkMultiView extends JFrame {
 		wrapEntrancePanel.add(container);
 		wrapEntrancePanel.add(Box.createHorizontalStrut(40));
 		
-		relayBoard = new SerialPort("COM5");
+		Properties prop = new Properties();
+		InputStream propertiesInput;
+		String relayPort = "COM3";
+
+		try {
+			propertiesInput = getClass().getResourceAsStream("config.properties");
+			prop.load(propertiesInput);
+			relayPort = prop.getProperty("relaysport");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		log.info("Will connect relay board to port " + relayPort);
+		relayBoard = new RelayDriver(relayPort);
 		try {
 			relayBoard.openPort();
 			relayBoard.setParams(SerialPort.BAUDRATE_9600, 
@@ -594,7 +627,15 @@ public class SoftParkMultiView extends JFrame {
 				public void serialEvent(SerialPortEvent event) {
 					if(event.isRXCHAR() && event.getEventValue() > 0) {
 						// TODO Pending code to print ticket
-						if(!printing) {
+						String receivedData = "";
+						try {
+							receivedData = relayBoard.readString(event.getEventValue());
+							log.trace("receivedData=" + receivedData);
+						} catch (SerialPortException e) {
+							log.fatal("Relay board error receiving data=" + e.getMessage());
+							System.exit(0);
+						}
+						if(!printing && receivedData.equalsIgnoreCase("@AD$")) {
 							printing = true;
 							CheckInRun v = new CheckInRun("vehicle.in.externalbutton");
 							Thread t = new Thread(v);
@@ -1868,10 +1909,107 @@ public class SoftParkMultiView extends JFrame {
 				break;
 			case "test":
 				labelStatus.setText("Enviando prueba al puerto " + activePort);
-				try {
-					boolean sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.printTest());
-				} catch (PrinterException e) {
-					e.printStackTrace();
+				if(stationInfo.getType().getId() != 2) {
+					try {
+						boolean sentCmd = fiscalPrinter.SendCmd(TfhkaPrinter.printTest());
+					} catch (PrinterException e) {
+						e.printStackTrace();
+					}
+				} else if(stationInfo.getType().getId() == 2) {
+					Db db = new Db();
+					String plate = "";
+					//int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
+					int transactionId = 1;
+					
+					tStart("printing");
+					
+					PrinterOptions p = new PrinterOptions();
+					
+					p.alignCenter();
+					p.setTextLn("C.C. Paseo");
+					p.alignLeft();
+					
+					tStart("printingTicketNo");
+					p.setTextLn("Ticket #: " + transactionId);
+					log.debug(tEnd("printingTicketNo"));
+					
+					tStart("getDateTimeFormat");
+					DateTime entranceDateTime = new DateTime(Db.getDbTime());
+					DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+					DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+					DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+					DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+					log.debug(tEnd("getDateTimeFormat"));
+					
+					tStart("printingTime");
+					p.setTextLn("Hora: " + entranceDateTime.toString(tFormatter));
+					log.debug(tEnd("printingTime"));
+					
+					tStart("printingDate");
+					p.setTextLn("Fecha: " + entranceDateTime.toString(dFormatter));
+					log.debug(tEnd("printingDate"));
+					
+					tStart("printingEntryStation");
+					p.setTextLn("Entrada: " + stationInfo.getId() + " " + stationInfo.getName());
+					log.debug(tEnd("printingEntryStation"));
+					
+					if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+						tStart("printingPlate");
+						p.setTextLn("Placa: " + plate);
+						log.debug(tEnd("printingPlate"));
+					}
+					
+					p.feed((byte) 2);
+					
+					p.alignCenter();
+					p.setTextLn("Total Parking, C.A.");
+					p.setTextLn("Rif: J-40121003-1");
+					p.setTextLn("Centro Comercial El Paseo");
+					p.setTextLn("Barquisimeto - Estado Lara");
+					
+					p.finit();
+					feedPrinter(p.getCommandSet().getBytes());
+					
+					log.debug(tEnd("printing"));
+					
+					/*Properties prop = new Properties();
+					InputStream propertiesInput;
+					String relayPort = "";
+					int relay = 2;
+
+					try {
+						propertiesInput = getClass().getResourceAsStream("config.properties");
+						prop.load(propertiesInput);
+						relayPort = prop.getProperty("relaysport");
+						relay = Integer.valueOf(prop.getProperty("relay"));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					RelayDriver rd = new RelayDriver(relayPort);
+					log.trace("Opening barrier");
+					try {
+						log.trace("Connecting to relay board on port " + relayPort);
+						if(rd.connect()) {
+							log.trace("Connected to relay board");
+						}
+						log.trace("Opening relay #" + relay);
+						if(rd.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+							log.trace("relay #" + relay + " was activated");
+						}
+						Thread.sleep(3000);
+						if(rd.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+							log.trace("relay #" + relay + " was unactivated");
+						}
+						if(rd.disconnect()) {
+							log.trace("Disconnected from relay board");
+						}
+					} catch (Exception e) {
+						log.error("Error opening barrier (" + e.getMessage().toString() + ")");
+						e.printStackTrace();
+					}*/
+					
+					labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 				}
 				break;
 			}
@@ -2137,14 +2275,15 @@ public class SoftParkMultiView extends JFrame {
 			if(stationInfo.getType().getId() != 2) {
 				printerChecker();
 			}
-			if(isPrinterConnected && stationInfo.getType().getId() != 2){
+			if((isPrinterConnected && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
 				log.debug("Printer is connected");
-				if (!printing && stationInfo.getType().getId() != 2){
+				if ((!printing && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
 					if(stationInfo.getType().getId() != 2) {
 						printing = true;
 					}
 					log.debug("No other printing job, starting to process print");
-					if (stationInfo.getType().getName().equals("Entrada/Salida")){
+					log.trace("station name=" + stationInfo.getType().getName());
+					if (stationInfo.getType().getName().equalsIgnoreCase("Entrada/Salida")){
 						log.debug("Process entrance ticket as E/S station");
 						log.debug("actionCommand="+ actionCommand);
 						if(actionCommand.equalsIgnoreCase("vehicle.in.button") || actionCommand.equalsIgnoreCase("vehicle.in.key")) {
@@ -2271,6 +2410,10 @@ public class SoftParkMultiView extends JFrame {
 							
 							PrinterOptions p = new PrinterOptions();
 							
+							p.alignCenter();
+							p.setTextLn("C.C. Paseo");
+							p.alignLeft();
+							
 							tStart("printingTicketNo");
 							p.setTextLn("Ticket #: " + transactionId);
 							log.debug(tEnd("printingTicketNo"));
@@ -2300,6 +2443,17 @@ public class SoftParkMultiView extends JFrame {
 								p.setTextLn("Placa: " + plate);
 								log.debug(tEnd("printingPlate"));
 							}
+							
+							p.feed((byte) 2);
+							
+							p.alignCenter();
+							p.setTextLn("Total Parking, C.A.");
+							p.setTextLn("Rif: J-40121003-1");
+							p.setTextLn("Centro Comercial El Paseo");
+							p.setTextLn("Barquisimeto - Estado Lara");
+							
+							p.finit();
+							feedPrinter(p.getCommandSet().getBytes());
 							
 							log.debug(tEnd("printing"));
 							
@@ -2342,7 +2496,92 @@ public class SoftParkMultiView extends JFrame {
 							
 							labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 						}
-					}//end of station mode= E/S
+					} else if (stationInfo.getType().getName().equalsIgnoreCase("Entrada")) {//end of station mode= E/S
+						Db db = new Db();
+						String plate = "";
+						int transactionId = db.preTransactionIn(stationInfo.getId(),plate);
+						
+						tStart("printing");
+						
+						PrinterOptions p = new PrinterOptions();
+						
+						p.alignCenter();
+						p.setTextLn("C.C. Paseo");
+						p.alignLeft();
+						
+						tStart("printingTicketNo");
+						p.setTextLn("Ticket #: " + transactionId);
+						log.debug(tEnd("printingTicketNo"));
+						
+						tStart("getDateTimeFormat");
+						DateTime entranceDateTime = new DateTime(Db.getDbTime());
+						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
+						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+						DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
+						DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
+						log.debug(tEnd("getDateTimeFormat"));
+						
+						tStart("printingTime");
+						p.setTextLn("Hora: " + entranceDateTime.toString(tFormatter));
+						log.debug(tEnd("printingTime"));
+						
+						tStart("printingDate");
+						p.setTextLn("Fecha: " + entranceDateTime.toString(dFormatter));
+						log.debug(tEnd("printingDate"));
+						
+						tStart("printingEntryStation");
+						p.setTextLn("Entrada: " + stationInfo.getId() + " " + stationInfo.getName());
+						log.debug(tEnd("printingEntryStation"));
+						
+						if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
+							tStart("printingPlate");
+							p.setTextLn("Placa: " + plate);
+							log.debug(tEnd("printingPlate"));
+						}
+						
+						p.feed((byte) 2);
+						
+						p.alignCenter();
+						p.setTextLn("Total Parking, C.A.");
+						p.setTextLn("Rif: J-40121003-1");
+						p.setTextLn("Centro Comercial El Paseo");
+						p.setTextLn("Barquisimeto - Estado Lara");
+						
+						p.finit();
+						feedPrinter(p.getCommandSet().getBytes());
+						
+						log.debug(tEnd("printing"));
+						
+						Properties prop = new Properties();
+						InputStream propertiesInput;
+						int relay = 2;
+						
+						try {
+							propertiesInput = getClass().getResourceAsStream("config.properties");
+							prop.load(propertiesInput);
+							relay = Integer.valueOf(prop.getProperty("relay"));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						
+						log.trace("Opening barrier");
+						log.trace("Opening relay #" + relay);
+						if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+							log.trace("relay #" + relay + " was activated");
+						}
+						try {
+							Thread.sleep(3000);
+						} catch (InterruptedException e) {
+							log.error("Error sleeping app while opening barrier");
+						}
+						if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+							log.trace("relay #" + relay + " was unactivated");
+						}
+						
+						if(Db.getAvailablePlaces(stationInfo.getLevelId()) > -1) { // TODO Fix this
+							labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
+						}
+					}
 					if(stationInfo.getType().getId() != 2) {
 						printing = false;
 					}
@@ -3221,6 +3460,43 @@ public class SoftParkMultiView extends JFrame {
 		}
 		return selectedId;
 	}
+	
+	private boolean feedPrinter(byte[] b)
+    {
+        try
+        {
+        	
+            AttributeSet attrSet = new HashPrintServiceAttributeSet(new PrinterName("EPSON EU-T400 Receipt", Locale.getDefault())); //EPSON TM-U220 ReceiptE4
+
+
+            DocPrintJob job = PrintServiceLookup.lookupPrintServices(null, attrSet)[0].createPrintJob();
+                    //PrintServiceLookup.lookupDefaultPrintService().createPrintJob();  
+
+
+
+        DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+        Doc doc = new SimpleDoc(b, flavor, null);
+        PrintJobWatcher pjDone = new PrintJobWatcher(job);
+
+        job.print(doc, null);
+        pjDone.waitForDone();
+        System.out.println("Done !");
+        }
+        catch(javax.print.PrintException pex)
+        {
+
+            System.out.println("Printer Error " + pex.getMessage());
+            return false;
+        }
+        catch(Exception e)
+        {
+        e.printStackTrace();
+        return false;
+        }
+
+
+        return true;
+    }
 	
 	private class PrintZReport implements Runnable{
 		

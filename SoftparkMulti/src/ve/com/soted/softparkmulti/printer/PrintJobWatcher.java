@@ -4,10 +4,10 @@ import javax.print.DocPrintJob;
 import javax.print.event.PrintJobAdapter;
 import javax.print.event.PrintJobEvent;
 
-class PrintJobWatcher {
+public class PrintJobWatcher {
 	  boolean done = false;
 
-	  PrintJobWatcher(DocPrintJob job) {
+	  public PrintJobWatcher(DocPrintJob job) {
 	    job.addPrintJobListener(new PrintJobAdapter() {
 	      @Override
 		public void printJobCanceled(PrintJobEvent pje) {

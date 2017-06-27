@@ -824,6 +824,7 @@ public class Db {
 	}
 
 	public static int getAvailablePlaces(int levelId) {
+		if(Db.getLevelPlaces(levelId) == -1) return -1;
 		return (Db.getLevelPlaces(levelId) - Db.getVehiclesIn(levelId) + Db.getLostTickets(levelId));
 	}
 	
