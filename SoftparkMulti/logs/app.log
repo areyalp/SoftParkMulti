@@ -49,3 +49,15 @@
 2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
 2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
 2017-35-13 10:35:42 [main] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-15-01 00:15:23 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Initializing
+2017-15-01 00:15:23 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Station Info: id=5, level=3, name=Entrada Caffe 90, type=Entrada
+2017-15-01 00:15:23 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Menu created
+2017-15-01 00:15:23 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Toolbar created
+2017-15-01 00:15:23 [AWT-EventQueue-0] INFO  ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Will connect relay board to port COM3
+2017-15-01 00:15:24 [AWT-EventQueue-0] TRACE ve.com.soted.softparkmulti.views.SoftParkMultiView >>> Status Bar added
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> printingTicketNo elapsed 0 ms = 0 sec
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> getDateTimeFormat elapsed 51 ms = 0 sec
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> printingTime elapsed 1 ms = 0 sec
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> printingDate elapsed 0 ms = 0 sec
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> printingEntryStation elapsed 0 ms = 0 sec
+2017-15-01 00:15:27 [AWT-EventQueue-0] DEBUG ve.com.soted.softparkmulti.views.SoftParkMultiView >>> printing elapsed 183 ms = 0 sec

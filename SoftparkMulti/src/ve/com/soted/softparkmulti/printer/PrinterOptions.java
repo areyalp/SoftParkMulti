@@ -1,5 +1,9 @@
 package ve.com.soted.softparkmulti.printer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 public class PrinterOptions {
 
 
@@ -15,7 +19,7 @@ public class PrinterOptions {
 
     public String initialize()
     {
-        final byte[] Init={};
+        final byte[] Init={27,64};
 
         commandSet+=new String(Init);
         return new String(Init);
@@ -121,8 +125,25 @@ public class PrinterOptions {
 
    public String barCode(String info)
    {
-	   //byte n = (byte) info.length();
-	   final byte[] BarCode={29,107,72,8,116,101,95,113,117,105,101,114,111};
+	   if(info.length() < 2) return null;
+	   
+	   this.barCodeHeight();
+	   final byte[] heading = {29,107};
+	   final byte barCodeType = 73;
+	   final byte barCodeLength = (byte) info.length();
+	   final byte[] infoBytes = info.getBytes(StandardCharsets.UTF_8);
+	   
+	   ByteArrayOutputStream out = new ByteArrayOutputStream();
+	   	try {
+	   		out.write(heading);
+	   		out.write(barCodeType);
+	   		out.write(barCodeLength);
+	   		out.write(infoBytes);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	   
+	   final byte[] BarCode = out.toByteArray();
        
        String s=new String(BarCode);
        //s+=info;
@@ -130,7 +151,14 @@ public class PrinterOptions {
        return s;
    }
 
-
+   public String barCodeHeight()
+   {
+	   final byte[] barCodeHeight = {29 ,104,(byte) 162};
+	   
+	   String s=new String(barCodeHeight);
+       commandSet+=s;
+        return s;
+   }
 
 
 
@@ -159,7 +187,7 @@ public class PrinterOptions {
 
 
 
-    public String doubleStrik(boolean enabled)
+    public String doubleStrike(boolean enabled)
     {
         final byte[] DoubleStrikeModeOn={27, 71,1};
         final byte[] DoubleStrikeModeOff={27, 71,0};

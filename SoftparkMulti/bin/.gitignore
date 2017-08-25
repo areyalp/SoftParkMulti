@@ -1,6 +1,3 @@
-/TfhkaJava.jar
-/apache-log4j-2.8.1-bin/
-/collect-money.png
 /cross_red.png
 /cutoff.png
 /document.png
@@ -9,8 +6,6 @@
 /fixed-invoice.png
 /image404.png
 /invoice-reprint.png
-/joda-time-2.9.6.jar
-/jssc.jar
 /last-transaction.png
 /lock.png
 /log.png
@@ -18,10 +13,14 @@
 /lost-ticket.png
 /lost_ticket.png
 /manual-ticket.png
-/mysql-connector-java-5.1.36-bin.jar
 /new_ticket.png
 /printer.png
 /printerA.png
+/TfhkaJava.jar
+/apache-log4j-2.8.1-bin/
+/joda-time-2.9.6.jar
+/jssc.jar
+/mysql-connector-java-5.1.36-bin.jar
 /signout.png
 /valet-invoice.png
 /valet-lost-ticket.png

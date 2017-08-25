@@ -23,6 +23,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -96,6 +98,7 @@ import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
 import jssc.SerialPortList;
+import sun.awt.WindowClosingListener;
 import tfhka.PrinterException;
 import tfhka.ve.S1PrinterData;
 import tfhka.ve.Tfhka;
@@ -123,7 +126,7 @@ import java.util.regex.Pattern;
 
 
 @SuppressWarnings({ "serial", "unused" })
-public class SoftParkMultiView extends JFrame {
+public class SoftParkMultiView extends JFrame implements WindowListener {
 	
 	// Ticket example 2502201712000000100000000004
 	// ddmmYYYYHHmmss + 3 digits station id + 11 digits ticket id
@@ -613,13 +616,14 @@ public class SoftParkMultiView extends JFrame {
 		log.info("Will connect relay board to port " + relayPort);
 		relayBoard = new RelayDriver(relayPort);
 		try {
-			relayBoard.openPort();
-			relayBoard.setParams(SerialPort.BAUDRATE_9600, 
+			boolean connected = relayBoard.connect();
+			log.info("Relayboard connected=" + connected);
+			/*relayBoard.setParams(SerialPort.BAUDRATE_9600, 
 								SerialPort.DATABITS_8, 
 								SerialPort.STOPBITS_1, 
 								SerialPort.PARITY_NONE);
 			
-			relayBoard.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);
+			relayBoard.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);*/
 			
 			relayBoard.addEventListener(new SerialPortEventListener() {
 				
@@ -635,13 +639,14 @@ public class SoftParkMultiView extends JFrame {
 							log.fatal("Relay board error receiving data=" + e.getMessage());
 							System.exit(0);
 						}
-						if(!printing && receivedData.equalsIgnoreCase("@AD$")) {
+						//if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
+						if(!printing) {
 							printing = true;
 							CheckInRun v = new CheckInRun("vehicle.in.externalbutton");
 							Thread t = new Thread(v);
 							t.setPriority(Thread.MAX_PRIORITY);
 							t.start();
-							printing = false;
+							//printing = false;
 						}
 					}
 				}
@@ -1961,6 +1966,14 @@ public class SoftParkMultiView extends JFrame {
 					
 					p.feed((byte) 2);
 					
+					String strTransactionId = String.valueOf(transactionId);
+					
+					if(strTransactionId.length() == 1) strTransactionId = "0" + strTransactionId;
+					
+					p.barCode(strTransactionId);
+					
+					p.feed((byte) 2);
+					
 					p.alignCenter();
 					p.setTextLn("Total Parking, C.A.");
 					p.setTextLn("Rif: J-40121003-1");
@@ -2275,7 +2288,7 @@ public class SoftParkMultiView extends JFrame {
 			if(stationInfo.getType().getId() != 2) {
 				printerChecker();
 			}
-			if((isPrinterConnected && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
+			if((isPrinterConnected && stationInfo.getType().getId() != 2 && relayBoard.isConnected()) || (stationInfo.getType().getId() == 2 && relayBoard.isConnected())){
 				log.debug("Printer is connected");
 				if ((!printing && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
 					if(stationInfo.getType().getId() != 2) {
@@ -2471,24 +2484,24 @@ public class SoftParkMultiView extends JFrame {
 								e.printStackTrace();
 							}
 							
-							RelayDriver rd = new RelayDriver(relayPort);
+							//RelayDriver rd = new RelayDriver(relayPort);
 							log.trace("Opening barrier");
 							try {
-								log.trace("Connecting to relay board on port " + relayPort);
+								/*log.trace("Connecting to relay board on port " + relayPort);
 								if(rd.connect()) {
 									log.trace("Connected to relay board");
-								}
+								}*/
 								log.trace("Opening relay #" + relay);
-								if(rd.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+								if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
 									log.trace("relay #" + relay + " was activated");
 								}
 								Thread.sleep(3000);
-								if(rd.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+								if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
 									log.trace("relay #" + relay + " was unactivated");
 								}
-								if(rd.disconnect()) {
+								/*if(rd.disconnect()) {
 									log.trace("Disconnected from relay board");
-								}
+								}*/
 							} catch (Exception e) {
 								log.error("Error opening barrier (" + e.getMessage().toString() + ")");
 								e.printStackTrace();
@@ -2541,6 +2554,14 @@ public class SoftParkMultiView extends JFrame {
 						
 						p.feed((byte) 2);
 						
+						String strTransactionId = String.valueOf(transactionId);
+						
+						if(strTransactionId.length() == 1) strTransactionId = "0" + strTransactionId;
+						
+						p.barCode(strTransactionId);
+						
+						p.feed((byte) 2);
+						
 						p.alignCenter();
 						p.setTextLn("Total Parking, C.A.");
 						p.setTextLn("Rif: J-40121003-1");
@@ -2588,9 +2609,16 @@ public class SoftParkMultiView extends JFrame {
 				} else {
 					JOptionPane.showMessageDialog(null, "Por favor espere, se esta imprimiendo el Ticket anterior");
 				}
-			} else {
+			} else if (!isPrinterConnected) {
 				log.error("Printer disconnected. Could not print entrance ticket");
+				labelStatus.setText("Impresora desconectada");
 				JOptionPane.showMessageDialog(null, "La impresora esta desconectada", "Impresora desconectada", JOptionPane.ERROR_MESSAGE);
+			} else if (!relayBoard.isConnected()) {
+				log.error("Relay board disconnected. Could not process the ticket");
+				labelStatus.setText("Tarjeta de Relay desconectada");
+			} else {
+				log.error("Ha ocurrido un error inesperado al imprimir");
+				labelStatus.setText("Error. Por favor revisar la impresora y la tarjeta de relays");
 			}
 			
 			if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1") && stationInfo.getType().getId() != 2) {
@@ -2601,6 +2629,7 @@ public class SoftParkMultiView extends JFrame {
 				buttonCarEntrance.setEnabled(true);
 				textTicket.setEnabled(true);
 			}
+			printing = false;
 			log.debug(tEnd("checkinrun"));
 		}
 	}
@@ -3634,6 +3663,50 @@ public class SoftParkMultiView extends JFrame {
 		public void setAvailablePlaces(int availablePlaces) {
 			this.availablePlaces = availablePlaces;
 		}
+		
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+		// TODO Auto-generated method stub
+		if(relayBoard.isConnected()) {
+			relayBoard.disconnect();
+		}
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+		// TODO Auto-generated method stub
 		
 	}
 	

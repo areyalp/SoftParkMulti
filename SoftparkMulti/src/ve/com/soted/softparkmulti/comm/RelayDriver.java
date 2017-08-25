@@ -7,7 +7,6 @@ import jssc.SerialPortException;
 public class RelayDriver extends SerialPort {
 	
 	String relays = "@DDDD$";
-	SerialPort serialPort;
 	
 	private boolean busy = false;
 	
@@ -18,12 +17,13 @@ public class RelayDriver extends SerialPort {
 		super(portName);
 	}
 	
-	public boolean connect() throws Exception{
+	public boolean connect() {
 		boolean connected = false;
-		if(!serialPort.isOpened()) {
+		if(!this.isOpened()) {
 			try {
-				connected = serialPort.openPort();
-				serialPort.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				connected = this.openPort();
+				this.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+				this.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);
 			} catch (SerialPortException e1) {
 				e1.printStackTrace();
 			}
@@ -31,15 +31,15 @@ public class RelayDriver extends SerialPort {
 		return connected;
 	}
 	
-	public boolean isOpened() {
-		return serialPort.isOpened();
+	public boolean isConnected() {
+		return this.isOpened();
 	}
 	
 	public boolean disconnect() {
 		boolean disconnected = false;
-		if(serialPort.isOpened()) {
+		if(this.isOpened()) {
 			try {
-				disconnected = serialPort.closePort();
+				disconnected = this.closePort();
 			} catch (SerialPortException e) {
 				e.printStackTrace();
 			}
