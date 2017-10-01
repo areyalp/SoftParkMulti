@@ -52,9 +52,11 @@ public class RelayDriver extends SerialPort {
 		boolean writed = false;
 		
 		char code = 'D';
+		char code2 = 'D';
 		
 		if(state==RelayDriver.ACTIVE_STATE){
 			code = 'A';
+			code2 = 'D';
 		}else if(state==RelayDriver.INACTIVE_STATE){
 			code = 'D';
 		}
@@ -62,21 +64,32 @@ public class RelayDriver extends SerialPort {
 		getSerialPort();
 		
 		StringBuilder sb = new StringBuilder(relays);
+		StringBuilder sb2 = new StringBuilder(relays);
 		String out = "";
+		String out2 = "";
 		if(relay==0){
 			out = "@" + code + code + code + code + "$";
+			out2 = "@" + code2 + code2 + code2 + code2 + "$";
 		}else if(relay==1){
 			sb.setCharAt(1, code);
+			sb2.setCharAt(1, code2);
 			out = sb.toString();
+			out2 = sb2.toString();
 		}else if(relay==2){
 			sb.setCharAt(2, code);
+			sb2.setCharAt(2, code2);
 			out = sb.toString();
+			out2 = sb2.toString();
 		}
 		relays = out;
 		
 		try {
 			writed = this.writeString(out);
+			Thread.sleep(5000);
+			writed = this.writeString(out2);
 		} catch (SerialPortException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
 			leaveSerialPort();

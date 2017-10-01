@@ -199,9 +199,11 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 	public Timestamp entranceDateTime;
 	
 	private RelayDriver relayBoard;
+	private PortReader portReader;
 	
 	private double transactionOutAmount;
 	private boolean printing = false;
+	private boolean openBarrier = false;
 	private boolean discounted = false;
 	
 	private static final Logger log = LogManager.getLogger(SoftParkMultiView.class.getName());
@@ -316,6 +318,10 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		}
 		else if(stationInfo.getType().getId() == 2){
 			tabbedPane.addTab("Entrada", createEntranceTab());
+			CheckBarrierTask taskCheckBarrier = new CheckBarrierTask();
+			
+			Timer timerCheckBarrier = new Timer(true);
+			timerCheckBarrier.scheduleAtFixedRate(taskCheckBarrier, 1000, 500);
 		}
 
 		this.add(toolBarPanel, BorderLayout.NORTH);
@@ -618,44 +624,74 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		try {
 			boolean connected = relayBoard.connect();
 			log.info("Relayboard connected=" + connected);
-			/*relayBoard.setParams(SerialPort.BAUDRATE_9600, 
-								SerialPort.DATABITS_8, 
-								SerialPort.STOPBITS_1, 
-								SerialPort.PARITY_NONE);
-			
-			relayBoard.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);*/
 			
 			relayBoard.addEventListener(new SerialPortEventListener() {
 				
 				@Override
 				public void serialEvent(SerialPortEvent event) {
+					log.trace("Serial event received");
 					if(event.isRXCHAR() && event.getEventValue() > 0) {
 						// TODO Pending code to print ticket
 						String receivedData = "";
 						try {
 							receivedData = relayBoard.readString(event.getEventValue());
-							log.trace("receivedData=" + receivedData);
 						} catch (SerialPortException e) {
 							log.fatal("Relay board error receiving data=" + e.getMessage());
 							System.exit(0);
 						}
-						//if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
-						if(!printing) {
+						if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
 							printing = true;
-							CheckInRun v = new CheckInRun("vehicle.in.externalbutton");
+							log.trace("receivedData=" + receivedData);
+							CheckInRun v = new CheckInRun("");
 							Thread t = new Thread(v);
 							t.setPriority(Thread.MAX_PRIORITY);
 							t.start();
-							//printing = false;
 						}
 					}
 				}
-			}, SerialPort.MASK_RXCHAR);
+			} , SerialPort.MASK_RXCHAR);
 		} catch (SerialPortException e) {
 			log.fatal("An error has ocurred on the relay board=" + e.getMessage());
 		}
 		
 		return wrapEntrancePanel;
+	}
+	
+	private static class PortReader implements SerialPortEventListener {
+		
+		private CheckInRun checkInRun;
+		private RelayDriver serialPort;
+		private boolean printing;
+		
+		PortReader(CheckInRun checkInRun, RelayDriver serialPort, boolean printing) {
+			this.checkInRun = checkInRun;
+			this.serialPort = serialPort;
+			this.printing = printing;
+		}
+		
+		@Override
+		public void serialEvent(SerialPortEvent event) {
+			log.trace("Serial event received");
+			if(event.isRXCHAR() && event.getEventValue() > 0) {
+				// TODO Pending code to print ticket
+				String receivedData = "";
+				try {
+					receivedData = serialPort.readString(event.getEventValue());
+					serialPort.closePort();
+					log.trace("receivedData=" + receivedData);
+				} catch (SerialPortException e) {
+					log.fatal("Relay board error receiving data=" + e.getMessage());
+					System.exit(0);
+				}
+				if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
+					printing = true;
+					CheckInRun v = this.checkInRun;
+					Thread t = new Thread(v);
+					t.setPriority(Thread.MAX_PRIORITY);
+					t.start();
+				}
+			}
+		}
 	}
 
 	private JPanel createSubPanelCharge() {
@@ -2266,7 +2302,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		return relayPort;
 	}
 	
-	private class CheckInRun implements Runnable{
+	public class CheckInRun implements Runnable{
 
 		String actionCommand;
 		
@@ -2288,12 +2324,11 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 			if(stationInfo.getType().getId() != 2) {
 				printerChecker();
 			}
-			if((isPrinterConnected && stationInfo.getType().getId() != 2 && relayBoard.isConnected()) || (stationInfo.getType().getId() == 2 && relayBoard.isConnected())){
+			log.trace("printing=" + printing);
+			if((isPrinterConnected && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
 				log.debug("Printer is connected");
 				if ((!printing && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
-					if(stationInfo.getType().getId() != 2) {
-						printing = true;
-					}
+					printing = true;
 					log.debug("No other printing job, starting to process print");
 					log.trace("station name=" + stationInfo.getType().getName());
 					if (stationInfo.getType().getName().equalsIgnoreCase("Entrada/Salida")){
@@ -2485,27 +2520,28 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 							}
 							
 							//RelayDriver rd = new RelayDriver(relayPort);
-							log.trace("Opening barrier");
-							try {
+							/*log.trace("Opening barrier");
+							try {*/
 								/*log.trace("Connecting to relay board on port " + relayPort);
 								if(rd.connect()) {
 									log.trace("Connected to relay board");
 								}*/
-								log.trace("Opening relay #" + relay);
+								/*log.trace("Opening relay #" + relay);
 								if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
 									log.trace("relay #" + relay + " was activated");
 								}
 								Thread.sleep(3000);
 								if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
 									log.trace("relay #" + relay + " was unactivated");
-								}
+								}*/
 								/*if(rd.disconnect()) {
 									log.trace("Disconnected from relay board");
 								}*/
-							} catch (Exception e) {
+							/*} catch (Exception e) {
 								log.error("Error opening barrier (" + e.getMessage().toString() + ")");
 								e.printStackTrace();
-							}
+							}*/
+							openBarrier = true;
 							
 							labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
 						}
@@ -2518,10 +2554,12 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 						
 						PrinterOptions p = new PrinterOptions();
 						
-						p.alignCenter();
-						p.setTextLn("C.C. Paseo");
-						p.alignLeft();
+						p.setTextLn("Estacionamiento Total Parking, C.A.");
+						p.setTextLn("Rif: J-40121003-1");
+						p.setTextLn("Centro Comercial El Paseo");
+						p.setTextLn("Barquisimeto - Estado Lara");
 						
+						p.addLineSeperator();
 						tStart("printingTicketNo");
 						p.setTextLn("Ticket #: " + transactionId);
 						log.debug(tEnd("printingTicketNo"));
@@ -2552,28 +2590,34 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 							log.debug(tEnd("printingPlate"));
 						}
 						
-						p.feed((byte) 2);
+						//p.feed((byte) 2);
 						
 						String strTransactionId = String.valueOf(transactionId);
 						
 						if(strTransactionId.length() == 1) strTransactionId = "0" + strTransactionId;
 						
-						p.barCode(strTransactionId);
+						//p.barCode(strTransactionId);
 						
-						p.feed((byte) 2);
-						
-						p.alignCenter();
-						p.setTextLn("Total Parking, C.A.");
-						p.setTextLn("Rif: J-40121003-1");
-						p.setTextLn("Centro Comercial El Paseo");
-						p.setTextLn("Barquisimeto - Estado Lara");
+						p.addLineSeperator();
+						p.setTextLn("CONDICIONES GENERALES");
+						String conditions = "Este estacionamiento esta amparado por una poliza de seguros y nuestra responsabilidad "
+								+ "por daños se extiende hasta el monto de la cobertura y condiciones de la referida poliza. En caso de "
+								+ "cualquier siniestro, el usuario aceptara la indemnizacion que acuerde la compañia de seguros y en "
+								+ "consecuencia libera al administrador y/o propietario del establecimiento de obligaciones posteriores. "
+								+ "El estacionamiento no responde por objetos dejados en el vehiculo. El usuario se obliga a conservar "
+								+ "el ticket del estacionamiento, en el caso de perdida el usuario se obliga a cumplir todos los "
+								+ "requisitos que fije el estacionamiento para poder retirar el vehiculo. Esta prohibido la pernoctacion "
+								+ "del vehiculo en las instalaciones. Bajo estas condiciones el usuario acepta recibir el servicio de "
+								+ "estacionamiento y guarda de su vehiculo.";
+						p.setTextLn(conditions);
+						p.setTextLn("SEGUN NORMA COVENIN 1811");
 						
 						p.finit();
 						feedPrinter(p.getCommandSet().getBytes());
 						
 						log.debug(tEnd("printing"));
 						
-						Properties prop = new Properties();
+						/*Properties prop = new Properties();
 						InputStream propertiesInput;
 						int relay = 2;
 						
@@ -2585,8 +2629,16 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 							e.printStackTrace();
 						}
 						
+						try {
+							relayBoard.removeEventListener();
+							relayBoard.closePort();
+						} catch (SerialPortException e) {
+							log.error("Error closing the port");
+						}
+						
 						log.trace("Opening barrier");
 						log.trace("Opening relay #" + relay);
+						
 						if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
 							log.trace("relay #" + relay + " was activated");
 						}
@@ -2598,6 +2650,48 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 						if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
 							log.trace("relay #" + relay + " was unactivated");
 						}
+						
+						if(relayBoard.connect()) {
+							log.trace("Relay board port opened");
+						}
+						
+						try {
+							relayBoard.purgePort(SerialPort.PURGE_RXCLEAR);
+							relayBoard.purgePort(SerialPort.PURGE_TXCLEAR);
+						} catch (SerialPortException e1) {
+							log.trace("Error purging the port");
+						}
+						
+						try {
+							relayBoard.addEventListener(new SerialPortEventListener() {
+								
+								@Override
+								public void serialEvent(SerialPortEvent event) {
+									log.trace("Serial event received");
+									if(event.isRXCHAR() && event.getEventValue() > 0) {
+										// TODO Pending code to print ticket
+										String receivedData = "";
+										try {
+											receivedData = relayBoard.readString(event.getEventValue());
+										} catch (SerialPortException e) {
+											log.fatal("Relay board error receiving data=" + e.getMessage());
+											System.exit(0);
+										}
+										if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
+											printing = true;
+											CheckInRun v = new CheckInRun("");
+											Thread t = new Thread(v);
+											t.setPriority(Thread.MAX_PRIORITY);
+											t.start();
+										}
+									}
+								}
+							} , SerialPort.MASK_RXCHAR);
+						} catch (SerialPortException e) {
+							log.error("An error ocurred attaching the listener to the port");
+						}*/
+
+						openBarrier = true;
 						
 						if(Db.getAvailablePlaces(stationInfo.getLevelId()) > -1) { // TODO Fix this
 							labelParkingCounter.setText("Puestos Disponibles: " + Db.getAvailablePlaces(stationInfo.getLevelId()));
@@ -3665,6 +3759,100 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		}
 		
 	}
+	
+	private class CheckBarrierTask extends TimerTask {
+
+		@Override
+		public synchronized void run() {
+			if(!printing && openBarrier) {
+				openBarrier = false;
+				Properties prop = new Properties();
+				InputStream propertiesInput;
+				int relay = 2;
+				
+//				try {
+//					propertiesInput = getClass().getResourceAsStream("config.properties");
+//					prop.load(propertiesInput);
+//					relay = Integer.valueOf(prop.getProperty("relay"));
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+				
+				try {
+					relayBoard.removeEventListener();
+					relayBoard.closePort();
+				} catch (SerialPortException e) {
+					log.error("Error closing the port");
+				}
+				
+				log.trace("Opening barrier");
+				log.trace("Opening relay #" + relay);
+				
+				if(relayBoard.connect()) {
+					log.trace("Relay board port opened");
+				}
+				
+				if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
+					log.trace("relay #" + relay + " was activated");
+				}
+				/*try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					log.error("Error sleeping app while opening barrier");
+				}
+				if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+					log.trace("relay #" + relay + " was unactivated");
+				}*/
+				
+				/*try {
+					relayBoard.closePort();
+				} catch (SerialPortException e2) {
+					log.trace("Error closing the port");
+				}
+				
+				if(relayBoard.connect()) {
+					log.trace("Relay board port opened");
+				}*/
+				
+				/*try {
+					relayBoard.purgePort(SerialPort.PURGE_RXCLEAR);
+					relayBoard.purgePort(SerialPort.PURGE_TXCLEAR);
+				} catch (SerialPortException e1) {
+					log.trace("Error purging the port");
+				}*/
+				
+				try {
+					relayBoard.addEventListener(new SerialPortEventListener() {
+						
+						@Override
+						public void serialEvent(SerialPortEvent event) {
+							log.trace("Serial event received");
+							if(event.isRXCHAR() && event.getEventValue() > 0) {
+								// TODO Pending code to print ticket
+								String receivedData = "";
+								try {
+									receivedData = relayBoard.readString(event.getEventValue());
+								} catch (SerialPortException e) {
+									log.fatal("Relay board error receiving data=" + e.getMessage());
+									System.exit(0);
+								}
+								if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
+									printing = true;
+									CheckInRun v = new CheckInRun("");
+									Thread t = new Thread(v);
+									t.setPriority(Thread.MAX_PRIORITY);
+									t.start();
+								}
+							}
+						}
+					} , SerialPort.MASK_RXCHAR);
+				} catch (SerialPortException e) {
+					log.error("An error ocurred attaching the listener to the port");
+				}
+			}
+		}
+		
+	}
 
 	@Override
 	public void windowActivated(WindowEvent e) {
@@ -3676,7 +3864,8 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 	public void windowClosed(WindowEvent e) {
 		// TODO Auto-generated method stub
 		if(relayBoard.isConnected()) {
-			relayBoard.disconnect();
+			boolean disconnected = relayBoard.disconnect();
+			log.info("Relay Board disconnected=" + disconnected);
 		}
 	}
 

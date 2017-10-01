@@ -81,8 +81,7 @@ public class PrinterOptions {
 
    public String alignLeft()
    {
-        final byte[] AlignLeft={27, 97,48};
-
+        final byte[] AlignLeft={27,97,48};
 
        String s=new String(AlignLeft);
        commandSet+=s;
@@ -92,7 +91,7 @@ public class PrinterOptions {
 
    public String alignCenter()
    {
-       final byte[] AlignCenter={27, 97,49};
+       final byte[] AlignCenter={27,97,49};
 
 
        String s=new String(AlignCenter);
