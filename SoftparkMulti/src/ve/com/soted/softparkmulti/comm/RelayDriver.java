@@ -23,7 +23,7 @@ public class RelayDriver extends SerialPort {
 			try {
 				connected = this.openPort();
 				this.setParams(SerialPort.BAUDRATE_9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-				this.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);
+				//this.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);
 			} catch (SerialPortException e1) {
 				e1.printStackTrace();
 			}
@@ -66,30 +66,22 @@ public class RelayDriver extends SerialPort {
 		StringBuilder sb = new StringBuilder(relays);
 		StringBuilder sb2 = new StringBuilder(relays);
 		String out = "";
-		String out2 = "";
 		if(relay==0){
 			out = "@" + code + code + code + code + "$";
-			out2 = "@" + code2 + code2 + code2 + code2 + "$";
 		}else if(relay==1){
 			sb.setCharAt(1, code);
 			sb2.setCharAt(1, code2);
 			out = sb.toString();
-			out2 = sb2.toString();
 		}else if(relay==2){
 			sb.setCharAt(2, code);
 			sb2.setCharAt(2, code2);
 			out = sb.toString();
-			out2 = sb2.toString();
 		}
 		relays = out;
 		
 		try {
-			writed = this.writeString(out);
-			Thread.sleep(5000);
-			writed = this.writeString(out2);
+			writed = this.writeBytes(out.getBytes());
 		} catch (SerialPortException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} finally {
 			leaveSerialPort();

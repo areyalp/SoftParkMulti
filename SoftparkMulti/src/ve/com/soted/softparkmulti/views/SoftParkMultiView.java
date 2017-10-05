@@ -199,7 +199,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 	public Timestamp entranceDateTime;
 	
 	private RelayDriver relayBoard;
-	private PortReader portReader;
+	//private PortReader portReader;
 	
 	private double transactionOutAmount;
 	private boolean printing = false;
@@ -212,6 +212,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 	
 	public SoftParkMultiView(int stationId) {
 		
+		log.debug("***************************************");
 		log.debug("Initializing");
 		UIManager.getLookAndFeelDefaults().put("Button.font", new Font("Arial", Font.BOLD, 18));
 		UIManager.getLookAndFeelDefaults().put("Label.font", new Font("Arial", Font.PLAIN, 16));
@@ -621,9 +622,9 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		
 		log.info("Will connect relay board to port " + relayPort);
 		relayBoard = new RelayDriver(relayPort);
+		log.trace("Relay board object created");
 		try {
-			boolean connected = relayBoard.connect();
-			log.info("Relayboard connected=" + connected);
+			log.info("Relayboard connected=" + relayBoard.connect());
 			
 			relayBoard.addEventListener(new SerialPortEventListener() {
 				
@@ -635,13 +636,13 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 						String receivedData = "";
 						try {
 							receivedData = relayBoard.readString(event.getEventValue());
+							log.trace("receivedData=" + receivedData);
 						} catch (SerialPortException e) {
 							log.fatal("Relay board error receiving data=" + e.getMessage());
 							System.exit(0);
 						}
 						if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
 							printing = true;
-							log.trace("receivedData=" + receivedData);
 							CheckInRun v = new CheckInRun("");
 							Thread t = new Thread(v);
 							t.setPriority(Thread.MAX_PRIORITY);
@@ -657,7 +658,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 		return wrapEntrancePanel;
 	}
 	
-	private static class PortReader implements SerialPortEventListener {
+	/*private static class PortReader implements SerialPortEventListener {
 		
 		private CheckInRun checkInRun;
 		private RelayDriver serialPort;
@@ -677,7 +678,6 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 				String receivedData = "";
 				try {
 					receivedData = serialPort.readString(event.getEventValue());
-					serialPort.closePort();
 					log.trace("receivedData=" + receivedData);
 				} catch (SerialPortException e) {
 					log.fatal("Relay board error receiving data=" + e.getMessage());
@@ -692,7 +692,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 				}
 			}
 		}
-	}
+	}*/
 
 	private JPanel createSubPanelCharge() {
 
@@ -2329,7 +2329,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 				log.debug("Printer is connected");
 				if ((!printing && stationInfo.getType().getId() != 2) || stationInfo.getType().getId() == 2){
 					printing = true;
-					log.debug("No other printing job, starting to process print");
+					log.trace("No other printing job, starting to process print");
 					log.trace("station name=" + stationInfo.getType().getName());
 					if (stationInfo.getType().getName().equalsIgnoreCase("Entrada/Salida")){
 						log.debug("Process entrance ticket as E/S station");
@@ -2560,34 +2560,34 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 						p.setTextLn("Barquisimeto - Estado Lara");
 						
 						p.addLineSeperator();
-						tStart("printingTicketNo");
+						//tStart("printingTicketNo");
 						p.setTextLn("Ticket #: " + transactionId);
-						log.debug(tEnd("printingTicketNo"));
+						//log.debug(tEnd("printingTicketNo"));
 						
-						tStart("getDateTimeFormat");
+						//tStart("getDateTimeFormat");
 						DateTime entranceDateTime = new DateTime(Db.getDbTime());
 						DateTimeFormatter tFormatter = DateTimeFormat.forPattern("HH:mm:ss");
 						DateTimeFormatter dFormatter = DateTimeFormat.forPattern("dd/MM/yyyy");
 						DateTimeFormatter tFormatter2 = DateTimeFormat.forPattern("HHmmss");
 						DateTimeFormatter dFormatter2 = DateTimeFormat.forPattern("ddMMyyyy");
-						log.debug(tEnd("getDateTimeFormat"));
+						//log.debug(tEnd("getDateTimeFormat"));
 						
-						tStart("printingTime");
+						//tStart("printingTime");
 						p.setTextLn("Hora: " + entranceDateTime.toString(tFormatter));
-						log.debug(tEnd("printingTime"));
+						//log.debug(tEnd("printingTime"));
 						
-						tStart("printingDate");
+						//tStart("printingDate");
 						p.setTextLn("Fecha: " + entranceDateTime.toString(dFormatter));
-						log.debug(tEnd("printingDate"));
+						//log.debug(tEnd("printingDate"));
 						
-						tStart("printingEntryStation");
+						//tStart("printingEntryStation");
 						p.setTextLn("Entrada: " + stationInfo.getId() + " " + stationInfo.getName());
-						log.debug(tEnd("printingEntryStation"));
+						//log.debug(tEnd("printingEntryStation"));
 						
 						if(Db.getConfig("register_plate_enabled", "plate").equalsIgnoreCase("1")) {
-							tStart("printingPlate");
+							//tStart("printingPlate");
 							p.setTextLn("Placa: " + plate);
-							log.debug(tEnd("printingPlate"));
+							//log.debug(tEnd("printingPlate"));
 						}
 						
 						//p.feed((byte) 2);
@@ -3779,28 +3779,38 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 //				}
 				
 				try {
-					relayBoard.removeEventListener();
-					relayBoard.closePort();
+					log.debug("Closing port=" + relayBoard.closePort());
 				} catch (SerialPortException e) {
-					log.error("Error closing the port");
+					log.error("Error closing the port=" + e.getMessage());
 				}
 				
-				log.trace("Opening barrier");
-				log.trace("Opening relay #" + relay);
+				log.trace("Will open barrier");
+				log.trace("Will open relay #" + relay);
 				
 				if(relayBoard.connect()) {
-					log.trace("Relay board port opened");
+					log.debug("Port connected=true");
+					try {
+						log.debug("Purge port RX=" + relayBoard.purgePort(SerialPort.PURGE_RXCLEAR));
+						log.debug("Purge port TX=" + relayBoard.purgePort(SerialPort.PURGE_TXCLEAR));
+					} catch (SerialPortException e) {
+						log.error("Error purging the port=" + e.getMessage());
+					}
 				}
 				
 				if(relayBoard.switchRelay(relay, RelayDriver.ACTIVE_STATE)) {
-					log.trace("relay #" + relay + " was activated");
+					log.debug("relay #" + relay + " was activated");
 				}
-				/*try {
+				try {
+					log.trace("Starting sleep");
 					Thread.sleep(3000);
+					log.trace("Sleep finished");
+					if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)){
+						log.trace("relay #" + relay + " was unactivated");
+					}
 				} catch (InterruptedException e) {
 					log.error("Error sleeping app while opening barrier");
 				}
-				if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
+				/*if(relayBoard.switchRelay(relay, RelayDriver.INACTIVE_STATE)) {
 					log.trace("relay #" + relay + " was unactivated");
 				}*/
 				
@@ -3828,7 +3838,6 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 						public void serialEvent(SerialPortEvent event) {
 							log.trace("Serial event received");
 							if(event.isRXCHAR() && event.getEventValue() > 0) {
-								// TODO Pending code to print ticket
 								String receivedData = "";
 								try {
 									receivedData = relayBoard.readString(event.getEventValue());
@@ -3838,6 +3847,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 								}
 								if(!printing && (receivedData.equalsIgnoreCase("@AD$") || receivedData.equalsIgnoreCase("@DA$") || receivedData.equalsIgnoreCase("@AA$"))) {
 									printing = true;
+									log.trace("receivedData=" + receivedData);
 									CheckInRun v = new CheckInRun("");
 									Thread t = new Thread(v);
 									t.setPriority(Thread.MAX_PRIORITY);
@@ -3864,8 +3874,7 @@ public class SoftParkMultiView extends JFrame implements WindowListener {
 	public void windowClosed(WindowEvent e) {
 		// TODO Auto-generated method stub
 		if(relayBoard.isConnected()) {
-			boolean disconnected = relayBoard.disconnect();
-			log.info("Relay Board disconnected=" + disconnected);
+			log.info("Relay Board disconnected=" + relayBoard.disconnect());
 		}
 	}
 
